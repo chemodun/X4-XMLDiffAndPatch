@@ -343,7 +343,7 @@ namespace X4XmlDiffAndPatch
                 Logger.Debug($"Comparing text in element '{originalElem.Name}': '{originalText}' vs '{modifiedText}'");
                 if (originalText != modifiedText)
                 {
-                    string sel = GenerateXPath(originalElem, original.Root);
+                    string sel = GenerateXPath(originalElem);
                     if (!string.IsNullOrEmpty(modifiedText))
                     {
                         if (checkOnly) {
@@ -412,7 +412,7 @@ namespace X4XmlDiffAndPatch
                                 matchedEnough = false;
                                 break;
                             }
-                            string sel = $"{GenerateXPath(originalChild, original.Root)}";
+                            string sel = $"{GenerateXPath(originalChild)}";
                             savedOp = new XElement("add",
                                 new XAttribute("sel", sel),
                                 new XAttribute("type", $"@{attr.Key}"),
@@ -429,7 +429,7 @@ namespace X4XmlDiffAndPatch
                                 matchedEnough = false;
                                 break;
                             }
-                            string sel = $"{GenerateXPath(originalChild, original.Root)}/@{attr.Key}";
+                            string sel = $"{GenerateXPath(originalChild)}/@{attr.Key}";
                             savedOp = new XElement("replace",
                                 new XAttribute("sel", sel),
                                 attr.Value
@@ -501,17 +501,17 @@ namespace X4XmlDiffAndPatch
                         if (originalChild.Name == nextModifiedChild.Name &&
                             originalChild.Attributes().All(attr => nextModifiedChild.Attribute(attr.Name)?.Value == attr.Value))
                         {
+                            XElement addOp = new XElement("add",
+                                new XAttribute("sel", GenerateXPath(originalChild)),
+                                new XAttribute("pos", "before")
+                            );
                             for (int l = j; l < k; l++)
                             {
                                 var addedChild = modifiedChildren[l];
-                                XElement addOp = new XElement("add",
-                                    new XAttribute("sel", GenerateXPath(originalChild, originalChild.Document.Root)),
-                                    new XAttribute("pos", "before"),
-                                    addedChild
-                                );
-                                diffRoot.Add(addOp);
+                                addOp.Add(addedChild);
                                 Logger.Debug($"Added element '{addedChild.Name}' to parent '{originalElem.Name}'.");
                             }
+                            diffRoot.Add(addOp);
                             j = k;
                             foundMatch = true;
                             break;
@@ -520,7 +520,7 @@ namespace X4XmlDiffAndPatch
 
                     if (!foundMatch)
                     {
-                        string sel = GenerateXPath(originalChild, original.Root);
+                        string sel = GenerateXPath(originalChild);
                         XElement removeOp = new XElement("remove",
                             new XAttribute("sel", sel)
                         );
@@ -538,7 +538,7 @@ namespace X4XmlDiffAndPatch
             while (i < originalChildren.Count)
             {
                 var originalChild = originalChildren[i];
-                string sel = GenerateXPath(originalChild, original.Root);
+                string sel = GenerateXPath(originalChild);
                 XElement removeOp = new XElement("remove",
                     new XAttribute("sel", sel)
                 );
@@ -547,73 +547,83 @@ namespace X4XmlDiffAndPatch
                 i++;
             }
 
-            while (j < modifiedChildren.Count)
+            if (j + 1 < modifiedChildren.Count)
             {
-                var addedChild = modifiedChildren[j];
-                XElement addOp = new XElement("add",
-                    new XAttribute("sel", GenerateXPath(addedChild, original.Root)),
-                    new XAttribute("pos", "after"),
-                    addedChild
-                );
-                diffRoot.Add(addOp);
-                Logger.Debug($"Added element '{addedChild.Name}' to parent '{originalElem.Name}'.");
-                j++;
+                XElement? originalLast = originalChildren.LastOrDefault();
+                if (originalLast != null) {
+                    XElement addOp = new XElement("add",
+                        new XAttribute("sel", GenerateXPath(originalLast)),
+                        new XAttribute("pos", "after")
+                    );
+                    while (j < modifiedChildren.Count)
+                    {
+                        var addedChild = modifiedChildren[j];
+                        addOp.Add(addedChild);
+                        Logger.Debug($"Added element '{addedChild.Name}' to parent '{originalElem.Name}'.");
+                        j++;
+                    }
+                    diffRoot.Add(addOp);
+                }
             }
             return false;
         }
 
-        private static string GenerateXPath(XElement element, XElement? root)
+        private static string GenerateXPath(XElement element)
         {
-            if (element == null || root == null)
+            if (element == null)
                 return string.Empty;
+            XElement? root = element.Document?.Root;
+            if (root == null)
+                return string.Empty;
+
+            // Attempt to make // with a unique attribute
+            foreach (var attr in element.Attributes())
+            {
+                string attrValue = attr.Value.Replace("\"", "&quot;");
+                string xpath = $"//{element.Name.LocalName}[@{attr.Name.LocalName}=\"{attrValue}\"]";
+                var matches = root.XPathSelectElements(xpath);
+                if (matches.Count() == 1)
+                    return xpath;
+            }
 
             var path = new System.Text.StringBuilder();
             XElement? current = element;
             while (current != null)
             {
                 string step = current.Name.LocalName;
-                var siblings = current.Parent?.Elements(current.Name.LocalName).ToList();
-                if (siblings != null && siblings.Count > 1)
-                {
-                    // Attempt to use a unique attribute
-                    var uniqueAttr = siblings
-                        .SelectMany(e => e.Attributes())
-                        .GroupBy(a => a.Name.LocalName)
-                        .Where(g => g.Count() == siblings.Count())
-                        .Select(g => g.Key)
-                        .FirstOrDefault();
+                XElement? parent = current.Parent;
+                if (parent != null) {
+                    var siblings = parent.Elements(current.Name.LocalName).ToList();
+                    if (siblings != null && siblings.Count > 1)
+                    {
+                        // Attempt to use a unique attribute
+                        var uniqueAttr = siblings
+                            .SelectMany(e => e.Attributes())
+                            .GroupBy(a => a.Name.LocalName)
+                            .Where(g => g.Count() == siblings.Count())
+                            .Select(g => g.Key)
+                            .FirstOrDefault();
 
-                    if (uniqueAttr != null && current.Attribute(uniqueAttr) != null)
-                    {
-                        string value = current.Attribute(uniqueAttr)!.Value.Replace("\"", "&quot;");
-                        step += $"[@{uniqueAttr}=\"{value}\"]";
-                    }
-                    else
-                    {
-                        int index = siblings.IndexOf(current) + 1;
-                        step += $"[{index}]";
+                        if (uniqueAttr != null && current.Attribute(uniqueAttr) != null)
+                        {
+                            string value = current.Attribute(uniqueAttr)!.Value.Replace("\"", "&quot;");
+                            step += $"[@{uniqueAttr}=\"{value}\"]";
+                        }
+                        else
+                        {
+                            // TODO: add sibling as unique additional id instead of index
+                            int index = siblings.IndexOf(current) + 1;
+                            step += $"[{index}]";
+                        }
                     }
                 }
                 path.Insert(0, "/" + step);
                 current = current.Parent!;
             }
 
+
             if (path.Length == 0)
                 path.Append("/" + root.Name.LocalName);
-
-            // If depth > 2, prefer using '//' with attributes
-            if (path.ToString().Count(c => c == '/') > 2)
-            {
-                foreach (var attr in element.Attributes())
-                {
-                    string attrValue = attr.Value.Replace("\"", "&quot;");
-                    string xpath = $"//{element.Name.LocalName}[@{attr.Name.LocalName}=\"{attrValue}\"]";
-                    var matches = root.XPathSelectElements(xpath);
-                    if (matches.Count() == 1)
-                        return xpath;
-                }
-            }
-
             return path.ToString();
         }
 
