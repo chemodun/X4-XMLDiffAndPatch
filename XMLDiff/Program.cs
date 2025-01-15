@@ -211,10 +211,7 @@ namespace X4XmlDiffAndPatch
                 XDocument modifiedDoc = XDocument.Load(modifiedXmlPath);
                 Logger.Info($"Parsed modified XML: {modifiedXmlPath}");
 
-                string indentStr = DetectIndentation(originalXmlPath);
-                Logger.Info($"Detected indentation: {ConsoleEscape(indentStr)}");
-
-                XElement diffRoot = GenerateDiff(originalDoc, modifiedDoc, indentStr);
+                XElement diffRoot = GenerateDiff(originalDoc, modifiedDoc);
 
                 if (!diffRoot.HasElements)
                 {
@@ -223,7 +220,6 @@ namespace X4XmlDiffAndPatch
                 }
 
                 XDocument diffDoc = new XDocument(new XDeclaration("1.0", "utf-8", "yes"), diffRoot);
-                IndentXml(diffDoc, indentStr);
 
 
                 diffDoc.Save(diffXmlPath);
@@ -317,7 +313,7 @@ namespace X4XmlDiffAndPatch
 
         #region Diff Generation
 
-        private static XElement GenerateDiff(XDocument original, XDocument modified, string indentStr)
+        private static XElement GenerateDiff(XDocument original, XDocument modified)
         {
             XElement diffRoot = new XElement("diff");
             if (original.Root == null || modified.Root == null)
@@ -325,25 +321,18 @@ namespace X4XmlDiffAndPatch
                 Logger.Error("Original or modified XML does not have a root element.");
                 return diffRoot;
             }
-            CompareElements(original, modified, diffRoot, indentStr);
+            CompareElements(original, modified, diffRoot);
             return diffRoot;
         }
 
-        private static bool CompareElements(XDocument original, XDocument modified, XElement diffRoot, string indentStr, XElement ?originalElem = null, XElement ?modifiedElem = null, bool checkOnly = false)
+        private static bool CompareElements(XDocument original, XDocument modified, XElement diffRoot, XElement ?originalElem = null, XElement ?modifiedElem = null, bool checkOnly = false)
         {
             if (originalElem != null && modifiedElem != null)
             {
                 if (originalElem.Name != modifiedElem.Name)
                 {
-                    if (!checkOnly) {
-                        string sel = GenerateXPath(originalElem, original.Root);
-                        XElement replaceOp = new XElement("replace",
-                            new XAttribute("sel", sel),
-                            modifiedElem
-                        );
-                        diffRoot.Add(replaceOp);
-                        Logger.Debug($"Replaced element '{originalElem.Name}' with '{modifiedElem.Name}'.");
-                    }
+                    // Process can be there only in case of changes detection, not for the real diff generation
+                    Logger.Error($"Element names do not match: {originalElem.Name} vs {modifiedElem.Name}");
                     return true;
                 }
 
@@ -470,14 +459,14 @@ namespace X4XmlDiffAndPatch
                             return true;
                         }
                         matchedEnough = false;
-                        if (! CompareElements(original, modified, diffRoot, indentStr, originalChild, modifiedChild, true)) {
+                        if (! CompareElements(original, modified, diffRoot, originalChild, modifiedChild, true)) {
                             bool nextMatched = true;
                             if ( i + 1 < originalChildren.Count && j + 1 < modifiedChildren.Count) {
                                 XElement originalTemp = new XElement("temp");
                                 originalTemp.Add(originalChildren[i + 1]);
                                 XElement modifiedTemp = new XElement("temp");
                                 modifiedTemp.Add(modifiedChildren[j + 1]);
-                                nextMatched = ! CompareElements(original, modified, diffRoot, indentStr, originalTemp, modifiedTemp, true);
+                                nextMatched = ! CompareElements(original, modified, diffRoot, originalTemp, modifiedTemp, true);
                             }
                             if (nextMatched) {
                                 if (savedOp != null) {
@@ -490,7 +479,7 @@ namespace X4XmlDiffAndPatch
                     }
                     Logger.Debug($"Matched enough: {matchedEnough}, i: {i}, j: {j}");
                     if (matchedEnough) {
-                        if (CompareElements(original, modified, diffRoot, indentStr, originalChild, modifiedChild, checkOnly))
+                        if (CompareElements(original, modified, diffRoot, originalChild, modifiedChild, checkOnly))
                         {
                             if (checkOnly) {
                                 return true;
@@ -516,8 +505,8 @@ namespace X4XmlDiffAndPatch
                             {
                                 var addedChild = modifiedChildren[l];
                                 XElement addOp = new XElement("add",
-                                    new XAttribute("sel", GenerateXPath(addedChild, original.Root)),
-                                    new XAttribute("pos", "after"),
+                                    new XAttribute("sel", GenerateXPath(originalChild, originalChild.Document.Root)),
+                                    new XAttribute("pos", "before"),
                                     addedChild
                                 );
                                 diffRoot.Add(addOp);
@@ -580,7 +569,7 @@ namespace X4XmlDiffAndPatch
 
             var path = new System.Text.StringBuilder();
             XElement? current = element;
-            while (current != null && current != root)
+            while (current != null)
             {
                 string step = current.Name.LocalName;
                 var siblings = current.Parent?.Elements(current.Name.LocalName).ToList();
@@ -626,16 +615,6 @@ namespace X4XmlDiffAndPatch
             }
 
             return path.ToString();
-        }
-
-        #endregion
-
-        #region XML Indentation
-
-        private static void IndentXml(XDocument doc, string indentStr)
-        {
-            // Currently, XDocument.Save with SaveOptions.None preserves indentation
-            // Custom indentation can be implemented if necessary
         }
 
         #endregion
