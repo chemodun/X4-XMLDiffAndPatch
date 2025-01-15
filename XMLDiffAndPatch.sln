@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XMLDiff", "XMLDiff\XMLDiff.csproj", "{D1AA4601-FADD-4C52-9E55-3C339BCD3566}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{356CFEF9-F833-4F2E-9FD1-958BDC0BBAA2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{356CFEF9-F833-4F2E-9FD1-958BDC0BBAA2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{356CFEF9-F833-4F2E-9FD1-958BDC0BBAA2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{356CFEF9-F833-4F2E-9FD1-958BDC0BBAA2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FCFCEA9B-4D50-4EA8-A4CD-72F854D8B55C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FCFCEA9B-4D50-4EA8-A4CD-72F854D8B55C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FCFCEA9B-4D50-4EA8-A4CD-72F854D8B55C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FCFCEA9B-4D50-4EA8-A4CD-72F854D8B55C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D1AA4601-FADD-4C52-9E55-3C339BCD3566}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D1AA4601-FADD-4C52-9E55-3C339BCD3566}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D1AA4601-FADD-4C52-9E55-3C339BCD3566}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D1AA4601-FADD-4C52-9E55-3C339BCD3566}.Release|Any CPU.Build.0 = Release|Any CPU
+		{60598D5D-DBA6-4F2B-AFAA-299DF944CD02}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{60598D5D-DBA6-4F2B-AFAA-299DF944CD02}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{60598D5D-DBA6-4F2B-AFAA-299DF944CD02}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{60598D5D-DBA6-4F2B-AFAA-299DF944CD02}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
