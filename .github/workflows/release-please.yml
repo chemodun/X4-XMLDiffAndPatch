@@ -27,6 +27,5 @@ jobs:
           # Optional configurations:
           # version-file: version.py  # Specify the version file if different
           #bump-minor-pre-major: true
-          initial-version: "0.2.12"
           monorepo-tags: true
           token: ${{ secrets.MY_RELEASE_PLEASE_TOKEN }}
