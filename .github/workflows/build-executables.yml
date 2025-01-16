@@ -24,7 +24,7 @@ jobs:
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: ${{ matrix.dotnet-version }}
-          cache: true
+          # cache: true
 
       # Step 3: Install dependencies
       - name: Install dependencies
