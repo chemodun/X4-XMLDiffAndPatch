@@ -35,10 +35,11 @@ jobs:
         run:  dotnet publish -c Release -r win-x64 --self-contained true /p:PublishSingleFile=true
 
       # Step 5: Check local files
-      - name: Build Executable with PyInstaller (Linux)
+      - name: Check local files
         if: ${{ github.event_name != 'release' }}
         run: |
-          Get-ChildItem -Path . -Recurse | Format-List
+          Get-ChildItem -Path XMLPatch -Recurse | Select-Object FullName, Length, LastWriteTime
+          Get-ChildItem -Path XMLDiff -Recurse | Select-Object FullName, Length, LastWriteTime
         shell: powershell
 
 
