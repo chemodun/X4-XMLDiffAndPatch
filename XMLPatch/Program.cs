@@ -206,23 +206,28 @@ namespace X4XmlDiffAndPatch
                 XDocument originalDoc = XDocument.Load(originalXmlPath);
                 Logger.Info($"Parsed original XML: {originalXmlPath}");
 
+                int indent = DetectIndentation(originalXmlPath);
+                Logger.Info($"Detected indentation: {indent}");
+
                 XDocument diffDoc = XDocument.Load(diffXmlPath);
                 Logger.Info($"Parsed diff XML: {diffXmlPath}");
 
-                XElement diffRoot = diffDoc.Root;
+                XElement diffRoot = diffDoc.Root ?? throw new InvalidOperationException("diffDoc.Root is null");
+
+                XElement originalRoot = originalDoc.Root ?? throw new InvalidOperationException("originalDoc.Root is null");
 
                 foreach (var operation in diffRoot.Elements())
                 {
                     switch (operation.Name.LocalName)
                     {
                         case "add":
-                            ApplyAdd(operation, originalDoc.Root);
+                            ApplyAdd(operation, originalRoot);
                             break;
                         case "replace":
-                            ApplyReplace(operation, originalDoc.Root);
+                            ApplyReplace(operation, originalRoot);
                             break;
                         case "remove":
-                            ApplyRemove(operation, originalDoc.Root);
+                            ApplyRemove(operation, originalRoot);
                             break;
                         default:
                             Logger.Warn($"Unknown operation: {operation.Name}. Skipping.");
@@ -230,15 +235,16 @@ namespace X4XmlDiffAndPatch
                     }
                 }
 
-                // Ensure output directory exists
-                string outputDir = Path.GetDirectoryName(outputXmlPath);
-                if (!string.IsNullOrEmpty(outputDir) && !Directory.Exists(outputDir))
+                var settings = new XmlWriterSettings
                 {
-                    Directory.CreateDirectory(outputDir);
-                    Logger.Info($"Created output directory: {outputDir}");
+                    Indent = true,
+                    IndentChars = new string(' ', indent)
+                };
+                using (var writer = XmlWriter.Create(diffXmlPath, settings))
+                {
+                    originalDoc.Save(writer);
                 }
 
-                originalDoc.Save(outputXmlPath);
                 Logger.Info($"Patched XML successfully written to '{outputXmlPath}'.");
             }
             catch (Exception ex)
@@ -270,7 +276,7 @@ namespace X4XmlDiffAndPatch
 
         #region Indentation Detection
 
-        private static string DetectIndentation(string xmlPath)
+        private static int DetectIndentation(string xmlPath)
         {
             var indentationLevels = new HashSet<string>();
             var indentPattern = new Regex(@"^(\s+)<");
@@ -285,14 +291,13 @@ namespace X4XmlDiffAndPatch
             }
 
             if (indentationLevels.Count == 0)
-                return "    "; // Default to four spaces
+                return 4; // Default to four spaces
 
             var sortedIndents = indentationLevels.OrderBy(s => s.Length).ToList();
             var indentLengths = sortedIndents.Where(s => s.Length > 0).Select(s => s.Length).OrderBy(n => n).ToList();
             var differences = indentLengths.Skip(1).Select((len, idx) => len - indentLengths[idx]).Where(diff => diff > 0).ToList();
             int perLevelIndentLen = differences.Any() ? differences.Min() : sortedIndents[0].Length;
-            var perLevelIndent = sortedIndents.FirstOrDefault(s => s.Length == perLevelIndentLen) ?? "    ";
-            return perLevelIndent;
+            return perLevelIndentLen;
         }
 
         #endregion
@@ -301,8 +306,10 @@ namespace X4XmlDiffAndPatch
 
         private static void ApplyAdd(XElement addElement, XElement originalRoot)
         {
-            string sel = addElement.Attribute("sel")?.Value;
-            string pos = addElement.Attribute("pos")?.Value ?? "after";
+            string sel = addElement.Attribute("sel")?.Value ?? throw new ArgumentException("The 'sel' attribute is required.");
+            string pos = addElement.Attribute("pos")?.Value ?? "append";
+
+            Logger.Debug($"Applying add operation: {sel} at {pos}");
 
             var newElements = addElement.Elements();
 
@@ -323,17 +330,22 @@ namespace X4XmlDiffAndPatch
                         if (pos == "before")
                         {
                             target.AddBeforeSelf(cloned);
-                            Logger.Info($"Added new element '{cloned.Name}' before '{target.Name}' in '{target.Parent.Name}'.");
+                            Logger.Info($"Added new element '{cloned.Name}' before '{target.Name}' in '{target.Parent?.Name}'.");
                         }
                         else if (pos == "after")
                         {
                             target.AddAfterSelf(cloned);
-                            Logger.Info($"Added new element '{cloned.Name}' after '{target.Name}' in '{target.Parent.Name}'.");
+                            Logger.Info($"Added new element '{cloned.Name}' after '{target.Name}' in '{target.Parent?.Name}'.");
                         }
                         else if (pos == "prepend")
                         {
                             target.AddFirst(cloned);
                             Logger.Info($"Prepended new element '{cloned.Name}' to '{target.Name}'.");
+                        }
+                        else if (pos == "append")
+                        {
+                            target.Add(cloned);
+                            Logger.Info($"Appended new element '{cloned.Name}' to '{target.Name}'.");
                         }
                         else
                         {
@@ -346,7 +358,7 @@ namespace X4XmlDiffAndPatch
 
         private static void ApplyReplace(XElement replaceElement, XElement originalRoot)
         {
-            string sel = replaceElement.Attribute("sel")?.Value;
+            string? sel = replaceElement.Attribute("sel")?.Value;
             if (sel == null)
             {
                 Logger.Warn("Replace operation missing 'sel' attribute.");
@@ -394,7 +406,7 @@ namespace X4XmlDiffAndPatch
 
         private static void ApplyRemove(XElement removeElement, XElement originalRoot)
         {
-            string sel = removeElement.Attribute("sel")?.Value;
+            string? sel = removeElement.Attribute("sel")?.Value;
             if (sel == null)
             {
                 Logger.Warn("Remove operation missing 'sel' attribute.");
@@ -412,13 +424,23 @@ namespace X4XmlDiffAndPatch
             {
                 if (targetObj is XElement target)
                 {
-                    XElement parent = target.Parent;
+                    XElement? parent = target.Parent;
+                    if (parent == null)
+                    {
+                        Logger.Warn($"Element '{target.Name}' has no parent. Cannot remove.");
+                        continue;
+                    }
                     target.Remove();
                     Logger.Debug($"Removed element '{target.Name}' from '{parent.Name}'.");
                 }
                 else if (targetObj is XAttribute attr)
                 {
-                    XElement parent = attr.Parent;
+                    XElement? parent = attr.Parent;
+                    if (parent == null)
+                    {
+                        Logger.Warn($"Attribute '{attr.Name}' has no parent. Cannot remove.");
+                        continue;
+                    }
                     attr.Remove();
                     Logger.Debug($"Removed attribute '{attr.Name}' from '{parent.Name}'.");
                 }

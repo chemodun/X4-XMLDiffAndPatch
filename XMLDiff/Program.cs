@@ -210,6 +210,9 @@ namespace X4XmlDiffAndPatch
                 XDocument originalDoc = XDocument.Load(originalXmlPath);
                 Logger.Info($"Parsed original XML: {originalXmlPath}");
 
+                int indent = DetectIndentation(originalXmlPath);
+                Logger.Info($"Detected indentation: {indent}");
+
                 XDocument modifiedDoc = XDocument.Load(modifiedXmlPath);
                 Logger.Info($"Parsed modified XML: {modifiedXmlPath}");
 
@@ -230,7 +233,16 @@ namespace X4XmlDiffAndPatch
                 XDocument diffDoc = new XDocument(new XDeclaration("1.0", "utf-8", "yes"), diffRoot);
 
 
-                diffDoc.Save(diffXmlPath);
+                var settings = new XmlWriterSettings
+                {
+                    Indent = true,
+                    IndentChars = new string(' ', indent)
+                };
+                using (var writer = XmlWriter.Create(diffXmlPath, settings))
+                {
+                    diffDoc.Save(writer);
+                }
+
                 if (diffReaderSettings != null)
                 {
                     Logger.Info($"Diff XML written to {diffXmlPath} and will be validated");
@@ -296,7 +308,7 @@ namespace X4XmlDiffAndPatch
 
         #region Indentation Detection
 
-        private static string DetectIndentation(string xmlPath)
+        private static int DetectIndentation(string xmlPath)
         {
             var indentationLevels = new HashSet<string>();
             var indentPattern = new Regex(@"^(\s+)<");
@@ -311,7 +323,7 @@ namespace X4XmlDiffAndPatch
             }
 
             if (indentationLevels.Count == 0)
-                return "    "; // Default to four spaces
+                return 4;
 
             var sortedIndents = indentationLevels.OrderBy(s => s.Length).ToList();
 
@@ -321,9 +333,7 @@ namespace X4XmlDiffAndPatch
 
             int perLevelIndentLen = differences.Any() ? differences.Min() : (sortedIndents[0].Length);
 
-            var perLevelIndent = sortedIndents.FirstOrDefault(s => s.Length == perLevelIndentLen) ?? "    ";
-
-            return perLevelIndent;
+            return perLevelIndentLen;
         }
 
         #endregion
@@ -718,15 +728,6 @@ namespace X4XmlDiffAndPatch
             return settings;
         }
 
-
-        #endregion
-
-        #region Utility Functions
-
-        private static string ConsoleEscape(string str)
-        {
-            return str.Replace("\n", "\\n").Replace("\t", "\\t").Replace("\r", "\\r");
-        }
 
         #endregion
     }
