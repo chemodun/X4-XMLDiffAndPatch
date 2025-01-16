@@ -273,10 +273,10 @@ namespace X4XmlDiffAndPatch
 
         private static void ProcessDirectories(string originalDir, string modifiedDir, string diffDir, XmlReaderSettings diffReaderSettings)
         {
-            foreach (var originalFilePath in Directory.EnumerateFiles(originalDir, "*.xml", SearchOption.AllDirectories))
+            foreach (var modifiedFilePath in Directory.EnumerateFiles(modifiedDir, "*.xml", SearchOption.AllDirectories))
             {
-                string relativePath = Path.GetRelativePath(originalDir, originalFilePath);
-                string modifiedFilePath = Path.Combine(modifiedDir, relativePath);
+                string relativePath = Path.GetRelativePath(modifiedDir, modifiedFilePath);
+                string originalFilePath = Path.Combine(originalDir, relativePath);
                 string diffFilePath = Path.Combine(diffDir, relativePath);
 
                 if (!File.Exists(modifiedFilePath))

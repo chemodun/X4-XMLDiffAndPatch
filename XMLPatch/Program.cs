@@ -209,8 +209,33 @@ namespace X4XmlDiffAndPatch
                 int indent = DetectIndentation(originalXmlPath);
                 Logger.Info($"Detected indentation: {indent}");
 
-                XDocument diffDoc = XDocument.Load(diffXmlPath);
-                Logger.Info($"Parsed diff XML: {diffXmlPath}");
+                XDocument diffDoc;
+                if (diffReaderSettings != null)
+                {
+                    using (XmlReader reader = XmlReader.Create(diffXmlPath, diffReaderSettings))
+                    {
+                        try {
+                            diffDoc = XDocument.Load(reader);
+                            Logger.Info($"Parsed diff XML: {diffXmlPath}");
+                        } catch (XmlSchemaValidationException ex) {
+                            Logger.Error($"Validation failed: {ex.Message}");
+                            return;
+                        }
+
+                    }
+                    Logger.Info($"Validation successful: {diffXmlPath} is valid against diff.xsd");
+                }
+                else
+                {
+                    Logger.Warn("Diff XML validation is disabled.");
+                    diffDoc = XDocument.Load(diffXmlPath);
+                }
+
+                if (diffDoc == null)
+                {
+                    Logger.Error("Diff XML root is null.");
+                    return;
+                }
 
                 XElement diffRoot = diffDoc.Root ?? throw new InvalidOperationException("diffDoc.Root is null");
 
@@ -240,7 +265,7 @@ namespace X4XmlDiffAndPatch
                     Indent = true,
                     IndentChars = new string(' ', indent)
                 };
-                using (var writer = XmlWriter.Create(diffXmlPath, settings))
+                using (var writer = XmlWriter.Create(outputXmlPath, settings))
                 {
                     originalDoc.Save(writer);
                 }
