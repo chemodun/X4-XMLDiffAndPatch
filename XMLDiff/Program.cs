@@ -9,7 +9,9 @@ using NLog;
 using System.Xml.XPath;
 using CommandLine;
 using System.Diagnostics;
-using System.Runtime.CompilerServices; // Add this line
+using System.Runtime.CompilerServices;
+using System.Reflection.Metadata;
+using System.Linq.Expressions; // Add this line
 
 namespace X4XmlDiffAndPatch
 {
@@ -211,6 +213,12 @@ namespace X4XmlDiffAndPatch
                 XDocument modifiedDoc = XDocument.Load(modifiedXmlPath);
                 Logger.Info($"Parsed modified XML: {modifiedXmlPath}");
 
+                if (File.Exists(diffXmlPath))
+                {
+                    File.Delete(diffXmlPath);
+                    Logger.Debug($"Deleted diff file at {diffXmlPath}.");
+                }
+
                 XElement diffRoot = GenerateDiff(originalDoc, modifiedDoc);
 
                 if (!diffRoot.HasElements)
@@ -226,11 +234,20 @@ namespace X4XmlDiffAndPatch
                 if (diffReaderSettings != null)
                 {
                     Logger.Info($"Diff XML written to {diffXmlPath} and will be validated");
-                    // ValidateDiffXml(diffXmlPath, diffXsdPath);
                     using (XmlReader reader = XmlReader.Create(diffXmlPath, diffReaderSettings))
                     {
-                        XDocument doc = XDocument.Load(reader);
-                        // doc.Validate(schemas, (o, e) => { throw new Exception(e.Message); });
+                        try {
+                            while (reader.Read()) {}
+                        } catch (XmlSchemaValidationException ex) {
+                            Logger.Error($"Validation failed: {ex.Message}");
+                            if (File.Exists(diffXmlPath))
+                            {
+                                File.Delete(diffXmlPath);
+                                Logger.Debug($"Deleted diff file at {diffXmlPath}.");
+                            }
+                            return;
+                        }
+
                     }
                     Logger.Info($"Validation successful: {diffXmlPath} is valid against diff.xsd");
                 }
@@ -531,10 +548,6 @@ namespace X4XmlDiffAndPatch
                 }
             }
 
-            if (checkOnly && (i < originalChildren.Count || j < modifiedChildren.Count)) {
-                return true;
-            }
-
             while (i < originalChildren.Count)
             {
                 var originalChild = originalChildren[i];
@@ -547,7 +560,7 @@ namespace X4XmlDiffAndPatch
                 i++;
             }
 
-            if (j + 1 < modifiedChildren.Count)
+            if (j + 1 <= modifiedChildren.Count)
             {
                 XElement? originalLast = originalChildren.LastOrDefault();
                 if (originalLast != null) {
@@ -568,6 +581,45 @@ namespace X4XmlDiffAndPatch
             return false;
         }
 
+        private static (string step, string patchForParent) GetElementPathStep(XElement element, XElement parent, XDocument doc, string patchForParent = "")
+        {
+            if (element == null)
+                return (string.Empty, string.Empty);
+            if (parent == null)
+                return (string.Empty, string.Empty);
+            if (doc == null)
+                return (string.Empty, string.Empty);
+            string step = "";
+            if (patchForParent == "")
+                patchForParent = $"{element.Name.LocalName}";
+            var attributes = element.Attributes().ToList();
+            if (attributes.Count > 0)
+            {
+                foreach (var attr in attributes)
+                {
+                    string attrValue = attr.Value.Replace("\"", "&quot;");
+                    string xpath = $"{patchForParent}[@{attr.Name.LocalName}=\"{attrValue}\"]";
+                    var matches = parent.XPathSelectElements(xpath);
+                    if (matches.Count() == 1 && matches.First() == element)
+                    {
+                        if (step == "")
+                            step = xpath;
+                        var doc_matches = doc.XPathSelectElements($"//{xpath}");
+                        if (doc_matches.Count() == 1)
+                            return ($"//{xpath}", patchForParent);
+                    }
+                }
+            }
+            else
+            {
+                var doc_matches = doc.XPathSelectElements($"//{patchForParent}");
+                if (doc_matches.Count() == 1)
+                {
+                    return ($"//{patchForParent}", patchForParent);
+                }
+            }
+            return (step, patchForParent);
+        }
         private static string GenerateXPath(XElement element)
         {
             if (element == null)
@@ -575,53 +627,40 @@ namespace X4XmlDiffAndPatch
             XElement? root = element.Document?.Root;
             if (root == null)
                 return string.Empty;
-
-            // Attempt to make // with a unique attribute
-            foreach (var attr in element.Attributes())
-            {
-                string attrValue = attr.Value.Replace("\"", "&quot;");
-                string xpath = $"//{element.Name.LocalName}[@{attr.Name.LocalName}=\"{attrValue}\"]";
-                var matches = root.XPathSelectElements(xpath);
-                if (matches.Count() == 1)
-                    return xpath;
-            }
-
+            XDocument? doc = root.Document;
+            if (doc == null)
+                return string.Empty;
             var path = new System.Text.StringBuilder();
             XElement? current = element;
             while (current != null)
             {
-                string step = current.Name.LocalName;
                 XElement? parent = current.Parent;
                 if (parent != null) {
-                    var siblings = parent.Elements(current.Name.LocalName).ToList();
-                    if (siblings != null && siblings.Count > 1)
+                    (string step, string patchForParent) = GetElementPathStep(element, parent, doc);
+                    if (step.StartsWith("//"))
                     {
-                        // Attempt to use a unique attribute
-                        var uniqueAttr = siblings
-                            .SelectMany(e => e.Attributes())
-                            .GroupBy(a => a.Name.LocalName)
-                            .Where(g => g.Count() == siblings.Count())
-                            .Select(g => g.Key)
-                            .FirstOrDefault();
-
-                        if (uniqueAttr != null && current.Attribute(uniqueAttr) != null)
-                        {
-                            string value = current.Attribute(uniqueAttr)!.Value.Replace("\"", "&quot;");
-                            step += $"[@{uniqueAttr}=\"{value}\"]";
+                        return step;
+                    }
+                    if (step == "") {
+                        var siblings = parent.Elements().ToList();
+                        string xpathWithSiblings = "";
+                        int index = siblings.IndexOf(current);
+                        if (index + 1 < siblings.Count) {
+                            XElement sibling = siblings[index + 1];
+                            (step, xpathWithSiblings) =  GetElementPathStep(sibling, parent, doc, $"{patchForParent}/following-sibling::{sibling.Name.LocalName}");
                         }
-                        else
+                        if (step.StartsWith("//"))
                         {
-                            // TODO: add sibling as unique additional id instead of index
-                            int index = siblings.IndexOf(current) + 1;
-                            step += $"[{index}]";
+                            return step;
+                        } else if (step == "")
+                        {
+                            step = $"{current.Name.LocalName}[{index + 1}]";
                         }
                     }
+                    path.Insert(0, "/" + step);
                 }
-                path.Insert(0, "/" + step);
-                current = current.Parent!;
+                current = parent;
             }
-
-
             if (path.Length == 0)
                 path.Append("/" + root.Name.LocalName);
             return path.ToString();
@@ -679,37 +718,6 @@ namespace X4XmlDiffAndPatch
             return settings;
         }
 
-        private static void ValidateDiffXml(string diffXmlPath, string? xsdPath)
-        {
-            try
-            {
-                if (xsdPath != null)
-                {
-                    XmlReaderSettings settings = new XmlReaderSettings();
-                    settings.ValidationType = ValidationType.Schema;
-                    try
-                    {
-                    // Add the schema to the schema set
-                        settings.Schemas.Add("", xsdPath);
-                    }
-                    catch (XmlSchemaException ex)
-                    {
-                        Console.WriteLine($"Error adding schema: {ex.Message}");
-                    }
-
-                    using (XmlReader reader = XmlReader.Create(diffXmlPath, settings))
-                    {
-                        XDocument doc = XDocument.Load(reader);
-                        // doc.Validate(schemas, (o, e) => { throw new Exception(e.Message); });
-                    }
-                    Logger.Info($"Validation successful: {diffXmlPath} is valid against {xsdPath}");
-                }
-            }
-            catch (Exception e)
-            {
-                Logger.Error($"Validation failed: {e.Message}");
-            }
-        }
 
         #endregion
 
