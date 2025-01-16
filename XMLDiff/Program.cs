@@ -584,20 +584,26 @@ namespace X4XmlDiffAndPatch
             if (j + 1 <= modifiedChildren.Count)
             {
                 XElement? originalLast = originalChildren.LastOrDefault();
+                XElement addOp;
                 if (originalLast != null) {
-                    XElement addOp = new XElement("add",
+                    addOp = new XElement("add",
                         new XAttribute("sel", GenerateXPath(originalLast, onlyFullPath)),
                         new XAttribute("pos", "after")
                     );
-                    while (j < modifiedChildren.Count)
-                    {
-                        var addedChild = modifiedChildren[j];
-                        addOp.Add(addedChild);
-                        Logger.Debug($"Added element '{addedChild.Name}' to parent '{originalElem.Name}'.");
-                        j++;
-                    }
-                    diffRoot.Add(addOp);
                 }
+                else {
+                    addOp = new XElement("add",
+                        new XAttribute("sel", GenerateXPath(originalElem, onlyFullPath))
+                    );
+                }
+                while (j < modifiedChildren.Count)
+                {
+                    var addedChild = modifiedChildren[j];
+                    addOp.Add(addedChild);
+                    Logger.Debug($"Added element '{addedChild.Name}' to parent '{originalElem.Name}'.");
+                    j++;
+                }
+                diffRoot.Add(addOp);
             }
             return false;
         }
