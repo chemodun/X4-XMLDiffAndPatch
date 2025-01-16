@@ -16,8 +16,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Step 2: Set dotnet
-      - name: Setup dotnet ${{ matrix.dotnet-version }}
+      # Step 2: Set dotnet SDK
+      - name: Setup dotnet SDK
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: '8.x'
