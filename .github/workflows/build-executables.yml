@@ -37,14 +37,14 @@ jobs:
       # Step 5: Compress to zip
       - name: Compress to zip
         run: |
-          cd XMLPatch\bin\Release\net8.0\win-x64\
+          cd D:\a\x4_XMLDiffAndPatch\x4_XMLDiffAndPatch\XMLPatch\bin\Release\net8.0\win-x64\publish\
           Get-ChildItem -Path . -Recurse | Select-Object FullName, Length, LastWriteTime
-          cd ..\..\..\..\XMLPatch\bin\Release\net8.0\win-x64\
+          cd D:\a\x4_XMLDiffAndPatch\x4_XMLDiffAndPatch\XMLDiff\bin\Release\net8.0\win-x64\publish\
           Get-ChildItem -Path . -Recurse | Select-Object FullName, Length, LastWriteTime
-          cd ..\..\..\..
+          cd .D:\a\x4_XMLDiffAndPatch\x4_XMLDiffAndPatch\
           mkdir -p XMLDiffAndPatch
-          cp -r XMLPatch\bin\Release\net8.0\win-x64\XMLPatch.exe XMLDiffAndPatch
-          cp -r XMLDiff\bin\Release\net8.0\win-x64\XMLDiff.exe XMLDiffAndPatch
+          cp -r XMLPatch\bin\Release\net8.0\win-x64\publish\XMLPatch.exe XMLDiffAndPatch
+          cp -r XMLDiff\bin\Release\net8.0\win-x64\publish\XMLDiff.exe XMLDiffAndPatch
           7z a -tzip XMLDiffAndPatch.zip XMLDiffAndPatch
         shell: powershell
 
