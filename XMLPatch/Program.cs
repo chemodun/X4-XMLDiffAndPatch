@@ -332,53 +332,71 @@ namespace X4XmlDiffAndPatch
         private static void ApplyAdd(XElement addElement, XElement originalRoot)
         {
             string sel = addElement.Attribute("sel")?.Value ?? throw new ArgumentException("The 'sel' attribute is required.");
-            string pos = addElement.Attribute("pos")?.Value ?? "append";
+            string? type = addElement.Attribute("type")?.Value;
+            string? pos = addElement.Attribute("pos")?.Value;
+            if (pos == null && type == null){
+                pos = "append";
+            }
 
-            Logger.Debug($"Applying add operation: {sel} at {pos}");
+            Logger.Debug($"Applying add operation: {sel} at {pos!}");
 
-            var newElements = addElement.Elements();
-
-            var targetNodes = originalRoot.XPathEvaluate(sel) as IEnumerable<object>;
-            if (targetNodes == null || !targetNodes.Any())
+            var targetElements = originalRoot.XPathSelectElements(sel);
+            if (targetElements == null || !targetElements.Any())
             {
                 Logger.Warn($"No nodes found for add selector: {sel}");
                 return;
             }
-
-            foreach (var targetObj in targetNodes)
+            if (targetElements.Count() > 1)
             {
-                if (targetObj is XElement target)
+                Logger.Warn($"Multiple nodes found for add selector: {sel}. Skipping.");
+                return;
+            }
+            var targetElement = targetElements.First();
+            if (pos != null) {
+                var newElements = addElement.Elements();
+                foreach (var newElem in newElements)
                 {
-                    foreach (var newElem in newElements)
+                    XElement cloned = new XElement(newElem);
+                    if (pos == "before")
                     {
-                        XElement cloned = new XElement(newElem);
-                        if (pos == "before")
-                        {
-                            target.AddBeforeSelf(cloned);
-                            Logger.Info($"Added new element '{cloned.Name}' before '{target.Name}' in '{target.Parent?.Name}'.");
-                        }
-                        else if (pos == "after")
-                        {
-                            target.AddAfterSelf(cloned);
-                            Logger.Info($"Added new element '{cloned.Name}' after '{target.Name}' in '{target.Parent?.Name}'.");
-                        }
-                        else if (pos == "prepend")
-                        {
-                            target.AddFirst(cloned);
-                            Logger.Info($"Prepended new element '{cloned.Name}' to '{target.Name}'.");
-                        }
-                        else if (pos == "append")
-                        {
-                            target.Add(cloned);
-                            Logger.Info($"Appended new element '{cloned.Name}' to '{target.Name}'.");
-                        }
-                        else
-                        {
-                            Logger.Warn($"Unknown position: {pos}. Skipping insertion.");
-                        }
+                        targetElement.AddBeforeSelf(cloned);
+                        Logger.Info($"Added new element '{cloned.Name}' before '{targetElement.Name}' in '{targetElement.Parent?.Name}'.");
+                    }
+                    else if (pos == "after")
+                    {
+                        targetElement.AddAfterSelf(cloned);
+                        Logger.Info($"Added new element '{cloned.Name}' after '{targetElement.Name}' in '{targetElement.Parent?.Name}'.");
+                    }
+                    else if (pos == "prepend")
+                    {
+                        targetElement.AddFirst(cloned);
+                        Logger.Info($"Prepended new element '{cloned.Name}' to '{targetElement.Name}'.");
+                    }
+                    else if (pos == "append")
+                    {
+                        targetElement.Add(cloned);
+                        Logger.Info($"Appended new element '{cloned.Name}' to '{targetElement.Name}'.");
+                    }
+                    else
+                    {
+                        Logger.Warn($"Unknown position: {pos}. Skipping insertion.");
                     }
                 }
             }
+            else if (type != null)
+            {
+                if (type.StartsWith('@') && type.Length > 1) {
+                    type = type.Substring(1);
+                    if (addElement.Value == null)
+                    {
+                        Logger.Warn("Attribute add operation missing value.");
+                        return;
+                    }
+                    targetElement.SetAttributeValue(type, addElement.Value);
+                    Logger.Info($"Added attribute '{type}' with value '{addElement.Value}' to '{targetElement.Name}'.");
+                }
+            }
+
         }
 
         private static void ApplyReplace(XElement replaceElement, XElement originalRoot)
