@@ -32,13 +32,13 @@ jobs:
 
       # Step 4: Build Executables
       - name: Build
-        run: dotnet build
+        run:  dotnet publish -c Release -r win-x64 --self-contained true /p:PublishSingleFile=true
 
-      # Step 5: Build Executables with PyInstaller (Linux)
+      # Step 5: Check local files
       - name: Build Executable with PyInstaller (Linux)
         if: ${{ github.event_name != 'release' }}
         run: |
-          ls -l .
+          Get-ChildItem -Path . -Recurse | Format-List
         shell: powershell
 
 
