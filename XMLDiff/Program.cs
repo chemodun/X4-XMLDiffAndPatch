@@ -418,7 +418,7 @@ namespace X4XmlDiffAndPatch
                 var originalChild = originalChildren[i];
                 var modifiedChild = modifiedChildren[j];
 
-                bool matchedEnough = true;
+                bool matchedEnough = false;
                 if (originalChild.Name == modifiedChild.Name)
                 {
                     var originalAttributes = originalChild.Attributes().ToDictionary(a => a.Name.LocalName, a => a.Value);
@@ -427,6 +427,8 @@ namespace X4XmlDiffAndPatch
                     int differencesInAttributesCount = 0;
 
                     XElement? savedOp = null;
+
+                    matchedEnough = true;
 
                     foreach (var attr in modifiedAttributes)
                     {
