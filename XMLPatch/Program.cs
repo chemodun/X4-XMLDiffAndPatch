@@ -215,7 +215,7 @@ namespace X4XmlDiffAndPatch
                     using (XmlReader reader = XmlReader.Create(diffXmlPath, diffReaderSettings))
                     {
                         try {
-                            diffDoc = XDocument.Load(reader);
+                            while (reader.Read()) {}
                             Logger.Info($"Parsed diff XML: {diffXmlPath}");
                         } catch (XmlSchemaValidationException ex) {
                             Logger.Error($"Validation failed: {ex.Message}");
@@ -231,6 +231,7 @@ namespace X4XmlDiffAndPatch
                     diffDoc = XDocument.Load(diffXmlPath);
                 }
 
+                diffDoc = XDocument.Load(diffXmlPath);
                 if (diffDoc == null)
                 {
                     Logger.Error("Diff XML root is null.");
@@ -263,7 +264,9 @@ namespace X4XmlDiffAndPatch
                 var settings = new XmlWriterSettings
                 {
                     Indent = true,
-                    IndentChars = new string(' ', indent)
+                    IndentChars = new string(' ', indent),
+                    NewLineChars = "\r\n",
+                    NewLineHandling = NewLineHandling.Replace
                 };
                 using (var writer = XmlWriter.Create(outputXmlPath, settings))
                 {
