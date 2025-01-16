@@ -34,12 +34,13 @@ jobs:
       - name: Build
         run:  dotnet publish -c Release -r win-x64 --self-contained true /p:PublishSingleFile=true
 
-      # Step 5: Check local files
-      - name: Check local files
-        if: ${{ github.event_name != 'release' }}
+      # Step 5: Compress to zip
+      - name: Compress to zip
         run: |
-          Get-ChildItem -Path XMLPatch -Recurse | Select-Object FullName, Length, LastWriteTime
-          Get-ChildItem -Path XMLDiff -Recurse | Select-Object FullName, Length, LastWriteTime
+          mkdir -p XMLDiffAndPatch
+          cp -r XMLPatch\bin\Release\net8.0\win-x64\XMLPatch.exe XMLDiffAndPatch
+          cp -r XMLDiff\bin\Release\net8.0\win-x64\XMLDiff.exe XMLDiffAndPatch
+          7z a -tzip XMLDiffAndPatch.zip XMLDiffAndPatch
         shell: powershell
 
 
