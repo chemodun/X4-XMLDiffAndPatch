@@ -43,6 +43,15 @@ jobs:
           7z a -tzip XMLDiffAndPatch.zip XMLDiffAndPatch
         shell: powershell
 
+      # Step 6: Upload Diff and Patch Archive as Artifact
+      - name: Upload Diff and Patch Archive as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: executables-archive
+          path: |
+            XMLDiffAndPatch.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.MY_RELEASE_PLEASE_TOKEN }}
 
       # Step 10: Scan with VirusTotal
       -
@@ -54,4 +63,4 @@ jobs:
           github_token: ${{ secrets.MY_RELEASE_PLEASE_TOKEN }}
           request_rate: 4
           files: |
-            ${{ github.event_name == 'release' && '.exe$' || '*.exe' }}
+            ${{ github.event_name == 'release' && '.zip$' || '*.zip' }}
