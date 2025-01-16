@@ -32,31 +32,32 @@ jobs:
 
       # Step 4: Build Executables
       - name: Build
-        run:  dotnet publish -c Release -r win-x64 --self-contained true /p:PublishSingleFile=true
+        run:  dotnet publish -c Release -r win-x64 --self-contained true
+        # /p:PublishSingleFile=true
 
       # Step 5: Compress to zip
       - name: Compress to zip
         run: |
-          cd \a\x4_XMLDiffAndPatch\x4_XMLDiffAndPatch\XMLPatch\bin\Release\net8.0\win-x64\publish\
+          cd \a\x4_XMLDiffAndPatch\x4_XMLDiffAndPatch\XMLPatch\bin\Release\net8.0\win-x64\
           Get-ChildItem -Path . -Recurse | Select-Object FullName, Length, LastWriteTime
-          cd \a\x4_XMLDiffAndPatch\x4_XMLDiffAndPatch\XMLDiff\bin\Release\net8.0\win-x64\publish\
+          cd \a\x4_XMLDiffAndPatch\x4_XMLDiffAndPatch\XMLDiff\bin\Release\net8.0\win-x64\
           Get-ChildItem -Path . -Recurse | Select-Object FullName, Length, LastWriteTime
           cd \a\x4_XMLDiffAndPatch\x4_XMLDiffAndPatch\
-          mkdir -p XMLDiffAndPatch
-          cp -r XMLPatch\bin\Release\net8.0\win-x64\publish\XMLPatch.exe XMLDiffAndPatch
-          cp -r XMLDiff\bin\Release\net8.0\win-x64\publish\XMLDiff.exe XMLDiffAndPatch
-          7z a -tzip XMLDiffAndPatch.zip XMLDiffAndPatch
+        # mkdir -p XMLDiffAndPatch
+        # cp -r XMLPatch\bin\Release\net8.0\win-x64\publish\XMLPatch.exe XMLDiffAndPatch
+        # cp -r XMLDiff\bin\Release\net8.0\win-x64\publish\XMLDiff.exe XMLDiffAndPatch
+        # 7z a -tzip XMLDiffAndPatch.zip XMLDiffAndPatch
         shell: powershell
 
-      # # Step 6: Upload Diff and Patch Archive as Artifact
-      - name: Upload Diff and Patch Archive as Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: executables-archive
-          path: |
-            XMLDiffAndPatch.zip
-        env:
-          GITHUB_TOKEN: ${{ secrets.MY_RELEASE_PLEASE_TOKEN }}
+      # # # Step 6: Upload Diff and Patch Archive as Artifact
+      # - name: Upload Diff and Patch Archive as Artifact
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: executables-archive
+      #     path: |
+      #       XMLDiffAndPatch.zip
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.MY_RELEASE_PLEASE_TOKEN }}
 
       # Step 10: Scan with VirusTotal
       # -
