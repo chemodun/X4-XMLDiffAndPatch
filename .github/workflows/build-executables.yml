@@ -49,14 +49,14 @@ jobs:
         shell: powershell
 
       # # Step 6: Upload Diff and Patch Archive as Artifact
-      # - name: Upload Diff and Patch Archive as Artifact
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: executables-archive
-      #     path: |
-      #       XMLDiffAndPatch.zip
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.MY_RELEASE_PLEASE_TOKEN }}
+      - name: Upload Diff and Patch Archive as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: executables-archive
+          path: |
+            XMLDiffAndPatch.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.MY_RELEASE_PLEASE_TOKEN }}
 
       # Step 10: Scan with VirusTotal
       # -
