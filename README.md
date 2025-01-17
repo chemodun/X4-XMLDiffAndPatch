@@ -209,4 +209,7 @@ There is a MIT license for this tool. You can find it in the [LICENSE](LICENSE) 
 
 ## Additional links
 
-There is a topic on the [Egosoft forum]https://forum.egosoft.com/viewtopic.php?t=468623), related to this toolset.
+There is a topic on the [Egosoft forum](https://forum.egosoft.com/viewtopic.php?t=468623), related to this toolset.
+
+## Antivirus scanning
+Please be aware - each release archive has an appropriate ling to the [VirusTotal](https://www.virustotal.com). Follow the link to be sure that the archive is safe.
