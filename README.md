@@ -10,7 +10,9 @@ It is highly recommended to use the `diff.xsd` file to validate the diff XML fil
 
 
 ## How to use
-1. Download the latest release from the [releases page](https://github.com/chemodun/x4_XMLDiffAndPatch/releases/) - there is an archive file `XMLDiffAndPatch.zip`.
+1. Download the latest release from:
+ - GitHub [releases page](https://github.com/chemodun/x4_XMLDiffAndPatch/releases/) - there is an archive file `XMLDiffAndPatch.zip`.
+ - [NexusMods](https://www.nexusmods.com/x4foundations/mods/1578) - there is an archive file `XMLDiffAndPatch.zip`.
 2. Extract the archive file to any useful location.
 3. Inside will be a folder, named XMLDiffAndPatch with two executable - `XMLDiff.exe` and `XMLPatch.exe`.
 

@@ -11,7 +11,10 @@ It is highly recommended to use the [b]diff.xsd[/b] file to validate the diff XM
 
 [size=3][b]How to use[/b][/size]
 [list=1]
-[*] Download the latest release from the [url=https://github.com/chemodun/x4_XMLDiffAndPatch/releases/]releases page[/url] - there is an archive file [b]XMLDiffAndPatch.zip[/b].
+[*] Download the latest release from:
+[/list][*] GitHub [url=https://github.com/chemodun/x4_XMLDiffAndPatch/releases/]releases page[/url] - there is an archive file [b]XMLDiffAndPatch.zip[/b].
+[*] [url=https://www.nexusmods.com/x4foundations/mods/1578]NexusMods[/url] - there is an archive file [b]XMLDiffAndPatch.zip[/b].
+[list=1]
 [*] Extract the archive file to any useful location.
 [*] Inside will be a folder, named XMLDiffAndPatch with two executable - [b]XMLDiff.exe[/b] and [b]XMLPatch.exe[/b].
 [/list]
