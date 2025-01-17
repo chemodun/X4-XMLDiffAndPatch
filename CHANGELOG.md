@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.14](https://github.com/chemodun/x4_XMLDiffAndPatch/compare/v0.2.13...v0.2.14) (2025-01-17)
+
+
+### Bug Fixes
+
+* removed the git commit information from the version info ([6d8e803](https://github.com/chemodun/x4_XMLDiffAndPatch/commit/6d8e803415c0155b400cde475ff129e6accf9a8f))
+
 ## 0.2.13 (2025-01-16)
 
 
