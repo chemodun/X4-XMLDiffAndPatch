@@ -23,7 +23,7 @@ It is highly recommended to use the `diff.xsd` file to validate the diff XML fil
 
 There is a command line help for the `XMLDiff` tool:
 
-```
+```shell
 XMLDiff 0.2.13
 Developed by Chem O`Dun
 
@@ -48,7 +48,7 @@ Developed by Chem O`Dun
 
 Example:
 
-```
+```shell
 XMLDiff.exe -o vanilla.xml -m modified.xml -d diff.xml
 ```
 
@@ -58,7 +58,7 @@ There the is example of the diff files created by tool:
 
 - with add operation:
 
-    ```
+    ```xml
     <?xml version="1.0" encoding="utf-8" standalone="yes"?>
     <diff>
     <add sel="//ware[@id=&quot;scanningarrays&quot;]" pos="before">
@@ -76,7 +76,7 @@ There the is example of the diff files created by tool:
 
 - with replace operation:
 
-    ```
+    ```xml
     <?xml version='1.0' encoding='UTF-8'?>
     <diff>
       <replace sel="//do_if[@value=&quot;@$speak and not this.assignedcontrolled.nextorder and (@$defaultorder.id != 'Patrol') and (@$defaultorder.id != 'ProtectPosition') and (@$defaultorder.id != 'ProtectShip') and (@$defaultorder.id != 'ProtectStation') and (@$defaultorder.id != 'Plunder') and (@$defaultorder.id != 'Police') and (not this.assignedcontrolled.commander or (this.assignedcontrolled.commander == player.occupiedship)) and notification.npc_await_orders.active&quot;]/@value">@$speak and not this.assignedcontrolled.nextorder and (@$defaultorder.id != 'ProtectSector') and (@$defaultorder.id != 'Patrol') and (@$defaultorder.id != 'ProtectPosition') and (@$defaultorder.id != 'ProtectShip') and (@$defaultorder.id != 'ProtectStation') and (@$defaultorder.id != 'Plunder') and (@$defaultorder.id != 'Police') and (not this.assignedcontrolled.commander or (this.assignedcontrolled.commander == player.occupiedship)) and notification.npc_await_orders.active</replace>
@@ -91,7 +91,7 @@ The `--only-full-path` option will generate only the full path to the element in
 
 Example:
 
-```
+```xml
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <diff>
 <add sel="/wares/ware[@id=&quot;scanningarrays&quot;]" pos="before">
@@ -113,7 +113,7 @@ The `--use-all-attributes` option will generate the `sel` attribute with all att
 
 Example:
 
-```
+```xml
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <diff>
 <add sel="/wares/ware[@id=&quot;scanningarrays&quot;][@name=&quot;{20201,3301}&quot;][@description=&quot;{20201,3302}&quot;][@factoryname=&quot;{20201,3304}&quot;][@group=&quot;hightech&quot;][@transport=&quot;container&quot;][@volume=&quot;38&quot;][@tags=&quot;container economy&quot;]" pos="before">
@@ -133,7 +133,7 @@ Example:
 
 There is a command line help for the `XMLPatch` tool:
 
-```
+```shell
 XMLPatch 0.2.13
 Developed by Chem O`Dun
 
@@ -154,7 +154,7 @@ Developed by Chem O`Dun
 
 Example:
 
-```
+```shell
 XMLPatch.exe -o vanilla.xml -d diff.xml -u modified.xml
 ```
 
@@ -164,7 +164,7 @@ There the is example of the patched XML files created by tool:
 
 - with add operation:
 
-    ```
+    ```xml
       <ware id="satellite_mk2" name="{20201,20401}" description="{20201,20402}" transport="equipment" volume="1" tags="equipment satellite">
         <price min="44380" average="52215" max="60045"/>
         <production time="60" amount="1" method="default" name="{20206,101}">
@@ -195,7 +195,7 @@ There the is example of the patched XML files created by tool:
 
 - with replace operation:
 
-    ```
+    ```xml
         <set_to_default_flight_control_model object="this.assignedcontrolled"/>
         <set_value name="$defaultorder" exact="this.assignedcontrolled.defaultorder"/>
         <do_if value="@$speak and not this.assignedcontrolled.nextorder and (@$defaultorder.id != 'Patrol') and (@$defaultorder.id != 'ProtectSector') and (@$defaultorder.id != 'ProtectPosition') and (@$defaultorder.id != 'ProtectShip') and (@$defaultorder.id != 'ProtectStation') and (@$defaultorder.id != 'Plunder') and (@$defaultorder.id != 'Police') and (not this.assignedcontrolled.commander or (this.assignedcontrolled.commander == player.occupiedship)) and notification.npc_await_orders.active">
@@ -220,13 +220,13 @@ The logic will be a next:
 
 Example:
 
-```
+```shell
 XMLDiff.exe -o vanilla_dir -m modified_dir -d diff_dir
 ```
 
 or
 
-```
+```shell
 XMLPatch.exe -o vanilla_dir -d diff_dir -u modified_dir
 ```
 

@@ -1,25 +1,30 @@
-[size=4][b]Modding tools: XML diff and patch for X4: Foundations[/b][/size]
+[size=4][u]Modding tools: XML diff and patch for X4: Foundations[/u][/size]
 
 This toolset is a simple XML diff and patch tools for X4: Foundations. It is designed to help modders to compare and patch XML files.
 
 The format of diff XML files is compatible with the appropriate [b]diff.xsd[/b] format definition. It is means - you can you this tool to create diff files for any XML files used in game.
 Also, you can use appropriate tool to patch XML files with diff files, this action has reason to check how your diff file will be applied to the vanilla XML file. Or better understand, what other modders did in their mods.
 
-[size=3][b]Important note[/b][/size]
+[size=3][u][b]Important note[/b][/u][/size]
+
 It is highly recommended to use the [b]diff.xsd[/b] file to validate the diff XML files. It is especially important when you creating them by [b]XMLDiff.exe[/b].
 
-
-[size=3][b]How to use[/b][/size]
+[size=3][u][b]How to use[/b][/u][/size]
 [list=1]
 [*] Download the latest release from:
-[/list][*] GitHub [url=https://github.com/chemodun/x4_XMLDiffAndPatch/releases/]releases page[/url] - there is an archive file [b]XMLDiffAndPatch.zip[/b].
+[/list][list]
+[list]
+[*] GitHub [url=https://github.com/chemodun/x4_XMLDiffAndPatch/releases/]releases page[/url] - there is an archive file [b]XMLDiffAndPatch.zip[/b].
 [*] [url=https://www.nexusmods.com/x4foundations/mods/1578]NexusMods[/url] - there is an archive file [b]XMLDiffAndPatch.zip[/b].
-[list=1]
-[*] Extract the archive file to any useful location.
-[*] Inside will be a folder, named XMLDiffAndPatch with two executable - [b]XMLDiff.exe[/b] and [b]XMLPatch.exe[/b].
 [/list]
-[size=2][b]How to create a diff file[/b][/size]
+[/list]
+[list=1][*] Extract the archive file to any useful location.
+[*] Inside will be a folder, named XMLDiffAndPatch with two executables - [b]XMLDiff.exe[/b] and [b]XMLPatch.exe[/b].
+[/list]
+[size=3][u][i]How to create a diff file[/i][/u][/size]
+
 There is a command line help for the [b]XMLDiff[/b] tool:
+
 [code]
 XMLDiff 0.2.13
 Developed by Chem O`Dun
@@ -44,13 +49,17 @@ Developed by Chem O`Dun
 [/code]
 
 Example:
+
 [code]
 XMLDiff.exe -o vanilla.xml -m modified.xml -d diff.xml
 [/code]
 
-[size=2][b]Example of resulting diff files[/b][/size]
+[size=3][u][i]Example of resulting diff files[/i][/u][/size]
+
 There the is example of the diff files created by tool:
+[list]
 [*] with add operation:
+[/list]
     [code]
     <?xml version="1.0" encoding="utf-8" standalone="yes"?>
     <diff>
@@ -65,21 +74,26 @@ There the is example of the diff files created by tool:
         </ware>
     </add>
     </diff>
-    ```
+    [/code]
+[list]
 [*] with replace operation:
-    ```xml
+[/list]
+    [code]
     <?xml version='1.0' encoding='UTF-8'?>
     <diff>
       <replace sel="//do_if[@value=&quot;@$speak and not this.assignedcontrolled.nextorder and (@$defaultorder.id != 'Patrol') and (@$defaultorder.id != 'ProtectPosition') and (@$defaultorder.id != 'ProtectShip') and (@$defaultorder.id != 'ProtectStation') and (@$defaultorder.id != 'Plunder') and (@$defaultorder.id != 'Police') and (not this.assignedcontrolled.commander or (this.assignedcontrolled.commander == player.occupiedship)) and notification.npc_await_orders.active&quot;]/@value">@$speak and not this.assignedcontrolled.nextorder and (@$defaultorder.id != 'ProtectSector') and (@$defaultorder.id != 'Patrol') and (@$defaultorder.id != 'ProtectPosition') and (@$defaultorder.id != 'ProtectShip') and (@$defaultorder.id != 'ProtectStation') and (@$defaultorder.id != 'Plunder') and (@$defaultorder.id != 'Police') and (not this.assignedcontrolled.commander or (this.assignedcontrolled.commander == player.occupiedship)) and notification.npc_await_orders.active</replace>
     </diff>
-    ```
-[size=1][b]Path options[/b][/size]
+    [/code]
 
-[size=1][b]Only full path[/b][/size]
+[size=3][u]Path options[/u][/size]
+
+[size=2][u][i]Only full path[/i][/u][/size]
+
 The [b]--only-full-path[/b] option will generate only the full path to the element in the XML file. It is mean - there no [b]//[/b] will be in the [b]sel[/b] attribute of the [b]add[/b], [b]replace[/b] or [b]remove[/b] element.
 
 Example:
-[/code]xml
+
+[code]
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <diff>
 <add sel="/wares/ware[@id=&quot;scanningarrays&quot;]" pos="before">
@@ -93,13 +107,15 @@ Example:
     </ware>
 </add>
 </diff>
-[code]
+[/code]
 
-[size=1][b]Use all attributes in XPath[/b][/size]
+[size=2][u][i]Use all attributes in XPath[/i][/u][/size]
+
 The [b]--use-all-attributes[/b] option will generate the [b]sel[/b] attribute with all attributes of the element in the XML file. It is mean - there will be all attributes of the element in the [b]sel[/b] attribute of the [b]add[/b], [b]replace[/b] or [b]remove[/b] element.
 
 Example:
-[/code]xml
+
+[code]
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <diff>
 <add sel="/wares/ware[@id=&quot;scanningarrays&quot;][@name=&quot;{20201,3301}&quot;][@description=&quot;{20201,3302}&quot;][@factoryname=&quot;{20201,3304}&quot;][@group=&quot;hightech&quot;][@transport=&quot;container&quot;][@volume=&quot;38&quot;][@tags=&quot;container economy&quot;]" pos="before">
@@ -113,11 +129,13 @@ Example:
     </ware>
 </add>
 </diff>
-[code]
-
-[size=2][b]How to apply a diff file[/b][/size]
-There is a command line help for the [b]XMLPatch[/b] tool:
 [/code]
+
+[size=3][u][i]How to apply a diff file[/i][/u][/size]
+
+There is a command line help for the [b]XMLPatch[/b] tool:
+
+[code]
 XMLPatch 0.2.13
 Developed by Chem O`Dun
 
@@ -134,17 +152,21 @@ Developed by Chem O`Dun
   --help                Display this help screen.
 
   --version             Display version information.
-[code]
+[/code]
 
 Example:
-[/code]
-xml-patch.exe -o vanilla.xml -d diff.xml -u modified.xml
-[code]
 
-[size=2][b]Example of resulting patched XML files[/b][/size]
+[code]
+XMLPatch.exe -o vanilla.xml -d diff.xml -u modified.xml
+[/code]
+
+[size=3][u][i]Example of resulting patched XML files[/i][/u][/size]
+
 There the is example of the patched XML files created by tool:
+[list]
 [*] with add operation:
-    ```xml
+[/list]
+    [code]
       <ware id="satellite_mk2" name="{20201,20401}" description="{20201,20402}" transport="equipment" volume="1" tags="equipment satellite">
         <price min="44380" average="52215" max="60045"/>
         <production time="60" amount="1" method="default" name="{20206,101}">
@@ -171,49 +193,59 @@ There the is example of the patched XML files created by tool:
         <component ref="xenon_psi_emitter_macro" amount="0"/>
         <use threshold="0"/>
       </ware>
-    ```
+    [/code]
+[list]
 [*] with replace operation:
-    ```xml
+[/list]
+    [code]
         <set_to_default_flight_control_model object="this.assignedcontrolled"/>
         <set_value name="$defaultorder" exact="this.assignedcontrolled.defaultorder"/>
         <do_if value="@$speak and not this.assignedcontrolled.nextorder and (@$defaultorder.id != 'Patrol') and (@$defaultorder.id != 'ProtectSector') and (@$defaultorder.id != 'ProtectPosition') and (@$defaultorder.id != 'ProtectShip') and (@$defaultorder.id != 'ProtectStation') and (@$defaultorder.id != 'Plunder') and (@$defaultorder.id != 'Police') and (not this.assignedcontrolled.commander or (this.assignedcontrolled.commander == player.occupiedship)) and notification.npc_await_orders.active">
           <set_value name="$speakline" exact="10304" comment="Awaiting orders."/>
-    ```
+    [/code]
 
-[size=2][b]If output XML is a directory[/b][/size]
+[size=3][u][i]If output XML is a directory[/i][/u][/size]
+
 If the output XML is a directory, the tool will create a new XML file with the same name as the original XML file in the output directory.
 For example, if the original XML file is [b]vanilla.xml[/b] and the output directory is [b]output[/b], the tool will create a new XML file [b]output/vanilla.xml[/b].
 
-[size=2][b]How to apply a tools to a directories[/b][/size]
+[size=3][u][i]How to apply a tools to a directories[/i][/u][/size]
+
 You can apply the tools to directories. In this case, the tools will apply the diff or patch to all XML files in the directory.
 The logic will be a next:
+[list]
 [*] all input parameters are directories - the tools will apply the diff or patch to all XML files in the directories.
 [*] it will recursively gro thru the diff or changed XML files in the directories, respectively to the tool.
 [*] for each diff or changed files will be checked a corresponding original XML file in the original directory with the same relative path.
 [*] if the original XML file is not found - the diff or changed file will be skipped.
 [*] if the original XML file is found - the diff or changed file will be patched with the original XML file and created a new patched XML file in the output directory with the same relative path.
-
+[/list]
 Example:
-[/code]
-XMLDiff.exe -o vanilla_dir -m modified_dir -d diff_dir
-[code]
-or
-[/code]
-XMLPatch.exe -o vanilla_dir -d diff_dir -u modified_dir
-```
 
-[size=3][b]Issues reporting[/b][/size]
+[code]
+XMLDiff.exe -o vanilla_dir -m modified_dir -d diff_dir
+[/code]
+
+or
+
+[code]
+XMLPatch.exe -o vanilla_dir -d diff_dir -u modified_dir
+[/code]
+
+[size=3][u][b]Issues reporting[/b][/u][/size]
 
 If you have any issues with the tool, please create an issue in the [url=https://github.com/chemodun/x4_XMLDiffAndPatch/issues]issues page[/url].
 Will be highly appreciated if you will provide a version of used tool and XMLDiff.log or XMLPatch.log file respectively to the tool.
 To create such debug file please use the [b]--log-to-file[/b] option.
 
-[size=3][b]License[/b][/size]
-There is a MIT license for this tool. You can find it in the [url=LICENSE]LICENSE[/url] file.
+[size=3][u][b]License[/b][/u][/size]
 
-[size=3][b]Additional links[/b][/size]
+There is a MIT license for this tool. You can find it in the [url=https://github.com/chemodun/X4-UniverseEditor/raw/main/C:\Users\psvor\OneDrive\Development\C#\X4\XMLDiffAndPatch/LICENSE]LICENSE[/url] file.
+
+[size=3][u][b]Additional links[/b][/u][/size]
 
 There is a topic on the [url=https://forum.egosoft.com/viewtopic.php?t=468623]Egosoft forum[/url], related to this toolset.
 
-[size=3][b]Antivirus scanning[/b][/size]
+[size=3][u][b]Antivirus scanning[/b][/u][/size]
+
 Please be aware - each release archive has an appropriate ling to the [url=https://www.virustotal.com]VirusTotal[/url]. Follow the link to be sure that the archive is safe.
