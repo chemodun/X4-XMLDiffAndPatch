@@ -136,7 +136,7 @@ Developed by Chem O`Dun
 
 Example:
 ```
-xml-patch.exe -o vanilla.xml -d diff.xml -u modified.xml
+XMLPatch.exe -o vanilla.xml -d diff.xml -u modified.xml
 ```
 
 ### Example of resulting patched XML files
