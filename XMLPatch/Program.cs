@@ -481,7 +481,7 @@ namespace X4XmlDiffAndPatch
     private static void ApplyRemove(XElement removeElement, XElement originalRoot)
     {
       string? sel = removeElement.Attribute("sel")?.Value;
-      Logger.Debug($"Applying remove operation: '{sel}'");
+      Logger.Info($"Applying remove operation: '{sel}'");
       if (sel == null)
       {
         Logger.Warn("Remove operation missing 'sel' attribute! Skipping operation.");
