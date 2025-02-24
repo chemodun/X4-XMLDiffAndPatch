@@ -22,18 +22,18 @@ namespace X4XmlDiffAndPatch
 
     private static void RunOptionsAndReturnExitCode(Options opts)
     {
-      ConfigureLogging(opts.LogToFile);
+      ConfigureLogging(opts.LogToFile, opts.AppendToLog);
 
       var originalXmlPath = opts.OriginalXml;
       var diffXmlPath = opts.DiffXml;
       var outputXmlPath = opts.OutputXml;
-      var diffXsdPath = opts.Xsd;
+      var diffXsdPath = opts.Xsd ?? "diff.xsd";
 
       bool originalIsDir = Directory.Exists(originalXmlPath);
       bool diffIsDir = Directory.Exists(diffXmlPath);
       bool outputIsDir = Directory.Exists(outputXmlPath);
 
-      XmlReaderSettings diffReaderSettings = CreateXmlReaderSettings(diffXsdPath!);
+      XmlReaderSettings? diffReaderSettings = CreateXmlReaderSettings(diffXsdPath!);
       if (originalIsDir && diffIsDir && outputIsDir)
       {
         Logger.Info("Processing directories recursively.");
@@ -78,6 +78,7 @@ namespace X4XmlDiffAndPatch
       private string? outputXml;
       private string? xsd;
       private bool logToFile;
+      private bool appendToLog;
 
       [Option('o', "original_xml", Required = true, HelpText = "Path to the original XML file or directory.")]
       public string? OriginalXml
@@ -113,13 +114,20 @@ namespace X4XmlDiffAndPatch
         get => logToFile;
         set => logToFile = value;
       }
+
+      [Option('a', "append-to-log", Required = false, HelpText = "Append logs to the existing log file.", Default = false)]
+      public bool AppendToLog
+      {
+        get => appendToLog;
+        set => appendToLog = value;
+      }
     }
 
     #endregion
 
     #region Logging Configuration
 
-    private static void ConfigureLogging(bool logToFile)
+    private static void ConfigureLogging(bool logToFile, bool appendToLog = false)
     {
       var config = new NLog.Config.LoggingConfiguration();
 
@@ -129,10 +137,10 @@ namespace X4XmlDiffAndPatch
       {
         var logFile = new NLog.Targets.FileTarget("logFile")
         {
-          FileName = "${basedir}/${processname}.log",
+          FileName = Path.Combine(Environment.CurrentDirectory, "${processname}.log"),
           Layout = "${longdate} ${level} ${message} ${exception}",
           KeepFileOpen = true,
-          DeleteOldFileOnStartup = true, // Overwrite the log file on each run
+          DeleteOldFileOnStartup = !appendToLog, // Overwrite the log file on each run
           ArchiveAboveSize = 0,
           ConcurrentWrites = true,
         };
@@ -155,9 +163,10 @@ namespace X4XmlDiffAndPatch
       string originalXmlPath,
       string diffXmlPath,
       string outputXmlPath,
-      XmlReaderSettings diffReaderSettings
+      XmlReaderSettings? diffReaderSettings
     )
     {
+      Logger.Info($"Patching the original XML file '{originalXmlPath}' with the diff XML file '{diffXmlPath}' to '{outputXmlPath}'.");
       if (!File.Exists(originalXmlPath))
       {
         Logger.Error($"Original XML file does not exist: {originalXmlPath}");
@@ -183,11 +192,9 @@ namespace X4XmlDiffAndPatch
         string? outputXmlDir = Path.GetDirectoryName(outputXmlPath);
         if (string.IsNullOrEmpty(outputXmlDir))
         {
-          Logger.Error("Failed to determine the directory for outputXmlPath.");
-          return;
+          Logger.Info("Output directory is null or empty. Using current directory.");
         }
-
-        if (!Directory.Exists(outputXmlDir))
+        else if (!Directory.Exists(outputXmlDir))
         {
           try
           {
@@ -259,7 +266,7 @@ namespace X4XmlDiffAndPatch
               ApplyRemove(operation, originalRoot);
               break;
             default:
-              Logger.Warn($"Unknown operation: {operation.Name}. Skipping.");
+              Logger.Warn($"Unknown operation: '{operation.Name}'. Skipping.");
               break;
           }
         }
@@ -284,7 +291,7 @@ namespace X4XmlDiffAndPatch
       }
     }
 
-    private static void ProcessDirectories(string originalDir, string diffDir, string outputDir, XmlReaderSettings diffReaderSettings)
+    private static void ProcessDirectories(string originalDir, string diffDir, string outputDir, XmlReaderSettings? diffReaderSettings)
     {
       var diffFiles = Directory.EnumerateFiles(diffDir, "*.xml", SearchOption.AllDirectories);
       foreach (var diffFilePath in diffFiles)
@@ -337,7 +344,12 @@ namespace X4XmlDiffAndPatch
 
     private static void ApplyAdd(XElement addElement, XElement originalRoot)
     {
-      string sel = addElement.Attribute("sel")?.Value ?? throw new ArgumentException("The 'sel' attribute is required.");
+      string? sel = addElement.Attribute("sel")?.Value;
+      if (sel == null)
+      {
+        Logger.Warn("Add operation missing 'sel' attribute! Skipping operation.");
+        return;
+      }
       string? type = addElement.Attribute("type")?.Value;
       string? pos = addElement.Attribute("pos")?.Value;
       if (pos == null && type == null)
@@ -345,17 +357,19 @@ namespace X4XmlDiffAndPatch
         pos = "append";
       }
 
-      Logger.Debug($"Applying add operation: {sel} at {pos!}");
+      Logger.Debug($"Applying add operation: '{sel}' at {pos!}");
 
       var targetElements = originalRoot.XPathSelectElements(sel);
       if (targetElements == null || !targetElements.Any())
       {
-        Logger.Warn($"No nodes found for add selector: {sel}");
+        Logger.Warn(
+          $"No nodes found for add selector: '{sel}'! Existing only: '{LastApplicableNode(sel, originalRoot)}'. Skipping operation."
+        );
         return;
       }
       if (targetElements.Count() > 1)
       {
-        Logger.Warn($"Multiple nodes found for add selector: {sel}. Skipping.");
+        Logger.Warn($"Multiple nodes found for add selector: '{sel}'! Skipping operation.");
         return;
       }
       var targetElement = targetElements.First();
@@ -365,29 +379,33 @@ namespace X4XmlDiffAndPatch
         foreach (var newElem in newElements)
         {
           XElement cloned = new XElement(newElem);
+          string clonedInfo = GetElementInfo(cloned);
+          string targetInfo = GetElementInfo(targetElement);
+          string parentInfo = GetElementInfo(targetElement.Parent);
+          Logger.Debug($"Cloned element: {clonedInfo}");
           if (pos == "before")
           {
             targetElement.AddBeforeSelf(cloned);
-            Logger.Info($"Added new element '{cloned.Name}' before '{targetElement.Name}' in '{targetElement.Parent?.Name}'.");
+            Logger.Info($"Added new element '{clonedInfo}' before '{targetInfo}' in '{parentInfo}'.");
           }
           else if (pos == "after")
           {
             targetElement.AddAfterSelf(cloned);
-            Logger.Info($"Added new element '{cloned.Name}' after '{targetElement.Name}' in '{targetElement.Parent?.Name}'.");
+            Logger.Info($"Added new element '{clonedInfo}' after '{targetInfo}' in '{parentInfo}'.");
           }
           else if (pos == "prepend")
           {
             targetElement.AddFirst(cloned);
-            Logger.Info($"Prepended new element '{cloned.Name}' to '{targetElement.Name}'.");
+            Logger.Info($"Prepended new element '{clonedInfo}' to '{targetInfo}'.");
           }
           else if (pos == "append")
           {
             targetElement.Add(cloned);
-            Logger.Info($"Appended new element '{cloned.Name}' to '{targetElement.Name}'.");
+            Logger.Info($"Appended new element '{clonedInfo}' to '{targetInfo}'.");
           }
           else
           {
-            Logger.Warn($"Unknown position: {pos}. Skipping insertion.");
+            Logger.Warn($"Unknown position: {pos}! Skipping operation.");
           }
         }
       }
@@ -398,11 +416,11 @@ namespace X4XmlDiffAndPatch
           type = type.Substring(1);
           if (addElement.Value == null)
           {
-            Logger.Warn("Attribute add operation missing value.");
+            Logger.Warn("Attribute add operation missing value! Skipping operation.");
             return;
           }
           targetElement.SetAttributeValue(type, addElement.Value);
-          Logger.Info($"Added attribute '{type}' with value '{addElement.Value}' to '{targetElement.Name}'.");
+          Logger.Info($"Added attribute '{type}' with value '{addElement.Value}' to '{GetElementInfo(targetElement)}'.");
         }
       }
     }
@@ -412,14 +430,16 @@ namespace X4XmlDiffAndPatch
       string? sel = replaceElement.Attribute("sel")?.Value;
       if (sel == null)
       {
-        Logger.Warn("Replace operation missing 'sel' attribute.");
+        Logger.Warn("Replace operation missing 'sel' attribute! Skipping operation.");
         return;
       }
 
       var targetNodes = originalRoot.XPathEvaluate(sel) as IEnumerable<object>;
       if (targetNodes == null || !targetNodes.Any())
       {
-        Logger.Warn($"No nodes found for replace selector: {sel}");
+        Logger.Warn(
+          $"No nodes found for replace selector: '{sel}'! Existing only: '{LastApplicableNode(sel, originalRoot)}'. Skipping operation."
+        );
         return;
       }
 
@@ -428,10 +448,11 @@ namespace X4XmlDiffAndPatch
         if (targetObj is XElement target)
         {
           var newContent = replaceElement.Value;
+          string targetInfo = GetElementInfo(target);
           if (!string.IsNullOrEmpty(newContent))
           {
             target.Value = newContent;
-            Logger.Debug($"Replaced text of element '{target.Name}' with '{newContent}'.");
+            Logger.Debug($"Replaced text of element '{targetInfo}' with '{newContent}'.");
           }
 
           var newElement = replaceElement.Element("new");
@@ -439,7 +460,7 @@ namespace X4XmlDiffAndPatch
           {
             XElement replacement = new XElement(newElement);
             target.ReplaceWith(replacement);
-            Logger.Info($"Replaced element '{target.Name}' with '{replacement.Name}'.");
+            Logger.Info($"Replaced element '{targetInfo}' with '{GetElementInfo(replacement)}'.");
           }
         }
         else if (targetObj is XText textNode)
@@ -450,7 +471,7 @@ namespace X4XmlDiffAndPatch
         else if (targetObj is XAttribute attr)
         {
           attr.Value = replaceElement.Value;
-          Logger.Debug($"Replaced attribute '{attr.Name}' with '{replaceElement.Value}'.");
+          Logger.Debug($"Replaced value of attribute '{attr.Name}' with '{replaceElement.Value}'.");
         }
       }
     }
@@ -460,14 +481,16 @@ namespace X4XmlDiffAndPatch
       string? sel = removeElement.Attribute("sel")?.Value;
       if (sel == null)
       {
-        Logger.Warn("Remove operation missing 'sel' attribute.");
+        Logger.Warn("Remove operation missing 'sel' attribute! Skipping operation.");
         return;
       }
 
       var targetNodes = originalRoot.XPathEvaluate(sel) as IEnumerable<object>;
       if (targetNodes == null || !targetNodes.Any())
       {
-        Logger.Warn($"No nodes found for remove selector: {sel}");
+        Logger.Warn(
+          $"No nodes found for remove selector: '{sel}'! Existing only: '{LastApplicableNode(sel, originalRoot)}'. Skipping operation."
+        );
         return;
       }
 
@@ -476,24 +499,26 @@ namespace X4XmlDiffAndPatch
         if (targetObj is XElement target)
         {
           XElement? parent = target.Parent;
+          string targetInfo = GetElementInfo(target);
           if (parent == null)
           {
-            Logger.Warn($"Element '{target.Name}' has no parent. Cannot remove.");
+            Logger.Warn($"Element '{targetInfo}' has no parent. Cannot remove.");
             continue;
           }
           target.Remove();
-          Logger.Debug($"Removed element '{target.Name}' from '{parent.Name}'.");
+          Logger.Debug($"Removed element '{targetInfo}' from '{parent.Name}'.");
         }
         else if (targetObj is XAttribute attr)
         {
           XElement? parent = attr.Parent;
+          string parentInfo = parent != null ? GetElementInfo(parent) : "";
           if (parent == null)
           {
             Logger.Warn($"Attribute '{attr.Name}' has no parent. Cannot remove.");
             continue;
           }
           attr.Remove();
-          Logger.Debug($"Removed attribute '{attr.Name}' from '{parent.Name}'.");
+          Logger.Debug($"Removed attribute '{attr.Name}' from '{parentInfo}'.");
         }
         else if (targetObj is XText textNode)
         {
@@ -503,8 +528,54 @@ namespace X4XmlDiffAndPatch
       }
     }
 
+    private static string LastApplicableNode(string selector, XElement originalRoot)
+    {
+      string lastApplicableNode = "";
+      string[] parts = selector.Split('/').Where(s => !string.IsNullOrEmpty(s)).ToArray();
+      string xpath = "";
+      foreach (var part in parts)
+      {
+        xpath += "/" + part;
+        var nodes = originalRoot.XPathSelectElements(xpath);
+        if (nodes.Any())
+        {
+          lastApplicableNode = xpath;
+        }
+      }
+      return lastApplicableNode;
+    }
+
     #endregion
 
+    #region Element and attr info
+    private static string GetElementInfo(XElement? element)
+    {
+      string info = "<";
+      if (element != null)
+      {
+        info += $"{element.Name}";
+        if (element.HasAttributes)
+        {
+          info += $"{element.FirstAttribute?.Name}=\"{element.FirstAttribute?.Value}\"";
+          if (element.Attributes().Count() > 1)
+          {
+            info += " ...";
+          }
+        }
+        info += ">";
+      }
+      return info;
+    }
+
+    private static string GetAttributeInfo(XAttribute? attr)
+    {
+      if (attr == null)
+      {
+        return "";
+      }
+      return $"{attr.Name}=\"{attr.Value}\"";
+    }
+    #endregion
 
     #region Diff Validation
 
@@ -520,10 +591,9 @@ namespace X4XmlDiffAndPatch
       return true;
     }
 
-    private static XmlReaderSettings CreateXmlReaderSettings(string xsdPath)
+    private static XmlReaderSettings? CreateXmlReaderSettings(string xsdPath)
     {
-      XmlReaderSettings settings = new XmlReaderSettings();
-
+      XmlReaderSettings? settings = null;
       if (ValidateXsdPath(xsdPath))
       {
         try
@@ -536,9 +606,9 @@ namespace X4XmlDiffAndPatch
           using (XmlReader reader = XmlReader.Create(xsdPath, xsdSettings))
           {
             XmlSchemaSet schemaSet = new XmlSchemaSet();
-
             // Add the schema using the XmlReader
             schemaSet.Add("", reader);
+            settings = new XmlReaderSettings();
             settings.DtdProcessing = DtdProcessing.Parse; // Enable DTD processing
             settings.ValidationType = ValidationType.Schema; // Optional, for validation during reading
             settings.Schemas = schemaSet;
@@ -556,39 +626,6 @@ namespace X4XmlDiffAndPatch
       }
       return settings;
     }
-
-    private static void ValidateDiffXml(string diffXmlPath, string? xsdPath)
-    {
-      try
-      {
-        if (xsdPath != null)
-        {
-          XmlReaderSettings settings = new XmlReaderSettings();
-          settings.ValidationType = ValidationType.Schema;
-          try
-          {
-            // Add the schema to the schema set
-            settings.Schemas.Add("", xsdPath);
-          }
-          catch (XmlSchemaException ex)
-          {
-            Console.WriteLine($"Error adding schema: {ex.Message}");
-          }
-
-          using (XmlReader reader = XmlReader.Create(diffXmlPath, settings))
-          {
-            XDocument doc = XDocument.Load(reader);
-            // doc.Validate(schemas, (o, e) => { throw new Exception(e.Message); });
-          }
-          Logger.Info($"Validation successful: {diffXmlPath} is valid against {xsdPath}");
-        }
-      }
-      catch (Exception e)
-      {
-        Logger.Error($"Validation failed: {e.Message}");
-      }
-    }
-
     #endregion
   }
 }

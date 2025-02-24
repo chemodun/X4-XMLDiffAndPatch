@@ -22,19 +22,19 @@ namespace X4XmlDiffAndPatch
 
     private static void RunOptionsAndReturnExitCode(Options opts)
     {
-      ConfigureLogging(opts.LogToFile);
+      ConfigureLogging(opts.LogToFile, opts.AppendToLog);
 
       var originalXmlPath = opts.OriginalXml;
       var modifiedXmlPath = opts.ModifiedXml;
       var diffXmlPath = opts.DiffXml;
-      var diffXsdPath = opts.Xsd;
+      var diffXsdPath = opts.Xsd ?? "diff.xsd";
       var pathOptions = new PathOptions { OnlyFullPath = opts.OnlyFullPath, UseAllAttributes = opts.UseAllAttributes };
 
       bool originalIsDir = Directory.Exists(originalXmlPath);
       bool modifiedIsDir = Directory.Exists(modifiedXmlPath);
       bool diffIsDir = Directory.Exists(diffXmlPath);
 
-      XmlReaderSettings diffReaderSettings = CreateXmlReaderSettings(diffXsdPath!);
+      XmlReaderSettings? diffReaderSettings = CreateXmlReaderSettings(diffXsdPath!);
       if (originalIsDir && modifiedIsDir && diffIsDir)
       {
         Logger.Info("Processing directories recursively.");
@@ -81,6 +81,7 @@ namespace X4XmlDiffAndPatch
       private bool logToFile;
       private bool onlyFullPath;
       private bool useAllAttributes;
+      private bool appendToLog;
 
       [Option('o', "original_xml", Required = true, HelpText = "Path to the original XML file or directory.")]
       public string? OriginalXml
@@ -117,6 +118,13 @@ namespace X4XmlDiffAndPatch
         set => logToFile = value;
       }
 
+      [Option('a', "append-to-log", Required = false, HelpText = "Append logs to the existing log file.", Default = false)]
+      public bool AppendToLog
+      {
+        get => appendToLog;
+        set => appendToLog = value;
+      }
+
       [Option("only-full-path", Required = false, HelpText = "Generate only full path.", Default = false)]
       public bool OnlyFullPath
       {
@@ -136,7 +144,7 @@ namespace X4XmlDiffAndPatch
 
     #region Logging Configuration
 
-    private static void ConfigureLogging(bool logToFile)
+    private static void ConfigureLogging(bool logToFile, bool appendToLog = false)
     {
       var config = new NLog.Config.LoggingConfiguration();
 
@@ -146,7 +154,7 @@ namespace X4XmlDiffAndPatch
       {
         var logFile = new NLog.Targets.FileTarget("logFile")
         {
-          FileName = "${basedir}/${processname}.log",
+          FileName = Path.Combine(Environment.CurrentDirectory, "${processname}.log"),
           Layout = "${longdate} ${level} ${message} ${exception}",
           KeepFileOpen = true,
           DeleteOldFileOnStartup = true, // Overwrite the log file on each run
@@ -172,10 +180,11 @@ namespace X4XmlDiffAndPatch
       string originalXmlPath,
       string modifiedXmlPath,
       string diffXmlPath,
-      XmlReaderSettings diffReaderSettings,
+      XmlReaderSettings? diffReaderSettings,
       PathOptions pathOptions
     )
     {
+      Logger.Info($"Comparing original XML '{originalXmlPath}' with modified XML '{modifiedXmlPath}' to the diff XML at '{diffXmlPath}'");
       if (!File.Exists(originalXmlPath))
       {
         Logger.Error($"Original XML file does not exist: {originalXmlPath}");
@@ -201,11 +210,9 @@ namespace X4XmlDiffAndPatch
         string? diffXmlDir = Path.GetDirectoryName(diffXmlPath);
         if (string.IsNullOrEmpty(diffXmlDir))
         {
-          Logger.Error("Failed to determine the directory for diffXmlPath.");
-          return;
+          Logger.Info("Output directory is null or empty. Using current directory.");
         }
-
-        if (!Directory.Exists(diffXmlDir))
+        else if (!Directory.Exists(diffXmlDir))
         {
           try
           {
@@ -287,7 +294,7 @@ namespace X4XmlDiffAndPatch
       string originalDir,
       string modifiedDir,
       string diffDir,
-      XmlReaderSettings diffReaderSettings,
+      XmlReaderSettings? diffReaderSettings,
       PathOptions pathOptions
     )
     {
@@ -405,7 +412,7 @@ namespace X4XmlDiffAndPatch
             }
             XElement replaceOp = new XElement("replace", new XAttribute("sel", sel), modifiedText);
             diffRoot.Add(replaceOp);
-            Logger.Debug($"Replaced text in element '{originalElem.Name}' from '{originalText}' to '{modifiedText}'.");
+            Logger.Debug($"Replaced text in element '{GetElementInfo(originalElem)}' from '{originalText}' to '{modifiedText}'.");
           }
           else
           {
@@ -415,7 +422,7 @@ namespace X4XmlDiffAndPatch
             }
             XElement removeOp = new XElement("remove", new XAttribute("sel", $"{sel}/text()"));
             diffRoot.Add(removeOp);
-            Logger.Debug($"Removed text from element '{originalElem.Name}'.");
+            Logger.Debug($"Removed text from element '{GetElementInfo(originalElem)}'.");
           }
         }
       }
@@ -576,7 +583,7 @@ namespace X4XmlDiffAndPatch
               {
                 var addedChild = modifiedChildren[l];
                 addOp.Add(addedChild);
-                Logger.Debug($"Added element '{addedChild.Name}' to parent '{originalElem.Name}'.");
+                Logger.Debug($"Added element '{GetElementInfo(addedChild)}' to parent '{GetElementInfo(originalElem)}'.");
               }
               diffRoot.Add(addOp);
               j = k;
@@ -590,7 +597,7 @@ namespace X4XmlDiffAndPatch
             string sel = GenerateXPath(originalChild, pathOptions);
             XElement removeOp = new XElement("remove", new XAttribute("sel", sel));
             diffRoot.Add(removeOp);
-            Logger.Debug($"Removed element '{originalChild.Name}' from parent '{originalElem.Name}'.");
+            Logger.Debug($"Removed element '{GetElementInfo(originalChild)}' from parent '{GetElementInfo(originalElem)}'.");
             i++;
           }
         }
@@ -602,7 +609,7 @@ namespace X4XmlDiffAndPatch
         string sel = GenerateXPath(originalChild, pathOptions);
         XElement removeOp = new XElement("remove", new XAttribute("sel", sel));
         diffRoot.Add(removeOp);
-        Logger.Debug($"Removed element '{originalChild.Name}' from parent '{originalElem.Name}'.");
+        Logger.Debug($"Removed element '{GetElementInfo(originalChild)}' from parent '{GetElementInfo(originalElem)}'.");
         i++;
       }
 
@@ -622,7 +629,7 @@ namespace X4XmlDiffAndPatch
         {
           var addedChild = modifiedChildren[j];
           addOp.Add(addedChild);
-          Logger.Debug($"Added element '{addedChild.Name}' to parent '{originalElem.Name}'.");
+          Logger.Debug($"Added element '{GetElementInfo(addedChild)}' to parent '{GetElementInfo(originalElem)}'.");
           j++;
         }
         diffRoot.Add(addOp);
@@ -768,6 +775,36 @@ namespace X4XmlDiffAndPatch
 
     #endregion
 
+    #region Element and attr info
+    private static string GetElementInfo(XElement? element)
+    {
+      string info = "<";
+      if (element != null)
+      {
+        info += $"{element.Name}";
+        if (element.HasAttributes)
+        {
+          info += $"{element.FirstAttribute?.Name}=\"{element.FirstAttribute?.Value}\"";
+          if (element.Attributes().Count() > 1)
+          {
+            info += " ...";
+          }
+        }
+        info += ">";
+      }
+      return info;
+    }
+
+    private static string GetAttributeInfo(XAttribute? attr)
+    {
+      if (attr == null)
+      {
+        return "";
+      }
+      return $"{attr.Name}=\"{attr.Value}\"";
+    }
+    #endregion
+
     #region Diff Validation
 
     private static bool ValidateXsdPath(string? xsdPath)
@@ -782,10 +819,9 @@ namespace X4XmlDiffAndPatch
       return true;
     }
 
-    private static XmlReaderSettings CreateXmlReaderSettings(string xsdPath)
+    private static XmlReaderSettings? CreateXmlReaderSettings(string xsdPath)
     {
-      XmlReaderSettings settings = new XmlReaderSettings();
-
+      XmlReaderSettings? settings = null;
       if (ValidateXsdPath(xsdPath))
       {
         try
@@ -801,6 +837,7 @@ namespace X4XmlDiffAndPatch
 
             // Add the schema using the XmlReader
             schemaSet.Add("", reader);
+            settings = new XmlReaderSettings();
             settings.DtdProcessing = DtdProcessing.Parse; // Enable DTD processing
             settings.ValidationType = ValidationType.Schema; // Optional, for validation during reading
             settings.Schemas = schemaSet;
@@ -810,10 +847,12 @@ namespace X4XmlDiffAndPatch
         {
           Logger.Error($"Schema Exception: {ex.Message}");
           Logger.Error($"Line: {ex.LineNumber}, Position: {ex.LinePosition}");
+          return settings;
         }
         catch (Exception ex)
         {
           Logger.Error($"General Exception: {ex.Message}");
+          return settings;
         }
       }
       return settings;
