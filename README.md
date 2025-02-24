@@ -13,7 +13,7 @@ If the `diff.xsd` file if it located in the "current" folder it will be used aut
 ## How to use
 
 - Download the latest release from:
-  - GitHub [releases page](https://github.com/chemodun/x4_XMLDiffAndPatch/releases/) - there is an archive file `XMLDiffAndPatch.zip`.
+  - GitHub [releases page](https://github.com/chemodun/X4-XMLDiffAndPatch/releases/) - there is an archive file `XMLDiffAndPatch.zip`.
   - [NexusMods](https://www.nexusmods.com/x4foundations/mods/1578) - there is an archive file `XMLDiffAndPatch.zip`.
 - Extract the archive file to any useful location.
 - Inside will be a folder, named XMLDiffAndPatch with two executables - `XMLDiff.exe` and `XMLPatch.exe`.

@@ -14,7 +14,7 @@ If the [b]diff.xsd[/b] file if it located in the "current" folder it will be use
 [list]
 [*] Download the latest release from:
 [list]
-[*] GitHub [url=https://github.com/chemodun/x4_XMLDiffAndPatch/releases/]releases page[/url] - there is an archive file [b]XMLDiffAndPatch.zip[/b].
+[*] GitHub [url=https://github.com/chemodun/X4-XMLDiffAndPatch/releases/]releases page[/url] - there is an archive file [b]XMLDiffAndPatch.zip[/b].
 [*] [url=https://www.nexusmods.com/x4foundations/mods/1578]NexusMods[/url] - there is an archive file [b]XMLDiffAndPatch.zip[/b].
 [/list]
 [*] Extract the archive file to any useful location.
@@ -243,7 +243,7 @@ To create such debug file please use the [b]--log-to-file[/b] option.
 
 [size=130][u]License[/u][/size]
 
-There is a MIT license for this tool. You can find it in the [url=https://github.com/chemodun/x4_XMLDiffAndPatch/raw/main//LICENSE]LICENSE[/url] file.
+There is a MIT license for this tool. You can find it in the [url=https://github.com/chemodun/X4-XMLDiffAndPatch/raw/main//LICENSE]LICENSE[/url] file.
 
 [size=130][u]Changelog[/u][/size]
 
