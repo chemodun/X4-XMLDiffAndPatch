@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.16](https://github.com/chemodun/X4-XMLDiffAndPatch/compare/v0.2.15...v0.2.16) (2025-02-24)
+
+
+### Bug Fixes
+
+* **XMLPatch:** fixed replace operation for elements ([817299a](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/817299adb27cff58b3bb13159111afc774ddb706))
+
 ## [0.2.15](https://github.com/chemodun/X4_XMLDiffAndPatch/compare/v0.2.14...v0.2.15) (2025-02-24)
 
 
