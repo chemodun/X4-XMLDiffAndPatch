@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.15](https://github.com/chemodun/X4_XMLDiffAndPatch/compare/v0.2.14...v0.2.15) (2025-02-24)
+
+
+### Bug Fixes
+
+* enhance logging configuration with append option and improve debug messages ([3ccb99f](https://github.com/chemodun/X4_XMLDiffAndPatch/commit/3ccb99f20ba3c287afee2fe54baeb91fa0e70d80))
+
 ## [0.2.14](https://github.com/chemodun/x4_XMLDiffAndPatch/compare/v0.2.13...v0.2.14) (2025-01-17)
 
 
