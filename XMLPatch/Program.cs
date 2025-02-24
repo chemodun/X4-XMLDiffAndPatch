@@ -345,6 +345,7 @@ namespace X4XmlDiffAndPatch
     private static void ApplyAdd(XElement addElement, XElement originalRoot)
     {
       string? sel = addElement.Attribute("sel")?.Value;
+      Logger.Debug($"Applying add operation: '{sel}'");
       if (sel == null)
       {
         Logger.Warn("Add operation missing 'sel' attribute! Skipping operation.");
@@ -357,7 +358,7 @@ namespace X4XmlDiffAndPatch
         pos = "append";
       }
 
-      Logger.Debug($"Applying add operation: '{sel}' at {pos!}");
+      Logger.Info($"Applying add operation: '{sel}' at {pos!}");
 
       var targetElements = originalRoot.XPathSelectElements(sel);
       if (targetElements == null || !targetElements.Any())
@@ -428,6 +429,7 @@ namespace X4XmlDiffAndPatch
     private static void ApplyReplace(XElement replaceElement, XElement originalRoot)
     {
       string? sel = replaceElement.Attribute("sel")?.Value;
+      Logger.Info($"Applying replace operation: '{sel}'");
       if (sel == null)
       {
         Logger.Warn("Replace operation missing 'sel' attribute! Skipping operation.");
@@ -447,31 +449,31 @@ namespace X4XmlDiffAndPatch
       {
         if (targetObj is XElement target)
         {
-          var newContent = replaceElement.Value;
+          string targetName = target.Name.LocalName;
+          XElement? replaceSubElement = replaceElement.Element(targetName);
+          XElement? parent = target.Parent;
           string targetInfo = GetElementInfo(target);
-          if (!string.IsNullOrEmpty(newContent))
+          string parentInfo = GetElementInfo(parent);
+          if (replaceSubElement != null)
           {
-            target.Value = newContent;
-            Logger.Debug($"Replaced text of element '{targetInfo}' with '{newContent}'.");
+            string replaceInfo = GetElementInfo(replaceSubElement);
+            target.ReplaceWith(replaceSubElement);
+            Logger.Info($"Replaced element '{targetInfo}' with '{replaceInfo}' in '{parentInfo}'.");
           }
-
-          var newElement = replaceElement.Element("new");
-          if (newElement != null)
+          else
           {
-            XElement replacement = new XElement(newElement);
-            target.ReplaceWith(replacement);
-            Logger.Info($"Replaced element '{targetInfo}' with '{GetElementInfo(replacement)}'.");
+            Logger.Warn($"Can't process replacement for '{targetInfo}' in '{parentInfo}'. Skipping operation.");
           }
         }
         else if (targetObj is XText textNode)
         {
           textNode.Value = replaceElement.Value;
-          Logger.Debug("Replaced text node.");
+          Logger.Info("Replaced text node.");
         }
         else if (targetObj is XAttribute attr)
         {
           attr.Value = replaceElement.Value;
-          Logger.Debug($"Replaced value of attribute '{attr.Name}' with '{replaceElement.Value}'.");
+          Logger.Info($"Replaced value of attribute '{attr.Name}' with '{replaceElement.Value}'.");
         }
       }
     }
@@ -479,6 +481,7 @@ namespace X4XmlDiffAndPatch
     private static void ApplyRemove(XElement removeElement, XElement originalRoot)
     {
       string? sel = removeElement.Attribute("sel")?.Value;
+      Logger.Debug($"Applying remove operation: '{sel}'");
       if (sel == null)
       {
         Logger.Warn("Remove operation missing 'sel' attribute! Skipping operation.");
@@ -499,6 +502,7 @@ namespace X4XmlDiffAndPatch
         if (targetObj is XElement target)
         {
           XElement? parent = target.Parent;
+          string parentInfo = GetElementInfo(parent);
           string targetInfo = GetElementInfo(target);
           if (parent == null)
           {
@@ -506,7 +510,7 @@ namespace X4XmlDiffAndPatch
             continue;
           }
           target.Remove();
-          Logger.Debug($"Removed element '{targetInfo}' from '{parent.Name}'.");
+          Logger.Info($"Removed element '{targetInfo}' from '{parentInfo}'.");
         }
         else if (targetObj is XAttribute attr)
         {
@@ -518,12 +522,12 @@ namespace X4XmlDiffAndPatch
             continue;
           }
           attr.Remove();
-          Logger.Debug($"Removed attribute '{attr.Name}' from '{parentInfo}'.");
+          Logger.Info($"Removed attribute '{attr.Name}' from '{parentInfo}'.");
         }
         else if (targetObj is XText textNode)
         {
           textNode.Remove();
-          Logger.Debug("Removed text node.");
+          Logger.Info("Removed text node.");
         }
       }
     }

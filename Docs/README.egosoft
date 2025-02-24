@@ -245,6 +245,40 @@ To create such debug file please use the [b]--log-to-file[/b] option.
 
 There is a MIT license for this tool. You can find it in the [url=https://github.com/chemodun/x4_XMLDiffAndPatch/raw/main//LICENSE]LICENSE[/url] file.
 
+[size=130][u]Changelog[/u][/size]
+
+[size=125][u][0.2.16] - 2025-02-25[/u][/size]
+[list]
+[*] Fixed
+[list]
+[*] Fixed issue with element replacements
+[/list]
+[*] Improved
+[list]
+[*] Logging information
+[/list]
+[/list]
+[size=125][u][0.2.15] - 2025-02-24[/u][/size]
+[list]
+[*] Fixed
+[list]
+[*] Fixed loading the diff.xsd
+[*] Fixed issue, if resulting file has to be located in current folder
+[/list]
+[*] Improved
+[/list]  Logging information, especially about wrong sel value. More info logged about processed XML elements.
+[list][*] Added
+[list]
+[*] Possibility to append into existing debug log
+[/list]
+[/list]
+[size=125][u][0.2.14] - 2025-01-17[/u][/size]
+[list]
+[*] Added
+[list]
+[*] First public version coded in C#.
+[/list]
+[/list]
 [size=130][u]Additional links[/u][/size]
 
 There is a topic on the [url=https://forum.egosoft.com/viewtopic.php?t=468623]EGOSOFT forum[/url], related to this toolset.

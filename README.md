@@ -243,6 +243,30 @@ To create such debug file please use the `--log-to-file` option.
 
 There is a MIT license for this tool. You can find it in the [LICENSE](LICENSE) file.
 
+## Changelog
+
+### [0.2.16] - 2025-02-25
+
+- Fixed
+  - Fixed issue with element replacements
+- Improved
+  - Logging information
+
+### [0.2.15] - 2025-02-24
+
+- Fixed
+  - Fixed loading the diff.xsd
+  - Fixed issue, if resulting file has to be located in current folder
+- Improved
+  Logging information, especially about wrong sel value. More info logged about processed XML elements.
+- Added
+  - Possibility to append into existing debug log
+
+### [0.2.14] - 2025-01-17
+
+- Added
+  - First public version coded in C#.
+
 ## Additional links
 
 There is a topic on the [EGOSOFT forum](https://forum.egosoft.com/viewtopic.php?t=468623), related to this toolset.
