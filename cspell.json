@@ -1,0 +1,24 @@
+{
+    "version": "0.2",
+    "ignorePaths": [],
+    "dictionaryDefinitions": [],
+    "dictionaries": [
+        "en"
+    ],
+    "words": [
+        "advancedelectronics",
+        "assignedcontrolled",
+        "defaultorder",
+        "energycells",
+        "factoryname",
+        "hightech",
+        "modders",
+        "nextorder",
+        "noplayerbuild",
+        "occupiedship",
+        "scanningarrays",
+        "speakline"
+    ],
+    "ignoreWords": [],
+    "import": []
+}
