@@ -8,6 +8,7 @@ Also, you can use appropriate tool to patch XML files with diff files, this acti
 [size=130][u]Important note[/u][/size]
 
 It is highly recommended to use the [b]diff.xsd[/b] file to validate the diff XML files. It is especially important when you creating them by [b]XMLDiff.exe[/b].
+If the [b]diff.xsd[/b] file if it located in the "current" folder it will be used automatically. If you want to use another [b]diff.xsd[/b] file, you can specify it with the [b]-x[/b] option.
 
 [size=130][u]How to use[/u][/size]
 [list=1]
@@ -26,7 +27,7 @@ It is highly recommended to use the [b]diff.xsd[/b] file to validate the diff XM
 There is a command line help for the [b]XMLDiff[/b] tool:
 
 [code=shell]
-XMLDiff 0.2.13
+XMLDiff 0.2.15
 Developed by Chem O`Dun
 
   -o, --original_xml      Required. Path to the original XML file or directory.
@@ -38,6 +39,8 @@ Developed by Chem O`Dun
   -x, --xsd               Path to the diff.xsd schema file.
 
   -l, --log-to-file       (Default: false) Log to a file.
+
+  -a, --append-to-log    (Default: false) Append logs to the existing log file.
 
   --only-full-path        (Default: false) Generate only full path.
 
@@ -136,7 +139,7 @@ Example:
 There is a command line help for the [b]XMLPatch[/b] tool:
 
 [code=shell]
-XMLPatch 0.2.13
+XMLPatch 0.2.15
 Developed by Chem O`Dun
 
   -o, --original_xml    Required. Path to the original XML file or directory.
@@ -148,6 +151,8 @@ Developed by Chem O`Dun
   -x, --xsd             Path to the diff.xsd schema file.
 
   -l, --log-to-file     (Default: false) Log to a file.
+
+  -a, --append-to-log    (Default: false) Append logs to the existing log file.
 
   --help                Display this help screen.
 
@@ -244,8 +249,8 @@ There is a MIT license for this tool. You can find it in the [url=https://github
 
 [size=130][u]Additional links[/u][/size]
 
-There is a topic on the [url=https://forum.egosoft.com/viewtopic.php?t=468623]Egosoft forum[/url], related to this toolset.
+There is a topic on the [url=https://forum.egosoft.com/viewtopic.php?t=468623]EGOSOFT forum[/url], related to this toolset.
 
 [size=130][u]Antivirus scanning[/u][/size]
 
-Please be aware - each release archive has an appropriate ling to the [url=https://www.virustotal.com]VirusTotal[/url]. Follow the link to be sure that the archive is safe.
+Please be aware - each release archive has an appropriate link to the [url=https://www.virustotal.com]VirusTotal[/url]. Follow the link to be sure that the archive is safe.
