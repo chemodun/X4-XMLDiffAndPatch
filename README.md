@@ -8,6 +8,7 @@ Also, you can use appropriate tool to patch XML files with diff files, this acti
 ## Important note
 
 It is highly recommended to use the `diff.xsd` file to validate the diff XML files. It is especially important when you creating them by `XMLDiff.exe`.
+If the `diff.xsd` file if it located in the "current" folder it will be used automatically. If you want to use another `diff.xsd` file, you can specify it with the `-x` option.
 
 ## How to use
 
@@ -24,7 +25,7 @@ It is highly recommended to use the `diff.xsd` file to validate the diff XML fil
 There is a command line help for the `XMLDiff` tool:
 
 ```shell
-XMLDiff 0.2.13
+XMLDiff 0.2.15
 Developed by Chem O`Dun
 
   -o, --original_xml      Required. Path to the original XML file or directory.
@@ -36,6 +37,8 @@ Developed by Chem O`Dun
   -x, --xsd               Path to the diff.xsd schema file.
 
   -l, --log-to-file       (Default: false) Log to a file.
+
+  -a, --append-to-log    (Default: false) Append logs to the existing log file.
 
   --only-full-path        (Default: false) Generate only full path.
 
@@ -134,7 +137,7 @@ Example:
 There is a command line help for the `XMLPatch` tool:
 
 ```shell
-XMLPatch 0.2.13
+XMLPatch 0.2.15
 Developed by Chem O`Dun
 
   -o, --original_xml    Required. Path to the original XML file or directory.
@@ -146,6 +149,8 @@ Developed by Chem O`Dun
   -x, --xsd             Path to the diff.xsd schema file.
 
   -l, --log-to-file     (Default: false) Log to a file.
+
+  -a, --append-to-log    (Default: false) Append logs to the existing log file.
 
   --help                Display this help screen.
 
@@ -242,8 +247,8 @@ There is a MIT license for this tool. You can find it in the [LICENSE](LICENSE) 
 
 ## Additional links
 
-There is a topic on the [Egosoft forum](https://forum.egosoft.com/viewtopic.php?t=468623), related to this toolset.
+There is a topic on the [EGOSOFT forum](https://forum.egosoft.com/viewtopic.php?t=468623), related to this toolset.
 
 ## Antivirus scanning
 
-Please be aware - each release archive has an appropriate ling to the [VirusTotal](https://www.virustotal.com). Follow the link to be sure that the archive is safe.
+Please be aware - each release archive has an appropriate link to the [VirusTotal](https://www.virustotal.com). Follow the link to be sure that the archive is safe.
