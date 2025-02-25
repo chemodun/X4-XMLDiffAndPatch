@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.17](https://github.com/chemodun/X4-XMLDiffAndPatch/compare/v0.2.16...v0.2.17) (2025-02-25)
+
+
+### Bug Fixes
+
+* **XMLPatch:** add checks to prevent duplicate elements during addition ([89b7626](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/89b76263d6d59886848783a7a905cc5ae6ed0071))
+
 ## [0.2.16](https://github.com/chemodun/X4-XMLDiffAndPatch/compare/v0.2.15...v0.2.16) (2025-02-24)
 
 
