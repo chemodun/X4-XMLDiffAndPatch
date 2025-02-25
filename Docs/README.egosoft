@@ -251,7 +251,7 @@ There is a MIT license for this tool. You can find it in the [url=https://github
 [list]
 [*] Fixed
 [list]
-[*] Made prevention of adding doubles from different files
+[*] Added checks to prevent duplicate elements during addition
 [/list]
 [/list]
 [size=125][u][0.2.16] - 2025-02-25[/u][/size]

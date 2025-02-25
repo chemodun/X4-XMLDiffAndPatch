@@ -248,7 +248,7 @@ There is a MIT license for this tool. You can find it in the [LICENSE](LICENSE) 
 ### [0.2.17] - 2025-02-25
 
 - Fixed
-  - Made prevention of adding doubles from different files
+  - Added checks to prevent duplicate elements during addition
 
 ### [0.2.16] - 2025-02-25
 
