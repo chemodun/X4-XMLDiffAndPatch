@@ -386,21 +386,61 @@ namespace X4XmlDiffAndPatch
           Logger.Debug($"Cloned element: {clonedInfo}");
           if (pos == "before")
           {
+            if (
+              targetElement
+                .Parent!.Elements()
+                .Any(e => e.Name == cloned.Name && e.Attributes().All(a => cloned.Attribute(a.Name)?.Value == a.Value))
+            )
+            {
+              Logger.Warn($"Element '{clonedInfo}' already exists in '{parentInfo}'. Skipping.");
+              continue;
+            }
             targetElement.AddBeforeSelf(cloned);
             Logger.Info($"Added new element '{clonedInfo}' before '{targetInfo}' in '{parentInfo}'.");
           }
           else if (pos == "after")
           {
+            if (
+              targetElement
+                .Parent!.Elements()
+                .Any(e => e.Name == cloned.Name && e.Attributes().All(a => cloned.Attribute(a.Name)?.Value == a.Value))
+            )
+            {
+              Logger.Warn($"Element '{clonedInfo}' already exists in '{parentInfo}'. Skipping.");
+              continue;
+            }
             targetElement.AddAfterSelf(cloned);
             Logger.Info($"Added new element '{clonedInfo}' after '{targetInfo}' in '{parentInfo}'.");
           }
           else if (pos == "prepend")
           {
+            if (
+              targetElement
+                .Elements()
+                .Any(e =>
+                  e.Name == cloned.Name && e.Attributes().All(a => a.Name == "_source" || cloned.Attribute(a.Name)?.Value == a.Value)
+                )
+            )
+            {
+              Logger.Warn($"Element '{clonedInfo}' already exists in '{targetInfo}'. Skipping.");
+              continue;
+            }
             targetElement.AddFirst(cloned);
             Logger.Info($"Prepended new element '{clonedInfo}' to '{targetInfo}'.");
           }
           else if (pos == "append")
           {
+            if (
+              targetElement
+                .Elements()
+                .Any(e =>
+                  e.Name == cloned.Name && e.Attributes().All(a => a.Name == "_source" || cloned.Attribute(a.Name)?.Value == a.Value)
+                )
+            )
+            {
+              Logger.Warn($"Element '{clonedInfo}' already exists in '{targetInfo}'. Skipping.");
+              continue;
+            }
             targetElement.Add(cloned);
             Logger.Info($"Appended new element '{clonedInfo}' to '{targetInfo}'.");
           }
@@ -472,8 +512,9 @@ namespace X4XmlDiffAndPatch
         }
         else if (targetObj is XAttribute attr)
         {
+          var oldValue = attr.Value;
           attr.Value = replaceElement.Value;
-          Logger.Info($"Replaced value of attribute '{attr.Name}' with '{replaceElement.Value}'.");
+          Logger.Info($"Replaced value of attribute '{attr.Name}' from '{oldValue}' to '{replaceElement.Value}'.");
         }
       }
     }
