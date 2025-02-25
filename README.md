@@ -212,14 +212,15 @@ For example, if the original XML file is `vanilla.xml` and the output directory 
 
 ### How to apply a tools to a directories
 
-You can apply the tools to directories. In this case, the tools will apply the diff or patch to all XML files in the directory.
-The logic will be a next:
+#### Applying XMLDiff to directories
 
-- all input parameters are directories - the tools will apply the diff or patch to all XML files in the directories.
-- it will recursively gro thru the diff or changed XML files in the directories, respectively to the tool.
-- for each diff or changed files will be checked a corresponding original XML file in the original directory with the same relative path.
-- if the original XML file is not found - the diff or changed file will be skipped.
-- if the original XML file is found - the diff or changed file will be patched with the original XML file and created a new patched XML file in the output directory with the same relative path.
+You can apply the XMLDiff tool to directories. In this case, the tool will traverse the directory structure and create diff files for XML files with identical names and relative paths. The process is as follows:
+
+- If all input parameters are directories, the tool will create diff files for all XML files in the directories.
+- The tool will recursively go through the directory structure, using modified files as a "keys" for it
+- For each changed file, the corresponding original XML file in the original directory with the same relative path will be checked.
+- If the original XML file is not found, the operation will be skipped.
+- If the original XML file is found, the diff file will be created in the output directory with the same relative path.
 
 Example:
 
@@ -227,7 +228,17 @@ Example:
 XMLDiff.exe -o vanilla_dir -m modified_dir -d diff_dir
 ```
 
-or
+#### Applying XMLPatch to directories
+
+You can apply the XMLPatch tool to directories. In this case, the tool will traverse the directory structure and apply the patch to XML files with identical names and relative paths. The process is as follows:
+
+- If all input parameters are directories, the tool will apply the patch to all XML files in the directories.
+- The tool will recursively go through the directory structure, using diff files as a "keys" for it
+- For each diff file, the corresponding original XML file in the original directory with the same relative path will be checked.
+- If the original XML file is not found, the operation will be skipped.
+- If the original XML file is found, the diff file will be patched with the original XML file, and a new patched XML file will be created in the output directory with the same relative path.
+
+Example:
 
 ```shell
 XMLPatch.exe -o vanilla_dir -d diff_dir -u modified_dir
