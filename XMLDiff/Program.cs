@@ -662,7 +662,16 @@ namespace X4XmlDiffAndPatch
       string step = "";
       if (patchForParent == "")
         patchForParent = $"{element.Name.LocalName}";
-      var attributes = element.Attributes().ToList();
+      List<XAttribute> attributes = [];
+      IEnumerable<XElement> matches = parent.XPathSelectElements(patchForParent);
+      if (matches.Count() == 1 && matches.First() == element)
+      {
+        step = patchForParent;
+      }
+      else
+      {
+        attributes = element.Attributes().ToList();
+      }
       if (attributes.Count > 0)
       {
         if (pathOptions.UseAllAttributes)
@@ -671,9 +680,16 @@ namespace X4XmlDiffAndPatch
           foreach (var attr in attributes)
           {
             string attrValue = attr.Value.Replace("\"", "&quot;");
-            xpath += $"[@{attr.Name.LocalName}=\"{attrValue}\"]";
+            if (attrValue.Contains("'"))
+            {
+              xpath += $"[@{attr.Name.LocalName}=\"{attrValue}\"]";
+            }
+            else
+            {
+              xpath += $"[@{attr.Name.LocalName}='{attrValue}']";
+            }
           }
-          var matches = parent.XPathSelectElements(xpath);
+          matches = parent.XPathSelectElements(xpath);
           if (matches.Count() == 1 && matches.First() == element)
           {
             step = xpath;
@@ -688,8 +704,16 @@ namespace X4XmlDiffAndPatch
         foreach (var attr in attributes)
         {
           string attrValue = attr.Value.Replace("\"", "&quot;");
-          string xpath = $"{patchForParent}[@{attr.Name.LocalName}=\"{attrValue}\"]";
-          var matches = parent.XPathSelectElements(xpath);
+          string xpath = $"{patchForParent}";
+          if (attrValue.Contains("'"))
+          {
+            xpath += $"[@{attr.Name.LocalName}=\"{attrValue}\"]";
+          }
+          else
+          {
+            xpath += $"[@{attr.Name.LocalName}='{attrValue}']";
+          }
+          matches = parent.XPathSelectElements(xpath);
           if (matches.Count() == 1 && matches.First() == element)
           {
             if (step == "")
@@ -698,7 +722,13 @@ namespace X4XmlDiffAndPatch
             {
               var doc_matches = doc.XPathSelectElements($"//{xpath}");
               if (doc_matches.Count() == 1)
+              {
                 return ($"//{xpath}", patchForParent);
+              }
+              else
+              {
+                return (xpath, patchForParent);
+              }
             }
           }
         }
@@ -709,6 +739,10 @@ namespace X4XmlDiffAndPatch
         if (doc_matches.Count() == 1)
         {
           return ($"//{patchForParent}", patchForParent);
+        }
+        else
+        {
+          return (patchForParent, patchForParent);
         }
       }
       return (step, patchForParent);
@@ -736,7 +770,8 @@ namespace X4XmlDiffAndPatch
           (string step, string patchForParent) = GetElementPathStep(current, parent, doc, pathOptions);
           if (step.StartsWith("//"))
           {
-            return step;
+            path.Insert(0, step);
+            return path.ToString();
           }
           if (step == "")
           {
