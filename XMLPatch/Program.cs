@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Reflection;
+using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Schema;
@@ -23,6 +24,17 @@ namespace X4XmlDiffAndPatch
     private static void RunOptionsAndReturnExitCode(Options opts)
     {
       ConfigureLogging(opts.LogToFile, opts.AppendToLog);
+
+      Assembly assembly = Assembly.GetExecutingAssembly();
+      AssemblyName assemblyName = assembly.GetName();
+
+      Logger.Info($"Running {assemblyName.Name} v{assemblyName.Version}");
+      string param = "";
+      foreach (var prop in typeof(Options).GetProperties())
+      {
+        param += (string.IsNullOrEmpty(param) ? "" : ", ") + $"{prop.Name}: '{prop.GetValue(opts)}'";
+      }
+      Logger.Info($"Parameters: {param}");
 
       var originalXmlPath = opts.OriginalXml;
       var diffXmlPath = opts.DiffXml;
