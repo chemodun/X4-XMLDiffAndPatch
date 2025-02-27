@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.20](https://github.com/chemodun/X4-XMLDiffAndPatch/compare/v0.2.19...v0.2.20) (2025-02-27)
+
+
+### Bug Fixes
+
+* **XMLPatch:** validate root element of diff XML before processing, i.e. skipping non-diff XML ([13d720b](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/13d720b1f46ad3633c99fec170ebdd4822879005))
+
 ## [0.2.19](https://github.com/chemodun/X4-XMLDiffAndPatch/compare/v0.2.18...v0.2.19) (2025-02-27)
 
 
