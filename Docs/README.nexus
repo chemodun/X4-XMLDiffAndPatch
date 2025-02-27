@@ -250,11 +250,23 @@ XMLPatch.exe -o vanilla_dir -d diff_dir -u modified_dir
 
 If you have any issues with the tool, please create an issue in the [url=https://github.com/chemodun/x4_XMLDiffAndPatch/issues]issues page[/url].
 Will be highly appreciated if you will provide a version of used tool and XMLDiff.log or XMLPatch.log file respectively to the tool.
-To create such debug file please use the [b]--log-to-file[/b] option.
+To create such debug file please use the [b]--log-to-file[/b] option with [b]debug[/b] level.
 
 [size=3][u][b]License[/b][/u][/size]
 
 There is a MIT license for this tool. You can find it in the [url=https://github.com/chemodun/X4-XMLDiffAndPatch/raw/main//LICENSE]LICENSE[/url] file.
+
+[size=3][u][b]Credits[/b][/u][/size]
+
+Special thanks to [url=https://forum.egosoft.com/memberlist.php?mode=viewprofile&u=419622]Duncaroos[/url] for the patience, testing, and valuable feedback.
+
+[size=3][u][b]Additional links[/b][/u][/size]
+
+There is a topic on the [url=https://forum.egosoft.com/viewtopic.php?t=468623]EGOSOFT forum[/url], related to this toolset.
+
+[size=3][u][b]Antivirus scanning[/b][/u][/size]
+
+Please be aware - each release archive has an appropriate link to the [url=https://www.virustotal.com]VirusTotal[/url]. Follow the link to be sure that the archive is safe.
 
 [size=3][u][b]Changelog[/b][/u][/size]
 
@@ -312,10 +324,3 @@ There is a MIT license for this tool. You can find it in the [url=https://github
 [*] First public version coded in C#.
 [/list]
 [/list]
-[size=3][u][b]Additional links[/b][/u][/size]
-
-There is a topic on the [url=https://forum.egosoft.com/viewtopic.php?t=468623]EGOSOFT forum[/url], related to this toolset.
-
-[size=3][u][b]Antivirus scanning[/b][/u][/size]
-
-Please be aware - each release archive has an appropriate link to the [url=https://www.virustotal.com]VirusTotal[/url]. Follow the link to be sure that the archive is safe.
