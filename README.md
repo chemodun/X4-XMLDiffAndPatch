@@ -256,11 +256,13 @@ There is a MIT license for this tool. You can find it in the [LICENSE](LICENSE) 
 
 ## Changelog
 
-### [0.2.18] - 2025-02-27
+### [0.2.19] - 2025-02-27
 
 - Fixed
   - XMLDiff: wrong attribute selection for the path
   - XMLDiff: fixed issue with not applied --append-to-log option
+  - XMLDiff: fixed issue with wrong changed attributes count detection
+  - XMLDiff: fixed usage or remove/add instead of replace for elements
 - Improved
   - Both utilities: --log-to-file option now requires a log level (error, warn, info, debug) as a parameter
 
