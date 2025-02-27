@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.2.19](https://github.com/chemodun/X4-XMLDiffAndPatch/compare/v0.2.18...v0.2.19) (2025-02-27)
+
+
+### Bug Fixes
+
+* **XMLDiff:** fix always usage remove for elements, replace detection is implemented, i.e. fixes [#9](https://github.com/chemodun/X4-XMLDiffAndPatch/issues/9) ([c070c59](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/c070c59b68d6ce73c263694130012286e54d8206))
+* **XMLDiff:** fix detection of changes in more then one attribute ([c070c59](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/c070c59b68d6ce73c263694130012286e54d8206))
+* **XMLDiff:** on adding to the end to `after` is used now ([c070c59](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/c070c59b68d6ce73c263694130012286e54d8206))
+
 ## [0.2.18](https://github.com/chemodun/X4-XMLDiffAndPatch/compare/v0.2.17...v0.2.18) (2025-02-27)
 
 
