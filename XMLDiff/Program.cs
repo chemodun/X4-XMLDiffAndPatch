@@ -167,7 +167,7 @@ namespace X4XmlDiffAndPatch
           FileName = Path.Combine(Environment.CurrentDirectory, "${processname}.log"),
           Layout = "${longdate} ${level} ${message} ${exception}",
           KeepFileOpen = true,
-          DeleteOldFileOnStartup = true, // Overwrite the log file on each run
+          DeleteOldFileOnStartup = !appendToLog, // Overwrite the log file on each run
           ArchiveAboveSize = 0,
           ConcurrentWrites = true,
         };
