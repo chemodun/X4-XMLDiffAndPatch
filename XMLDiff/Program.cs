@@ -88,7 +88,7 @@ namespace X4XmlDiffAndPatch
       private string? modifiedXml;
       private string? diffXml;
       private string? xsd;
-      private bool logToFile;
+      private string? logToFile;
       private bool onlyFullPath;
       private bool useAllAttributes;
       private bool appendToLog;
@@ -121,11 +121,20 @@ namespace X4XmlDiffAndPatch
         set => xsd = value?.Trim();
       }
 
-      [Option('l', "log-to-file", Required = false, HelpText = "Log to a file.", Default = false)]
-      public bool LogToFile
+      [Option('l', "log-to-file", HelpText = "Log level (error, warn, info, debug).")]
+      public string? LogToFile
       {
         get => logToFile;
-        set => logToFile = value;
+        set
+        {
+          string input = value?.Trim() ?? "info";
+          var validLogLevels = new[] { "error", "warn", "info", "debug" };
+          if (!validLogLevels.Contains(input.ToLower()))
+          {
+            throw new ArgumentException($"Invalid log level: {input}. Valid values are: error, warn, info, debug.");
+          }
+          logToFile = input.ToLower();
+        }
       }
 
       [Option('a', "append-to-log", Required = false, HelpText = "Append logs to the existing log file.", Default = false)]
@@ -154,13 +163,13 @@ namespace X4XmlDiffAndPatch
 
     #region Logging Configuration
 
-    private static void ConfigureLogging(bool logToFile, bool appendToLog = false)
+    private static void ConfigureLogging(string? logToFile, bool appendToLog = false)
     {
       var config = new NLog.Config.LoggingConfiguration();
 
       // Targets
       var logConsole = new NLog.Targets.ConsoleTarget("logConsole");
-      if (logToFile)
+      if (!string.IsNullOrEmpty(logToFile))
       {
         var logFile = new NLog.Targets.FileTarget("logFile")
         {
@@ -171,7 +180,15 @@ namespace X4XmlDiffAndPatch
           ArchiveAboveSize = 0,
           ConcurrentWrites = true,
         };
-        config.AddRule(LogLevel.Debug, LogLevel.Fatal, logFile);
+        LogLevel minLogLevel = logToFile switch
+        {
+          "error" => LogLevel.Error,
+          "warn" => LogLevel.Warn,
+          "info" => LogLevel.Info,
+          "debug" => LogLevel.Debug,
+          _ => LogLevel.Info,
+        };
+        config.AddRule(minLogLevel, LogLevel.Fatal, logFile);
       }
       logConsole.Layout = "${longdate} ${level} ${message} ${exception}";
 
