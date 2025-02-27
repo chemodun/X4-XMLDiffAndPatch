@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.2.18](https://github.com/chemodun/X4-XMLDiffAndPatch/compare/v0.2.17...v0.2.18) (2025-02-27)
+
+
+### Bug Fixes
+
+* **XMLDiff:** fix losing the previously gathered path if some parent is accessible via "//" ([a04494d](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/a04494d2e3cf3a0a216dc9e071101f310fbbb7ab))
+* **XMLDiff:** fix skipping valid xpath step in case if "//" doesn't work with it ([a04494d](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/a04494d2e3cf3a0a216dc9e071101f310fbbb7ab))
+* **XMLDiff:** in total fixes [#10](https://github.com/chemodun/X4-XMLDiffAndPatch/issues/10) ([a04494d](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/a04494d2e3cf3a0a216dc9e071101f310fbbb7ab))
+* **XMLDiff:** update log file deletion behavior to respect appendToLog option. Fixes  [#8](https://github.com/chemodun/X4-XMLDiffAndPatch/issues/8) ([e31b246](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/e31b2462a74c135a27a80984b2d6d6f9e861dafc))
+
 ## [0.2.17](https://github.com/chemodun/X4-XMLDiffAndPatch/compare/v0.2.16...v0.2.17) (2025-02-25)
 
 
