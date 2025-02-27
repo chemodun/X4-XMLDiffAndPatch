@@ -23,7 +23,7 @@ If the `diff.xsd` file if it located in the "current" folder it will be used aut
 There is a command line help for the `XMLDiff` tool:
 
 ```shell
-XMLDiff 0.2.15
+XMLDiff 0.2.18
 Developed by Chem O`Dun
 
   -o, --original_xml      Required. Path to the original XML file or directory.
@@ -34,9 +34,9 @@ Developed by Chem O`Dun
 
   -x, --xsd               Path to the diff.xsd schema file.
 
-  -l, --log-to-file       (Default: false) Log to a file.
+  -l, --log-to-file       Log level (error, warn, info, debug).
 
-  -a, --append-to-log    (Default: false) Append logs to the existing log file.
+  -a, --append-to-log     (Default: false) Append logs to the existing log file.
 
   --only-full-path        (Default: false) Generate only full path.
 
@@ -135,24 +135,24 @@ Example:
 There is a command line help for the `XMLPatch` tool:
 
 ```shell
-XMLPatch 0.2.15
+XMLPatch 0.2.18
 Developed by Chem O`Dun
 
-  -o, --original_xml    Required. Path to the original XML file or directory.
+  -o, --original_xml     Required. Path to the original XML file or directory.
 
-  -d, --diff_xml        Required. Path to the diff XML file or directory.
+  -d, --diff_xml         Required. Path to the diff XML file or directory.
 
-  -u, --output_xml      Required. Path for the output XML file or directory.
+  -u, --output_xml       Required. Path for the output XML file or directory.
 
-  -x, --xsd             Path to the diff.xsd schema file.
+  -x, --xsd              Path to the diff.xsd schema file.
 
-  -l, --log-to-file     (Default: false) Log to a file.
+  -l, --log-to-file      Log level (error, warn, info, debug).
 
   -a, --append-to-log    (Default: false) Append logs to the existing log file.
 
-  --help                Display this help screen.
+  --help                 Display this help screen.
 
-  --version             Display version information.
+  --version              Display version information.
 ```
 
 Example:
@@ -255,6 +255,14 @@ To create such debug file please use the `--log-to-file` option.
 There is a MIT license for this tool. You can find it in the [LICENSE](LICENSE) file.
 
 ## Changelog
+
+### [0.2.18] - 2025-02-27
+
+- Fixed
+  - XMLDiff: wrong attribute selection for the path
+  - XMLDiff: fixed issue with not applied --append-to-log option
+- Improved
+  - Both utilities: --log-to-file option now requires a log level (error, warn, info, debug) as a parameter
 
 ### [0.2.17] - 2025-02-25
 
