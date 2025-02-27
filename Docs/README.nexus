@@ -25,7 +25,7 @@ If the [b]diff.xsd[/b] file if it located in the "current" folder it will be use
 There is a command line help for the [b]XMLDiff[/b] tool:
 
 [code]
-XMLDiff 0.2.15
+XMLDiff 0.2.18
 Developed by Chem O`Dun
 
   -o, --original_xml      Required. Path to the original XML file or directory.
@@ -36,9 +36,9 @@ Developed by Chem O`Dun
 
   -x, --xsd               Path to the diff.xsd schema file.
 
-  -l, --log-to-file       (Default: false) Log to a file.
+  -l, --log-to-file       Log level (error, warn, info, debug).
 
-  -a, --append-to-log    (Default: false) Append logs to the existing log file.
+  -a, --append-to-log     (Default: false) Append logs to the existing log file.
 
   --only-full-path        (Default: false) Generate only full path.
 
@@ -137,24 +137,24 @@ Example:
 There is a command line help for the [b]XMLPatch[/b] tool:
 
 [code]
-XMLPatch 0.2.15
+XMLPatch 0.2.18
 Developed by Chem O`Dun
 
-  -o, --original_xml    Required. Path to the original XML file or directory.
+  -o, --original_xml     Required. Path to the original XML file or directory.
 
-  -d, --diff_xml        Required. Path to the diff XML file or directory.
+  -d, --diff_xml         Required. Path to the diff XML file or directory.
 
-  -u, --output_xml      Required. Path for the output XML file or directory.
+  -u, --output_xml       Required. Path for the output XML file or directory.
 
-  -x, --xsd             Path to the diff.xsd schema file.
+  -x, --xsd              Path to the diff.xsd schema file.
 
-  -l, --log-to-file     (Default: false) Log to a file.
+  -l, --log-to-file      Log level (error, warn, info, debug).
 
   -a, --append-to-log    (Default: false) Append logs to the existing log file.
 
-  --help                Display this help screen.
+  --help                 Display this help screen.
 
-  --version             Display version information.
+  --version              Display version information.
 [/code]
 
 Example:
@@ -258,6 +258,20 @@ There is a MIT license for this tool. You can find it in the [url=https://github
 
 [size=3][u][b]Changelog[/b][/u][/size]
 
+[size=3][u][i][0.2.19] - 2025-02-27[/i][/u][/size]
+[list]
+[*] Fixed
+[list]
+[*] XMLDiff: wrong attribute selection for the path
+[*] XMLDiff: fixed issue with not applied --append-to-log option
+[*] XMLDiff: fixed issue with wrong changed attributes count detection
+[*] XMLDiff: fixed usage or remove/add instead of replace for elements
+[/list]
+[*] Improved
+[list]
+[*] Both utilities: --log-to-file option now requires a log level (error, warn, info, debug) as a parameter
+[/list]
+[/list]
 [size=3][u][i][0.2.17] - 2025-02-25[/i][/u][/size]
 [list]
 [*] Fixed
