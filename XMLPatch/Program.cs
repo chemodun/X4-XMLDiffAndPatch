@@ -278,6 +278,11 @@ namespace X4XmlDiffAndPatch
         }
 
         XElement diffRoot = diffDoc.Root ?? throw new InvalidOperationException("diffDoc.Root is null");
+        if (diffRoot.Name.LocalName != "diff")
+        {
+          Logger.Error($"Root element of diff XML is not 'diff'. Found: '{diffRoot.Name}'.");
+          return;
+        }
 
         XElement originalRoot = originalDoc.Root ?? throw new InvalidOperationException("originalDoc.Root is null");
 
