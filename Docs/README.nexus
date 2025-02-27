@@ -258,7 +258,7 @@ There is a MIT license for this tool. You can find it in the [url=https://github
 
 [size=3][u][b]Changelog[/b][/u][/size]
 
-[size=3][u][i][0.2.19] - 2025-02-27[/i][/u][/size]
+[size=3][u][i][0.2.20] - 2025-02-27[/i][/u][/size]
 [list]
 [*] Fixed
 [list]
@@ -266,6 +266,7 @@ There is a MIT license for this tool. You can find it in the [url=https://github
 [*] XMLDiff: fixed issue with not applied --append-to-log option
 [*] XMLDiff: fixed issue with wrong changed attributes count detection
 [*] XMLDiff: fixed usage or remove/add instead of replace for elements
+[*] XMLPatch: skip the diff file without diff elements
 [/list]
 [*] Improved
 [list]
