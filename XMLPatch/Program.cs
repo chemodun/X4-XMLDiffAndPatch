@@ -148,13 +148,7 @@ namespace X4XmlDiffAndPatch
         set => appendToLog = value;
       }
 
-      [Option(
-        ' ',
-        "allow-doubles",
-        Required = false,
-        HelpText = "Allow doubles in the diff XML. Useful for scripts patching.",
-        Default = false
-      )]
+      [Option("allow-doubles", Required = false, HelpText = "Allow doubles in the diff XML. Useful for scripts patching.", Default = false)]
       public bool AllowDoubles
       {
         get => allowDoubles;
