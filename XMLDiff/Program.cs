@@ -12,6 +12,7 @@ namespace X4XmlDiffAndPatch
   class XMLDiff
   {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+    private static readonly Regex NumericIdsPattern = new Regex(@"\[\d+\]");
 
     static void Main(string[] args)
     {
@@ -646,11 +647,18 @@ namespace X4XmlDiffAndPatch
               XElement addOp;
               if (i > 0)
               {
-                addOp = new XElement(
-                  "add",
-                  new XAttribute("sel", GenerateXPath(originalChildren[i - 1], pathOptions)),
-                  new XAttribute("pos", "after")
-                );
+                string xpath = GenerateXPath(originalChildren[i - 1], pathOptions);
+                string pos = "after";
+                if (NumericIdsPattern.IsMatch(xpath))
+                {
+                  string xpathBefore = GenerateXPath(originalChild, pathOptions);
+                  if (!NumericIdsPattern.IsMatch(xpathBefore))
+                  {
+                    xpath = xpathBefore;
+                    pos = "before";
+                  }
+                }
+                addOp = new XElement("add", new XAttribute("sel", xpath), new XAttribute("pos", pos));
               }
               else
               {
