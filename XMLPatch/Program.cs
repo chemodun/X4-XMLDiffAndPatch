@@ -552,14 +552,18 @@ namespace X4XmlDiffAndPatch
           }
           else if (newNode is XElement || newNode is XComment)
           {
-            latestAdded.AddAfterSelf(newNode);
             if (newNode is XElement newElem)
             {
-              Logger.Info($"Added new element: {GetElementInfo(newElem)}");
+              XElement cloned = new XElement(newElem);
+              latestAdded.AddAfterSelf(cloned);
+              latestAdded = cloned;
+              Logger.Info($"Added new element: {GetElementInfo(cloned)}");
             }
             else if (newNode is XComment comment)
             {
-              Logger.Info($"Added comment: '{comment.Value}'");
+              XComment cloned = new XComment(comment);
+              latestAdded.AddAfterSelf(cloned);
+              Logger.Info($"Added comment: '{cloned.Value}'");
             }
           }
         }
