@@ -439,8 +439,8 @@ namespace X4XmlDiffAndPatch
         }
 
         // Compare text
-        string originalText = (originalElem.Value ?? "").Trim();
-        string modifiedText = (modifiedElem.Value ?? "").Trim();
+        string originalText = GetValue(originalElem);
+        string modifiedText = GetValue(modifiedElem);
 
         Logger.Debug($"Comparing text in element '{originalElem.Name}': '{originalText}' vs '{modifiedText}'");
         if (originalText != modifiedText)
@@ -919,6 +919,21 @@ namespace X4XmlDiffAndPatch
     #endregion
 
     #region Element and attr info
+
+    private static string GetValue(XElement? element)
+    {
+      if (element == null)
+      {
+        return "";
+      }
+      IEnumerable<XNode> nodes = element.Nodes().Where(n => n.NodeType == XmlNodeType.Text);
+      if (!nodes.Any())
+      {
+        return "";
+      }
+      return nodes.First().ToString();
+    }
+
     private static string GetElementInfo(XElement? element)
     {
       string info = "<";
