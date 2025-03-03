@@ -560,11 +560,11 @@ namespace X4XmlDiffAndPatch
           }
           if (matchedEnough)
           {
-            foreach (var attr in originalAttributes.Keys)
+            foreach (var attr in originalAttributes)
             {
-              if (!modifiedAttributes.ContainsKey(attr))
+              if (!modifiedAttributes.ContainsKey(attr.Key))
               {
-                Logger.Debug($"Modified attributes does not contain key '{attr}'.");
+                Logger.Debug($"Modified attributes does not contain key '{attr.Key}'.");
                 if (checkOnly)
                 {
                   Logger.Debug(
@@ -572,7 +572,15 @@ namespace X4XmlDiffAndPatch
                   );
                   return true;
                 }
-                matchedEnough = false;
+                differencesInAttributesCount++;
+                if (differencesInAttributesCount > 1 || originalAttributes.Count == 1)
+                {
+                  differencesInAttributesCount++;
+                  matchedEnough = false;
+                  break;
+                }
+                string sel = $"{GenerateXPath(originalChild, pathOptions)}/@{attr.Key}";
+                savedOp = new XElement("remove", new XAttribute("sel", sel));
                 break;
               }
             }
