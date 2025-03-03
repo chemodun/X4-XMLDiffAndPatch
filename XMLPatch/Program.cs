@@ -441,24 +441,6 @@ namespace X4XmlDiffAndPatch
               switch (pos)
               {
                 case "before":
-                  if (
-                    (ParsedOptions == null || !ParsedOptions.AllowDoubles)
-                    && targetElement
-                      .Parent!.Elements()
-                      .Any(e =>
-                        e.Name == cloned.Name
-                        && e.Attributes().All(a => cloned.Attribute(a.Name)?.Value == a.Value)
-                        && cloned.Attributes().All(a => e.Attribute(a.Name)?.Value == a.Value)
-                      )
-                  )
-                  {
-                    Logger.Warn($"Element '{clonedInfo}' already exists in '{parentInfo}'. Skipping.");
-                    continue;
-                  }
-                  targetElement.AddBeforeSelf(cloned);
-                  Logger.Info($"Added new element '{clonedInfo}' before '{targetInfo}' in '{parentInfo}'.");
-                  latestAdded = cloned;
-                  break;
                 case "after":
                   if (
                     (ParsedOptions == null || !ParsedOptions.AllowDoubles)
@@ -474,29 +456,19 @@ namespace X4XmlDiffAndPatch
                     Logger.Warn($"Element '{clonedInfo}' already exists in '{parentInfo}'. Skipping.");
                     continue;
                   }
-                  targetElement.AddAfterSelf(cloned);
-                  Logger.Info($"Added new element '{clonedInfo}' after '{targetInfo}' in '{parentInfo}'.");
+                  if (pos == "before")
+                  {
+                    targetElement.AddBeforeSelf(cloned);
+                    Logger.Info($"Added new element '{clonedInfo}' before '{targetInfo}' in '{parentInfo}'.");
+                  }
+                  else
+                  {
+                    targetElement.AddAfterSelf(cloned);
+                    Logger.Info($"Added new element '{clonedInfo}' after '{targetInfo}' in '{parentInfo}'.");
+                  }
                   latestAdded = cloned;
                   break;
                 case "prepend":
-                  if (
-                    (ParsedOptions == null || !ParsedOptions.AllowDoubles)
-                    && targetElement
-                      .Elements()
-                      .Any(e =>
-                        e.Name == cloned.Name
-                        && e.Attributes().All(a => cloned.Attribute(a.Name)?.Value == a.Value)
-                        && cloned.Attributes().All(a => e.Attribute(a.Name)?.Value == a.Value)
-                      )
-                  )
-                  {
-                    Logger.Warn($"Element '{clonedInfo}' already exists in '{targetInfo}'. Skipping.");
-                    continue;
-                  }
-                  targetElement.AddFirst(cloned);
-                  Logger.Info($"Prepended new element '{clonedInfo}' to '{targetInfo}'.");
-                  latestAdded = cloned;
-                  break;
                 case "append":
                   if (
                     (ParsedOptions == null || !ParsedOptions.AllowDoubles)
@@ -512,8 +484,16 @@ namespace X4XmlDiffAndPatch
                     Logger.Warn($"Element '{clonedInfo}' already exists in '{targetInfo}'. Skipping.");
                     continue;
                   }
-                  targetElement.Add(cloned);
-                  Logger.Info($"Appended new element '{clonedInfo}' to '{targetInfo}'.");
+                  if (pos == "prepend")
+                  {
+                    targetElement.AddFirst(cloned);
+                    Logger.Info($"Prepended new element '{clonedInfo}' to '{targetInfo}'.");
+                  }
+                  else
+                  {
+                    targetElement.Add(cloned);
+                    Logger.Info($"Appended new element '{clonedInfo}' to '{targetInfo}'.");
+                  }
                   latestAdded = cloned;
                   break;
                 default:
