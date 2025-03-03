@@ -137,7 +137,7 @@ Example:
 There is a command line help for the [b]XMLPatch[/b] tool:
 
 [code]
-XMLPatch 0.2.18
+XMLPatch 0.2.20
 Developed by Chem O`Dun
 
   -o, --original_xml     Required. Path to the original XML file or directory.
@@ -152,6 +152,8 @@ Developed by Chem O`Dun
 
   -a, --append-to-log    (Default: false) Append logs to the existing log file.
 
+  --allow-doubles        (Default: false) Allow doubles in the diff XML. Useful for scripts patching.
+
   --help                 Display this help screen.
 
   --version              Display version information.
@@ -165,7 +167,7 @@ XMLPatch.exe -o vanilla.xml -d diff.xml -u modified.xml
 
 [size=3][u][i]Example of resulting patched XML files[/i][/u][/size]
 
-There the is example of the patched XML files created by tool:
+There is an example of the patched XML files created by the tool:
 [list]
 [*] with add operation:
 [/list]
@@ -270,6 +272,20 @@ Please be aware - each release archive has an appropriate link to the [url=https
 
 [size=3][u][b]Changelog[/b][/u][/size]
 
+[size=3][u][i][0.2.21] - 2025-03-03[/i][/u][/size]
+[list]
+[*] Fixed
+[list]
+[*] XMLDiff: fixed issue with text nodes differing
+[*] XMLDiff: improved "pos" definition logic
+[*] XMLDiff: improved logging information
+[/list]
+[*] Added
+[list]
+[*] XMLPatch: added --allow-doubles option, useful for scripts patching
+[*] XMLPatch: added comments processing, now comments will be added to the resulting XML file
+[/list]
+[/list]
 [size=3][u][i][0.2.20] - 2025-02-27[/i][/u][/size]
 [list]
 [*] Fixed
