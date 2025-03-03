@@ -598,12 +598,24 @@ namespace X4XmlDiffAndPatch
             matchedEnough = false;
             if (!CompareElements(original, modified, diffRoot, pathOptions, originalChild, modifiedChild, true))
             {
-              if (savedOp != null)
+              bool nextMatched = true;
+              if (i + 1 < originalChildren.Count && j + 1 < modifiedChildren.Count)
               {
-                diffRoot.Add(savedOp);
-                Logger.Info($"[Operation {savedOp.Name}] Added the saved operation to the diff.");
+                XElement originalTemp = new XElement("temp");
+                originalTemp.Add(originalChildren[i + 1]);
+                XElement modifiedTemp = new XElement("temp");
+                modifiedTemp.Add(modifiedChildren[j + 1]);
+                nextMatched = !CompareElements(original, modified, diffRoot, pathOptions, originalTemp, modifiedTemp, true);
               }
-              matchedEnough = true;
+              if (nextMatched)
+              {
+                if (savedOp != null)
+                {
+                  diffRoot.Add(savedOp);
+                  Logger.Info($"[Operation {savedOp.Name}] Added the saved operation to the diff.");
+                }
+                matchedEnough = true;
+              }
             }
           }
           Logger.Debug($"Matched enough: {matchedEnough}, i: {i}, j: {j}");
