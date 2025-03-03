@@ -135,7 +135,7 @@ Example:
 There is a command line help for the `XMLPatch` tool:
 
 ```shell
-XMLPatch 0.2.18
+XMLPatch 0.2.20
 Developed by Chem O`Dun
 
   -o, --original_xml     Required. Path to the original XML file or directory.
@@ -150,6 +150,8 @@ Developed by Chem O`Dun
 
   -a, --append-to-log    (Default: false) Append logs to the existing log file.
 
+  --allow-doubles        (Default: false) Allow doubles in the diff XML. Useful for scripts patching.
+
   --help                 Display this help screen.
 
   --version              Display version information.
@@ -163,7 +165,7 @@ XMLPatch.exe -o vanilla.xml -d diff.xml -u modified.xml
 
 ### Example of resulting patched XML files
 
-There the is example of the patched XML files created by tool:
+There is an example of the patched XML files created by the tool:
 
 - with add operation:
 
@@ -267,6 +269,16 @@ There is a topic on the [EGOSOFT forum](https://forum.egosoft.com/viewtopic.php?
 Please be aware - each release archive has an appropriate link to the [VirusTotal](https://www.virustotal.com). Follow the link to be sure that the archive is safe.
 
 ## Changelog
+
+### [0.2.21] - 2025-03-03
+
+- Fixed
+  - XMLDiff: fixed issue with text nodes differing
+  - XMLDiff: improved "pos" definition logic
+  - XMLDiff: improved logging information
+- Added
+  - XMLPatch: added --allow-doubles option, useful for scripts patching
+  - XMLPatch: added comments processing, now comments will be added to the resulting XML file
 
 ### [0.2.20] - 2025-02-27
 
