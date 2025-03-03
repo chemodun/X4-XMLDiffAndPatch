@@ -491,7 +491,7 @@ namespace X4XmlDiffAndPatch
 
       int i = 0,
         j = 0;
-      int lastRemoved = -1;
+      int lastRemovedOrReplaced = -1;
       while (i < originalChildren.Count && j < modifiedChildren.Count)
       {
         var originalChild = originalChildren[i];
@@ -649,7 +649,7 @@ namespace X4XmlDiffAndPatch
               {
                 string xpath = GenerateXPath(originalChildren[i - 1], pathOptions);
                 string pos = "after";
-                if (lastRemoved == i - 1 || NumericIdsPattern.IsMatch(xpath))
+                if (lastRemovedOrReplaced == i - 1 || NumericIdsPattern.IsMatch(xpath))
                 {
                   string xpathBefore = GenerateXPath(originalChild, pathOptions);
                   if (!NumericIdsPattern.IsMatch(xpathBefore))
@@ -699,6 +699,7 @@ namespace X4XmlDiffAndPatch
             {
               string sel = GenerateXPath(originalChild, pathOptions);
               XElement replaceOp = new XElement("replace", new XAttribute("sel", sel), modifiedChild);
+              lastRemovedOrReplaced = i;
               diffRoot.Add(replaceOp);
               Logger.Info($"[Operation replace] Element '{GetElementInfo(originalChild)}' with '{GetElementInfo(modifiedChild)}'.");
               i++;
@@ -708,7 +709,7 @@ namespace X4XmlDiffAndPatch
             {
               string sel = GenerateXPath(originalChild, pathOptions);
               XElement removeOp = new XElement("remove", new XAttribute("sel", sel));
-              lastRemoved = i;
+              lastRemovedOrReplaced = i;
               diffRoot.Add(removeOp);
               Logger.Info($"[Operation remove] Element '{GetElementInfo(originalChild)}' from parent '{GetElementInfo(originalElem)}'.");
               i++;
@@ -722,7 +723,7 @@ namespace X4XmlDiffAndPatch
         var originalChild = originalChildren[i];
         string sel = GenerateXPath(originalChild, pathOptions);
         XElement removeOp = new XElement("remove", new XAttribute("sel", sel));
-        lastRemoved = i;
+        lastRemovedOrReplaced = i;
         diffRoot.Add(removeOp);
         Logger.Info($"[Operation remove] Element '{GetElementInfo(originalChild)}' from parent '{GetElementInfo(originalElem)}'.");
         i++;
