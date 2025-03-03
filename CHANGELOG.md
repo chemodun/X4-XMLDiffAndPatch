@@ -1,5 +1,41 @@
 # Changelog
 
+## [0.2.21](https://github.com/chemodun/X4-XMLDiffAndPatch/compare/v0.2.20...v0.2.21) (2025-03-03)
+
+
+### Bug Fixes
+
+* **XMLDiff:** get back enhanced element comparison logic to handle next matched elements correctly ([eb05c82](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/eb05c826e69d72247cc76d9f7495fdbe199d68ae))
+* **XMLDiff:** missed removing the attributes ([5595509](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/5595509b4290afd329d5845543947987ae7ec132))
+* **XMLDiff:** rename variable for clarity in tracking removed or replaced elements ([e4644ee](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/e4644eebfa9069a53672ef1cf4e03f955eca073b))
+* **XMLDiff:** simplify condition for identifying replace or remove operations ([3485f06](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/3485f0675369e045fd8f4f838365818441eb016b))
+* **XMLDiff:** track last removed element to improve XPath matching logic ([b639741](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/b639741788804306e64befb250f81527f3c793f7))
+* **XMLPatch:** streamline option attribute formatting for AllowDoubles property ([3df7df5](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/3df7df50c1afdb651667780f96745a2960a442af))
+* **XMLPatch:** when multiple items added the order can be broken ([7ed6837](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/7ed6837c1f4b345848b351830fd80897eb318c28))
+
+
+### Code Refactoring
+
+* **XMLDiff:** enhance add operation logic for XML element positioning, use "after" and "prepend" instead of "before" in most cases&gt; ([dc92ca1](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/dc92ca117641b34123ad68c694d84be1cd4d76b7))
+* **XMLDiff:** extract text value retrieval into a separate method for improved readability, as XML libraries on Value return all text from all inherited items ([de4ea36](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/de4ea366f61e0c131e30cbab9bacbcec73964255))
+* **XMLDiff:** if difference in one attribute when them more then one, and all inherited elements are equal - it will be marked as change of attribute ([0b81ee8](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/0b81ee843a9bae7fc770813883fb80ec6c1059c9))
+* **XMLDiff:** if difference in one attribute, but there is one attribute in element - it will be marked as totally differ ([0b81ee8](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/0b81ee843a9bae7fc770813883fb80ec6c1059c9))
+* **XMLDiff:** improve add operation logic to exclude numeric ID patterns if possible ([aa64598](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/aa64598ebf63a7b9538be05631dc404e9835d957))
+* **XMLDiff:** update logging to use Info level for operations and improve clarity ([0b81ee8](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/0b81ee843a9bae7fc770813883fb80ec6c1059c9))
+* **XMLPatch:** add option to allow doubles in diff XML processing ([8e4e053](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/8e4e053ed7c6f5dc6354753d8808749b7ad117e4))
+* **XMLPatch:** clone and add elements and comments to improve logging and maintain state ([9b683de](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/9b683de29429692b2495632437eb5d56f1b9f5cd))
+* **XMLPatch:** enhance element addition logic to handle comments and improve logging ([7ed6837](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/7ed6837c1f4b345848b351830fd80897eb318c28))
+* **XMLPatch:** streamline element addition logic for improved clarity and maintainability ([bb2a720](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/bb2a7208dcccd9e99fa974766b1fe57c5381e816))
+
+
+### Documentation
+
+* **bbcode:** Update bbcode files ([bf97f53](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/bf97f53ea16a67a14c65335bdc184e008340432a))
+* **bbcode:** Update bbcode files ([c9aec6e](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/c9aec6e9d6d60b61e01db7d47a604e2cdac8a0b2))
+* **README:** enhance documentation with debug logging details and credits ([2705f32](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/2705f320e4ad6f825647ce7256f9c9af93186759))
+* **README:** update changelog for version 0.2.20 ([2f9e134](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/2f9e13412a6a6800b348d70511f3a78cf954797e))
+* **README:** update version to 0.2.20 and add --allow-doubles option description ([bd92775](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/bd92775aaee925e5b08219ba00ab8e6847e2172d))
+
 ## [0.2.20](https://github.com/chemodun/X4-XMLDiffAndPatch/compare/v0.2.19...v0.2.20) (2025-02-27)
 
 
