@@ -13,16 +13,20 @@ namespace X4XmlDiffAndPatch
   {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
+    private Options? ParsedOptions { get; set; }
+
     static void Main(string[] args)
     {
+      var program = new XMLPatch();
       Parser
         .Default.ParseArguments<Options>(args)
-        .WithParsed<Options>(opts => RunOptionsAndReturnExitCode(opts))
+        .WithParsed<Options>(opts => program.RunOptionsAndReturnExitCode(opts))
         .WithNotParsed<Options>((errs) => HandleParseError(errs));
     }
 
-    private static void RunOptionsAndReturnExitCode(Options opts)
+    private void RunOptionsAndReturnExitCode(Options opts)
     {
+      ParsedOptions = opts;
       ConfigureLogging(opts.LogToFile, opts.AppendToLog);
 
       Assembly assembly = Assembly.GetExecutingAssembly();
@@ -91,6 +95,7 @@ namespace X4XmlDiffAndPatch
       private string? xsd;
       private string? logToFile;
       private bool appendToLog;
+      private bool allowDoubles;
 
       [Option('o', "original_xml", Required = true, HelpText = "Path to the original XML file or directory.")]
       public string? OriginalXml
@@ -142,6 +147,19 @@ namespace X4XmlDiffAndPatch
         get => appendToLog;
         set => appendToLog = value;
       }
+
+      [Option(
+        ' ',
+        "allow-doubles",
+        Required = false,
+        HelpText = "Allow doubles in the diff XML. Useful for scripts patching.",
+        Default = false
+      )]
+      public bool AllowDoubles
+      {
+        get => allowDoubles;
+        set => allowDoubles = value;
+      }
     }
 
     #endregion
@@ -188,12 +206,7 @@ namespace X4XmlDiffAndPatch
 
     #region Processing
 
-    private static void ProcessSingleFile(
-      string originalXmlPath,
-      string diffXmlPath,
-      string outputXmlPath,
-      XmlReaderSettings? diffReaderSettings
-    )
+    private void ProcessSingleFile(string originalXmlPath, string diffXmlPath, string outputXmlPath, XmlReaderSettings? diffReaderSettings)
     {
       Logger.Info($"Patching the original XML file '{originalXmlPath}' with the diff XML file '{diffXmlPath}' to '{outputXmlPath}'.");
       if (!File.Exists(originalXmlPath))
@@ -325,7 +338,7 @@ namespace X4XmlDiffAndPatch
       }
     }
 
-    private static void ProcessDirectories(string originalDir, string diffDir, string outputDir, XmlReaderSettings? diffReaderSettings)
+    private void ProcessDirectories(string originalDir, string diffDir, string outputDir, XmlReaderSettings? diffReaderSettings)
     {
       var diffFiles = Directory.EnumerateFiles(diffDir, "*.xml", SearchOption.AllDirectories);
       foreach (var diffFilePath in diffFiles)
@@ -376,7 +389,7 @@ namespace X4XmlDiffAndPatch
 
     #region Apply Operations
 
-    private static void ApplyAdd(XElement addElement, XElement originalRoot)
+    private void ApplyAdd(XElement addElement, XElement originalRoot)
     {
       string? sel = addElement.Attribute("sel")?.Value;
       Logger.Debug($"Applying add operation: '{sel}'");
@@ -421,9 +434,14 @@ namespace X4XmlDiffAndPatch
           if (pos == "before")
           {
             if (
-              targetElement
+              (ParsedOptions == null || !ParsedOptions.AllowDoubles)
+              && targetElement
                 .Parent!.Elements()
-                .Any(e => e.Name == cloned.Name && e.Attributes().All(a => cloned.Attribute(a.Name)?.Value == a.Value))
+                .Any(e =>
+                  e.Name == cloned.Name
+                  && e.Attributes().All(a => cloned.Attribute(a.Name)?.Value == a.Value)
+                  && cloned.Attributes().All(a => e.Attribute(a.Name)?.Value == a.Value)
+                )
             )
             {
               Logger.Warn($"Element '{clonedInfo}' already exists in '{parentInfo}'. Skipping.");
@@ -435,9 +453,14 @@ namespace X4XmlDiffAndPatch
           else if (pos == "after")
           {
             if (
-              targetElement
+              (ParsedOptions == null || !ParsedOptions.AllowDoubles)
+              && targetElement
                 .Parent!.Elements()
-                .Any(e => e.Name == cloned.Name && e.Attributes().All(a => cloned.Attribute(a.Name)?.Value == a.Value))
+                .Any(e =>
+                  e.Name == cloned.Name
+                  && e.Attributes().All(a => cloned.Attribute(a.Name)?.Value == a.Value)
+                  && cloned.Attributes().All(a => e.Attribute(a.Name)?.Value == a.Value)
+                )
             )
             {
               Logger.Warn($"Element '{clonedInfo}' already exists in '{parentInfo}'. Skipping.");
@@ -449,10 +472,13 @@ namespace X4XmlDiffAndPatch
           else if (pos == "prepend")
           {
             if (
-              targetElement
+              (ParsedOptions == null || !ParsedOptions.AllowDoubles)
+              && targetElement
                 .Elements()
                 .Any(e =>
-                  e.Name == cloned.Name && e.Attributes().All(a => a.Name == "_source" || cloned.Attribute(a.Name)?.Value == a.Value)
+                  e.Name == cloned.Name
+                  && e.Attributes().All(a => cloned.Attribute(a.Name)?.Value == a.Value)
+                  && cloned.Attributes().All(a => e.Attribute(a.Name)?.Value == a.Value)
                 )
             )
             {
@@ -465,10 +491,13 @@ namespace X4XmlDiffAndPatch
           else if (pos == "append")
           {
             if (
-              targetElement
+              (ParsedOptions == null || !ParsedOptions.AllowDoubles)
+              && targetElement
                 .Elements()
                 .Any(e =>
-                  e.Name == cloned.Name && e.Attributes().All(a => a.Name == "_source" || cloned.Attribute(a.Name)?.Value == a.Value)
+                  e.Name == cloned.Name
+                  && e.Attributes().All(a => cloned.Attribute(a.Name)?.Value == a.Value)
+                  && cloned.Attributes().All(a => e.Attribute(a.Name)?.Value == a.Value)
                 )
             )
             {
@@ -500,7 +529,7 @@ namespace X4XmlDiffAndPatch
       }
     }
 
-    private static void ApplyReplace(XElement replaceElement, XElement originalRoot)
+    private void ApplyReplace(XElement replaceElement, XElement originalRoot)
     {
       string? sel = replaceElement.Attribute("sel")?.Value;
       Logger.Info($"Applying replace operation: '{sel}'");
@@ -553,7 +582,7 @@ namespace X4XmlDiffAndPatch
       }
     }
 
-    private static void ApplyRemove(XElement removeElement, XElement originalRoot)
+    private void ApplyRemove(XElement removeElement, XElement originalRoot)
     {
       string? sel = removeElement.Attribute("sel")?.Value;
       Logger.Info($"Applying remove operation: '{sel}'");
@@ -635,7 +664,7 @@ namespace X4XmlDiffAndPatch
         info += $"{element.Name}";
         if (element.HasAttributes)
         {
-          info += $"{element.FirstAttribute?.Name}=\"{element.FirstAttribute?.Value}\"";
+          info += $" {element.FirstAttribute?.Name}=\"{element.FirstAttribute?.Value}\"";
           if (element.Attributes().Count() > 1)
           {
             info += " ...";
