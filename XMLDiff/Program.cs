@@ -643,11 +643,23 @@ namespace X4XmlDiffAndPatch
             )
             {
               Logger.Debug($"Found match for '{GetElementInfo(originalChild)}' in the next child of '{GetElementInfo(modifiedElem)}'.");
-              XElement addOp = new XElement(
-                "add",
-                new XAttribute("sel", GenerateXPath(originalChild, pathOptions)),
-                new XAttribute("pos", "before")
-              );
+              XElement addOp;
+              if (i > 0)
+              {
+                addOp = new XElement(
+                  "add",
+                  new XAttribute("sel", GenerateXPath(originalChildren[i - 1], pathOptions)),
+                  new XAttribute("pos", "after")
+                );
+              }
+              else
+              {
+                addOp = new XElement(
+                  "add",
+                  new XAttribute("sel", GenerateXPath(originalElem, pathOptions)),
+                  new XAttribute("pos", "prepend")
+                );
+              }
               for (int l = j; l < k; l++)
               {
                 var addedChild = modifiedChildren[l];
