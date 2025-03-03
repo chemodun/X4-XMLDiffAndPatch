@@ -280,10 +280,9 @@ namespace X4XmlDiffAndPatch
         else
         {
           Logger.Warn("Diff XML validation is disabled.");
-          diffDoc = XDocument.Load(diffXmlPath);
         }
 
-        diffDoc = XDocument.Load(diffXmlPath);
+        diffDoc = XDocument.Load(diffXmlPath, LoadOptions.SetLineInfo);
         if (diffDoc == null)
         {
           Logger.Error("Diff XML root is null.");
@@ -298,9 +297,13 @@ namespace X4XmlDiffAndPatch
         }
 
         XElement originalRoot = originalDoc.Root ?? throw new InvalidOperationException("originalDoc.Root is null");
-
-        foreach (var operation in diffRoot.Elements())
+        foreach (XNode node in diffRoot.Nodes())
         {
+          if (node is not XElement operation)
+          {
+            Logger.Warn($"Skipping non-element node: {node}");
+            continue;
+          }
           switch (operation.Name.LocalName)
           {
             case "add":
@@ -423,93 +426,141 @@ namespace X4XmlDiffAndPatch
       var targetElement = targetElements.First();
       if (pos != null)
       {
-        var newElements = addElement.Elements();
-        foreach (var newElem in newElements)
+        XNode? latestAdded = null;
+        foreach (var newNode in addElement.Nodes())
         {
-          XElement cloned = new XElement(newElem);
-          string clonedInfo = GetElementInfo(cloned);
-          string targetInfo = GetElementInfo(targetElement);
-          string parentInfo = GetElementInfo(targetElement.Parent);
-          Logger.Debug($"Cloned element: {clonedInfo}");
-          if (pos == "before")
+          if (latestAdded == null)
           {
-            if (
-              (ParsedOptions == null || !ParsedOptions.AllowDoubles)
-              && targetElement
-                .Parent!.Elements()
-                .Any(e =>
-                  e.Name == cloned.Name
-                  && e.Attributes().All(a => cloned.Attribute(a.Name)?.Value == a.Value)
-                  && cloned.Attributes().All(a => e.Attribute(a.Name)?.Value == a.Value)
-                )
-            )
+            if (newNode is XElement newElem)
             {
-              Logger.Warn($"Element '{clonedInfo}' already exists in '{parentInfo}'. Skipping.");
-              continue;
+              XElement cloned = new XElement(newElem);
+              string clonedInfo = GetElementInfo(cloned);
+              string targetInfo = GetElementInfo(targetElement);
+              string parentInfo = GetElementInfo(targetElement.Parent);
+              Logger.Debug($"Cloned element: {clonedInfo}");
+              switch (pos)
+              {
+                case "before":
+                  if (
+                    (ParsedOptions == null || !ParsedOptions.AllowDoubles)
+                    && targetElement
+                      .Parent!.Elements()
+                      .Any(e =>
+                        e.Name == cloned.Name
+                        && e.Attributes().All(a => cloned.Attribute(a.Name)?.Value == a.Value)
+                        && cloned.Attributes().All(a => e.Attribute(a.Name)?.Value == a.Value)
+                      )
+                  )
+                  {
+                    Logger.Warn($"Element '{clonedInfo}' already exists in '{parentInfo}'. Skipping.");
+                    continue;
+                  }
+                  targetElement.AddBeforeSelf(cloned);
+                  Logger.Info($"Added new element '{clonedInfo}' before '{targetInfo}' in '{parentInfo}'.");
+                  latestAdded = cloned;
+                  break;
+                case "after":
+                  if (
+                    (ParsedOptions == null || !ParsedOptions.AllowDoubles)
+                    && targetElement
+                      .Parent!.Elements()
+                      .Any(e =>
+                        e.Name == cloned.Name
+                        && e.Attributes().All(a => cloned.Attribute(a.Name)?.Value == a.Value)
+                        && cloned.Attributes().All(a => e.Attribute(a.Name)?.Value == a.Value)
+                      )
+                  )
+                  {
+                    Logger.Warn($"Element '{clonedInfo}' already exists in '{parentInfo}'. Skipping.");
+                    continue;
+                  }
+                  targetElement.AddAfterSelf(cloned);
+                  Logger.Info($"Added new element '{clonedInfo}' after '{targetInfo}' in '{parentInfo}'.");
+                  latestAdded = cloned;
+                  break;
+                case "prepend":
+                  if (
+                    (ParsedOptions == null || !ParsedOptions.AllowDoubles)
+                    && targetElement
+                      .Elements()
+                      .Any(e =>
+                        e.Name == cloned.Name
+                        && e.Attributes().All(a => cloned.Attribute(a.Name)?.Value == a.Value)
+                        && cloned.Attributes().All(a => e.Attribute(a.Name)?.Value == a.Value)
+                      )
+                  )
+                  {
+                    Logger.Warn($"Element '{clonedInfo}' already exists in '{targetInfo}'. Skipping.");
+                    continue;
+                  }
+                  targetElement.AddFirst(cloned);
+                  Logger.Info($"Prepended new element '{clonedInfo}' to '{targetInfo}'.");
+                  latestAdded = cloned;
+                  break;
+                case "append":
+                  if (
+                    (ParsedOptions == null || !ParsedOptions.AllowDoubles)
+                    && targetElement
+                      .Elements()
+                      .Any(e =>
+                        e.Name == cloned.Name
+                        && e.Attributes().All(a => cloned.Attribute(a.Name)?.Value == a.Value)
+                        && cloned.Attributes().All(a => e.Attribute(a.Name)?.Value == a.Value)
+                      )
+                  )
+                  {
+                    Logger.Warn($"Element '{clonedInfo}' already exists in '{targetInfo}'. Skipping.");
+                    continue;
+                  }
+                  targetElement.Add(cloned);
+                  Logger.Info($"Appended new element '{clonedInfo}' to '{targetInfo}'.");
+                  latestAdded = cloned;
+                  break;
+                default:
+                  Logger.Warn($"Unknown position: {pos}! Skipping operation.");
+                  break;
+              }
             }
-            targetElement.AddBeforeSelf(cloned);
-            Logger.Info($"Added new element '{clonedInfo}' before '{targetInfo}' in '{parentInfo}'.");
-          }
-          else if (pos == "after")
-          {
-            if (
-              (ParsedOptions == null || !ParsedOptions.AllowDoubles)
-              && targetElement
-                .Parent!.Elements()
-                .Any(e =>
-                  e.Name == cloned.Name
-                  && e.Attributes().All(a => cloned.Attribute(a.Name)?.Value == a.Value)
-                  && cloned.Attributes().All(a => e.Attribute(a.Name)?.Value == a.Value)
-                )
-            )
+            else if (newNode is XComment comment)
             {
-              Logger.Warn($"Element '{clonedInfo}' already exists in '{parentInfo}'. Skipping.");
-              continue;
+              XComment cloned = new XComment(comment);
+              latestAdded = cloned;
+              switch (pos)
+              {
+                case "before":
+                  targetElement.AddBeforeSelf(cloned);
+                  break;
+                case "after":
+                  targetElement.AddAfterSelf(cloned);
+                  break;
+                case "prepend":
+                  targetElement.AddFirst(cloned);
+                  break;
+                case "append":
+                  targetElement.Add(cloned);
+                  break;
+                default:
+                  latestAdded = null;
+                  Logger.Warn($"Unknown position: {pos}! Skipping operation.");
+                  break;
+              }
+              if (latestAdded != null)
+              {
+                Logger.Info($"Added comment: '{cloned.Value}'");
+              }
             }
-            targetElement.AddAfterSelf(cloned);
-            Logger.Info($"Added new element '{clonedInfo}' after '{targetInfo}' in '{parentInfo}'.");
           }
-          else if (pos == "prepend")
+          else if (newNode is XElement || newNode is XComment)
           {
-            if (
-              (ParsedOptions == null || !ParsedOptions.AllowDoubles)
-              && targetElement
-                .Elements()
-                .Any(e =>
-                  e.Name == cloned.Name
-                  && e.Attributes().All(a => cloned.Attribute(a.Name)?.Value == a.Value)
-                  && cloned.Attributes().All(a => e.Attribute(a.Name)?.Value == a.Value)
-                )
-            )
+            latestAdded.AddAfterSelf(newNode);
+            if (newNode is XElement newElem)
             {
-              Logger.Warn($"Element '{clonedInfo}' already exists in '{targetInfo}'. Skipping.");
-              continue;
+              Logger.Info($"Added new element: {GetElementInfo(newElem)}");
             }
-            targetElement.AddFirst(cloned);
-            Logger.Info($"Prepended new element '{clonedInfo}' to '{targetInfo}'.");
-          }
-          else if (pos == "append")
-          {
-            if (
-              (ParsedOptions == null || !ParsedOptions.AllowDoubles)
-              && targetElement
-                .Elements()
-                .Any(e =>
-                  e.Name == cloned.Name
-                  && e.Attributes().All(a => cloned.Attribute(a.Name)?.Value == a.Value)
-                  && cloned.Attributes().All(a => e.Attribute(a.Name)?.Value == a.Value)
-                )
-            )
+            else if (newNode is XComment comment)
             {
-              Logger.Warn($"Element '{clonedInfo}' already exists in '{targetInfo}'. Skipping.");
-              continue;
+              Logger.Info($"Added comment: '{comment.Value}'");
             }
-            targetElement.Add(cloned);
-            Logger.Info($"Appended new element '{clonedInfo}' to '{targetInfo}'.");
-          }
-          else
-          {
-            Logger.Warn($"Unknown position: {pos}! Skipping operation.");
           }
         }
       }
