@@ -528,7 +528,7 @@ namespace X4XmlDiffAndPatch
             {
               Logger.Debug($"Original attributes does not contain key '{attr.Key}'.");
               differencesInAttributesCount++;
-              if (differencesInAttributesCount > 1 || modifiedAttributes.Count == 1)
+              if (differencesInAttributesCount > 1)
               {
                 differencesInAttributesCount++;
                 matchedEnough = false;
@@ -544,7 +544,7 @@ namespace X4XmlDiffAndPatch
                 $"Original attributes value '{originalAttributes[attr.Key]}' does not match with modified attributes value '{attr.Value}'."
               );
               differencesInAttributesCount++;
-              if (differencesInAttributesCount > 1 || originalAttributes.Count == 1)
+              if (differencesInAttributesCount > 1)
               {
                 differencesInAttributesCount++;
                 matchedEnough = false;
@@ -596,26 +596,19 @@ namespace X4XmlDiffAndPatch
               return true;
             }
             matchedEnough = false;
-            if (!CompareElements(original, modified, diffRoot, pathOptions, originalChild, modifiedChild, true))
+            if (
+              !CompareElements(original, modified, diffRoot, pathOptions, originalChild, modifiedChild, true)
+              && originalChildren[i + 1].Name == modifiedChildren[j + 1].Name
+              && originalChildren[i + 1].Attributes().Count() == modifiedChildren[j + 1].Attributes().Count()
+              && originalChildren[i + 1].Attributes().All(attr => modifiedChildren[j + 1].Attribute(attr.Name)?.Value == attr.Value)
+            )
             {
-              bool nextMatched = true;
-              if (i + 1 < originalChildren.Count && j + 1 < modifiedChildren.Count)
+              if (savedOp != null)
               {
-                XElement originalTemp = new XElement("temp");
-                originalTemp.Add(originalChildren[i + 1]);
-                XElement modifiedTemp = new XElement("temp");
-                modifiedTemp.Add(modifiedChildren[j + 1]);
-                nextMatched = !CompareElements(original, modified, diffRoot, pathOptions, originalTemp, modifiedTemp, true);
+                diffRoot.Add(savedOp);
+                Logger.Info($"[Operation {savedOp.Name}] Added the saved operation to the diff.");
               }
-              if (nextMatched)
-              {
-                if (savedOp != null)
-                {
-                  diffRoot.Add(savedOp);
-                  Logger.Info($"[Operation {savedOp.Name}] Added the saved operation to the diff.");
-                }
-                matchedEnough = true;
-              }
+              matchedEnough = true;
             }
           }
           Logger.Debug($"Matched enough: {matchedEnough}, i: {i}, j: {j}");
