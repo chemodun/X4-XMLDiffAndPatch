@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.2.22](https://github.com/chemodun/X4-XMLDiffAndPatch/compare/v0.2.21...v0.2.22) (2025-03-06)
+
+
+### Code Refactoring
+
+* **XMLDiff:** improve replace attribute detection ([37ab85e](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/37ab85e71112c5b7e4c6844e8900ca0500d8b0e8))
+
+
+### Miscellaneous Chores
+
+* **XMLDiff:** add RunXMLDiff.bat script and documentation for integration with VSCode; update cspell.json ([67153e9](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/67153e91c6433f12440c445af5d2a1ebf2296652))
+
 ## [0.2.21](https://github.com/chemodun/X4-XMLDiffAndPatch/compare/v0.2.20...v0.2.21) (2025-03-03)
 
 
