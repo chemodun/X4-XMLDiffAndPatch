@@ -7,8 +7,8 @@ This document describes how to use XMLDiff with Visual Studio Code.
 ## Prerequisites
 
 - Visual Studio Code
-- XMLDiff.exe and RunXMLDiff.bat from this repository
-- VSCode extension (Run on Save)[https://marketplace.visualstudio.com/items?itemName=emeraldwalk.RunOnSave] by (emeraldwalk)[https://marketplace.visualstudio.com/publishers/emeraldwalk]
+- XMLDiff.exe and [RunXMLDiff.bat](/forVSCode/RunXMLDiff.bat) from this repository
+- VSCode extension [Run on Save](https://marketplace.visualstudio.com/items?itemName=emeraldwalk.RunOnSave) by [emeraldwalk](https://marketplace.visualstudio.com/publishers/emeraldwalk)
 
 ## Steps
 
@@ -27,10 +27,10 @@ This document describes how to use XMLDiff with Visual Studio Code.
     │   md.original
     ```
 
-2. You can scipt creation `*.original` folders, if you will use the `extracted` files folder.
-3. Copy the `RunXMLDiff.bat` file to the root of your project.
+2. You can script creation `*.original` folders, if you will use the `extracted` files folder.
+3. Copy the [RunXMLDiff.bat](/forVSCode/RunXMLDiff.bat) file to the root of your project.
 4. Copy the `XMLDiff.exe` file to the `XMLDiffAndPatch` folder in the root of your project.
-5. Install the VSCode extension (Run on Save)[https://marketplace.visualstudio.com/items?itemName=emeraldwalk.RunOnSave] by (emeraldwalk)[https://marketplace.visualstudio.com/publishers/emeraldwalk]
+5. Install the VSCode extension [Run on Save](https://marketplace.visualstudio.com/items?itemName=emeraldwalk.RunOnSave) by [emeraldwalk](https://marketplace.visualstudio.com/publishers/emeraldwalk)
 6. Open the settings of the extension by pressing `Ctrl + ,` and search for `runOnSave.commands`
 7. Add the following configuration to the settings:
     7.1 In case of not to use the "Extracted" files folder, i.e. with `*.original` folders:
