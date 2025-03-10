@@ -747,6 +747,19 @@ namespace X4XmlDiffAndPatch
       return false;
     }
 
+    private static string AttributeToXpathElement(XAttribute attr)
+    {
+      string attrValue = attr.Value.Replace("\"", "&quot;");
+      if (attrValue.Contains("'"))
+      {
+        return $"[@{attr.Name.LocalName}=\"{attrValue}\"]";
+      }
+      else
+      {
+        return $"[@{attr.Name.LocalName}='{attrValue}']";
+      }
+    }
+
     private static (string step, string patchForParent) GetElementPathStep(
       XElement element,
       XElement parent,
@@ -763,6 +776,10 @@ namespace X4XmlDiffAndPatch
       if (patchForParent == "")
         patchForParent = $"{element.Name.LocalName}";
       List<XAttribute> attributes = [];
+      if (element.FirstAttribute != null)
+      {
+        patchForParent += AttributeToXpathElement(element.FirstAttribute);
+      }
       IEnumerable<XElement> matches = parent.XPathSelectElements(patchForParent);
       if (matches.Count() == 1 && matches.First() == element)
       {
@@ -774,20 +791,12 @@ namespace X4XmlDiffAndPatch
       }
       if (attributes.Count > 0)
       {
+        string xpath = $"{patchForParent}";
         if (pathOptions.UseAllAttributes)
         {
-          string xpath = $"{patchForParent}";
           foreach (var attr in attributes)
           {
-            string attrValue = attr.Value.Replace("\"", "&quot;");
-            if (attrValue.Contains("'"))
-            {
-              xpath += $"[@{attr.Name.LocalName}=\"{attrValue}\"]";
-            }
-            else
-            {
-              xpath += $"[@{attr.Name.LocalName}='{attrValue}']";
-            }
+            xpath += AttributeToXpathElement(attr);
           }
           matches = parent.XPathSelectElements(xpath);
           if (matches.Count() == 1 && matches.First() == element)
@@ -801,18 +810,11 @@ namespace X4XmlDiffAndPatch
             }
           }
         }
+        xpath = $"{patchForParent}";
         foreach (var attr in attributes)
         {
           string attrValue = attr.Value.Replace("\"", "&quot;");
-          string xpath = $"{patchForParent}";
-          if (attrValue.Contains("'"))
-          {
-            xpath += $"[@{attr.Name.LocalName}=\"{attrValue}\"]";
-          }
-          else
-          {
-            xpath += $"[@{attr.Name.LocalName}='{attrValue}']";
-          }
+          xpath += AttributeToXpathElement(attr);
           matches = parent.XPathSelectElements(xpath);
           if (matches.Count() == 1 && matches.First() == element)
           {
