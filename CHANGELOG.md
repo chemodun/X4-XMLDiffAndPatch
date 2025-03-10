@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.2.22](https://github.com/chemodun/X4-XMLDiffAndPatch/compare/v0.2.21...v0.2.22) (2025-03-10)
+
+
+### Code Refactoring
+
+* **XMLDiff:** always include the first attribute in the XPath element ([f3aec88](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/f3aec88c8f9ccc47056fa3b72f09b7f4a221b748))
+* **XMLDiff:** extract attribute to XPath element conversion into a separate method ([f3aec88](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/f3aec88c8f9ccc47056fa3b72f09b7f4a221b748))
+* **XMLDiff:** if one of attribute is not enough to identify the element, include step by step next attributes ([f3aec88](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/f3aec88c8f9ccc47056fa3b72f09b7f4a221b748))
+* **XMLDiff:** improve replace attribute detection ([37ab85e](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/37ab85e71112c5b7e4c6844e8900ca0500d8b0e8))
+
+
+### Miscellaneous Chores
+
+* **XMLDiff:** add RunXMLDiff.bat script and documentation for integration with VSCode; update cspell.json ([67153e9](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/67153e91c6433f12440c445af5d2a1ebf2296652))
+
+
+### Documentation
+
+* **bbcode:** Update bbcode files ([66f41a2](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/66f41a2014859845de7cb4b5419ac8ac904537fe))
+* **README:** add integration details for VSCode and RunXMLDiff.bat script ([dad5f06](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/dad5f06b7ea576ec733a4e4d40637ddc0b645d92))
+* **README:** update changelog for version 0.2.22 with XMLDiff improvements ([31c042b](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/31c042b3f8778635ef2f7e095d02d06b97e915fe))
+* **README:** update VSCode integration details and improve link formatting ([203c8e2](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/203c8e2229c777937c21a59e02bc98d53fc08500))
+
 ## [0.2.21](https://github.com/chemodun/X4-XMLDiffAndPatch/compare/v0.2.20...v0.2.21) (2025-03-03)
 
 
