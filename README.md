@@ -270,6 +270,12 @@ Please be aware - each release archive has an appropriate link to the [VirusTota
 
 ## Changelog
 
+### [0.2.22] - 2025-03-10
+
+- Improved
+  - XMLDiff: The first attribute of elements in XPath will be always added to make a diff more clear.
+  - XMLDiff: If one attribute is not enough to define the element, the next one will be added to the XPath, iteratively.
+
 ### [0.2.21] - 2025-03-03
 
 - Fixed
