@@ -272,6 +272,14 @@ Please be aware - each release archive has an appropriate link to the [url=https
 
 [size=130][u]Changelog[/u][/size]
 
+[size=125][u][0.2.22] - 2025-03-10[/u][/size]
+[list]
+[*] Improved
+[list]
+[*] XMLDiff: The first attribute of elements in XPath will be always added to make a diff more clear.
+[*] XMLDiff: If one attribute is not enough to define the element, the next one will be added to the XPath, iteratively.
+[/list]
+[/list]
 [size=125][u][0.2.21] - 2025-03-03[/u][/size]
 [list]
 [*] Fixed
