@@ -278,6 +278,7 @@ Please be aware - each release archive has an appropriate link to the [url=https
 [list]
 [*] XMLDiff: The first attribute of elements in XPath will be always added to make a diff more clear.
 [*] XMLDiff: If one attribute is not enough to define the element, the next one will be added to the XPath, iteratively.
+[*] XMLDiff: Added the [url=https://github.com/chemodun/X4-XMLDiffAndPatch/raw/main///forVSCode/XMLDIffwithVSCode.md]short description of integration with VSCode[/url] via RunXMLDiff.bat script and appropriate extension to make a diffs "on the fly" during editing XML files (modified ones).
 [/list]
 [/list]
 [size=3][u][i][0.2.21] - 2025-03-03[/i][/u][/size]
