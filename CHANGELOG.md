@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.2.23](https://github.com/chemodun/X4-XMLDiffAndPatch/compare/v0.2.22...v0.2.23) (2025-03-15)
+
+
+### Bug Fixes
+
+* **workflow:** enhance file change detection in markdown update workflow ([ea8405f](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/ea8405f8bf5c4a7c5865b4b1c5d6b272c8375e6c))
+* **workflow:** rename variable for clarity in markdown update workflow ([5604053](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/560405355683c98058f16b64e57056c0d76b2fcc))
+* **workflow:** trying to replace compromised tj-actions ([6d5082d](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/6d5082d745c17d47951229ed60a8a29d7af30d17))
+* **workflow:** update environment variable reference for file masks in markdown update workflow ([880bc08](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/880bc0884cf904f934308c84b796e6091e7070cc))
+* **XMLDiff:** improve element comparison logic to right handle last elements ([4824209](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/48242090fe19e67e129c85b8cebd4236e5505d92))
+
+
+### Documentation
+
+* **CHANGELOG:** add entry for version 0.2.23 with XMLDiff fix ([8128d54](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/8128d547a0f3c72fa4217d501230e81def387842))
+* **README:** clarify XMLDiff fix description for index out of range issue ([129598f](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/129598feb45f52853ab5761c35f8b18540c985d4))
+* **README:** clarify XMLDiff fix description for version 0.2.23 ([7796856](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/779685606b306e73cd9aeccf3308e9289fe86498))
+* **README:** simplify XMLDiff fix description for version 0.2.23 ([ba7ed4c](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/ba7ed4c4bbd455ab61b74a01bab0340f8c2ca721))
+* **README:** update XMLDiff fix description to clarify index out of range issue ([5bbab50](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/5bbab500a1e28f67f62f254198b180170c1a69b2))
+
 ## [0.2.22](https://github.com/chemodun/X4-XMLDiffAndPatch/compare/v0.2.21...v0.2.22) (2025-03-10)
 
 
