@@ -598,9 +598,13 @@ namespace X4XmlDiffAndPatch
             matchedEnough = false;
             if (
               !CompareElements(original, modified, diffRoot, pathOptions, originalChild, modifiedChild, true)
-              && originalChildren[i + 1].Name == modifiedChildren[j + 1].Name
-              && originalChildren[i + 1].Attributes().Count() == modifiedChildren[j + 1].Attributes().Count()
-              && originalChildren[i + 1].Attributes().All(attr => modifiedChildren[j + 1].Attribute(attr.Name)?.Value == attr.Value)
+              && (
+                i + 1 == originalChildren.Count
+                || j + 1 == modifiedChildren.Count
+                || originalChildren[i + 1].Name == modifiedChildren[j + 1].Name
+                  && originalChildren[i + 1].Attributes().Count() == modifiedChildren[j + 1].Attributes().Count()
+                  && originalChildren[i + 1].Attributes().All(attr => modifiedChildren[j + 1].Attribute(attr.Name)?.Value == attr.Value)
+              )
             )
             {
               if (savedOp != null)
