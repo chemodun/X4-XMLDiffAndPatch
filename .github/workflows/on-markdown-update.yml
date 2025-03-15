@@ -38,9 +38,9 @@ jobs:
           # Loop through each file mask and check for changes
           for mask in ${{ env.file_masks }}; do
             # Get the list of changed files for the current mask
-            current_changed_files=$(git diff --name-status ${{ github.event.before }} ${{ github.event.after }} | grep '^[AM]' | grep "${mask}" | awk '{print $2}')
+            current_changed_files=$(git diff --name-status ${{ github.event.before }} ${{ github.event.after }} | grep '^[AM]' | grep "${mask}" | awk '{print $2}' | xargs)
             # Get the list of deleted files for the current mask
-            current_deleted_files=$(git diff --name-status ${{ github.event.before }} ${{ github.event.after }} | grep '^D' | grep "${mask}" | awk '{print $2}')
+            current_deleted_files=$(git diff --name-status ${{ github.event.before }} ${{ github.event.after }} | grep '^D' | grep "${mask}" | awk '{print $2}' | xargs)
             # Check if there are any changes for the current mask
             current_any_changed=$(git diff --name-status ${{ github.event.before }} ${{ github.event.after }} | grep "${mask}" | wc -l)
 
