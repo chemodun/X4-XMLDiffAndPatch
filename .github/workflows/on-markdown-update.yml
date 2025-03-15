@@ -29,8 +29,6 @@ jobs:
 
       - name: Get changed files
         id: changed-markdown-files
-        env:
-          FILE_MASKS: ${{ steps.define-file-masks.outputs.file_masks }}
         run: |
           # Initialize variables
           changed_files=""
@@ -38,7 +36,7 @@ jobs:
           any_changes="false"
 
           # Loop through each file mask and check for changes
-          for mask in $FILE_MASKS; do
+          for mask in ${{ env.file_masks }}; do
             # Get the list of changed files for the current mask
             current_changed_files=$(git diff --name-status ${{ github.event.before }} ${{ github.event.after }} | grep '^[AM]' | grep "${mask}" | awk '{print $2}')
             # Get the list of deleted files for the current mask
