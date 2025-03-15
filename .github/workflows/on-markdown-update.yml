@@ -26,8 +26,7 @@ jobs:
         uses: chemodun/changed-files@0.1.1
         with:
           # Avoid using single or double quotes for multiline patterns
-          files: |
-            README.md
+          files: README.md
 
       - name: Install python3
         if: steps.changed-markdown-files.outputs.any_changed == 'true'
