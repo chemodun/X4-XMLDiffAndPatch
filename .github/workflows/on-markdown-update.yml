@@ -23,7 +23,7 @@ jobs:
 
       - name: Get all markdown files
         id: changed-markdown-files
-        uses: chemodun/changed-files@0.1.0
+        uses: chemodun/changed-files@0.1.1
         with:
           # Avoid using single or double quotes for multiline patterns
           files: |
