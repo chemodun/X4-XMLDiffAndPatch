@@ -20,7 +20,7 @@ If the `diff.xsd` file if it located in the "current" folder it will be used aut
 
 ### How to create a diff file
 
-There is a command line help for the `XMLDiff` tool:
+There is a command line help for the `XMLDiff` tool: 
 
 ```shell
 XMLDiff 0.2.18
