@@ -272,6 +272,13 @@ Please be aware - each release archive has an appropriate link to the [url=https
 
 [size=3][u][b]Changelog[/b][/u][/size]
 
+[size=3][u][i][0.2.23] - 2025-03-15[/i][/u][/size]
+[list]
+[*] Fixed:
+[list]
+[*] XMLDiff: fixed issue with the last sub element comparison (index out of range)
+[/list]
+[/list]
 [size=3][u][i][0.2.22] - 2025-03-10[/i][/u][/size]
 [list]
 [*] Improved
