@@ -21,13 +21,20 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Get all markdown files
+      - name: Get changed files
         id: changed-markdown-files
-        uses: tj-actions/changed-files@v45
-        with:
-          # Avoid using single or double quotes for multiline patterns
-          files: |
-            README.md
+        # Set outputs using the command.
+        run: |
+          git diff --name-only ${{ github.event.before }} ${{ github.event.after }}
+          git diff --name-only ${{ github.event.before }} ${{ github.event.after }} | grep -c 'README\.md$'
+          echo "changed_files=$(git diff --name-only ${{ github.event.before }} ${{ github.event.after }} | grep 'README\.md$' | xargs)" >> $GITHUB_OUTPUT
+
+      - name: List changed files
+        run: |
+            for file in ${{ steps.changed-markdown-files.outputs.changed_files }}; do
+                echo "$file was changed"
+            done
+
 
       - name: Install python3
         if: steps.changed-markdown-files.outputs.any_changed == 'true'
