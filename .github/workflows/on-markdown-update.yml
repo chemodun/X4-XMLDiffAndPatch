@@ -21,20 +21,57 @@ jobs:
         with:
           fetch-depth: 0
 
+
+      - name: Define file masks
+        id: define-file-masks
+        run: |
+          echo "file_masks='README.md'" >> $GITHUB_ENV
+
       - name: Get changed files
         id: changed-markdown-files
-        # Set outputs using the command.
+        env:
+          FILE_MASKS: ${{ steps.define-file-masks.outputs.file_masks }}
         run: |
-          git diff --name-only ${{ github.event.before }} ${{ github.event.after }}
-          git diff --name-only ${{ github.event.before }} ${{ github.event.after }} | grep -c 'README\.md$'
-          echo "changed_files=$(git diff --name-only ${{ github.event.before }} ${{ github.event.after }} | grep 'README\.md$' | xargs)" >> $GITHUB_OUTPUT
+          # Initialize variables
+          changed_files=""
+          deleted_files=""
+          any_changes="false"
+
+          # Loop through each file mask and check for changes
+          for mask in $FILE_MASKS; do
+            # Get the list of changed files for the current mask
+            current_changed_files=$(git diff --name-status ${{ github.event.before }} ${{ github.event.after }} | grep '^[AM]' | grep "${mask}" | awk '{print $2}')
+            # Get the list of deleted files for the current mask
+            current_deleted_files=$(git diff --name-status ${{ github.event.before }} ${{ github.event.after }} | grep '^D' | grep "${mask}" | awk '{print $2}')
+            # Check if there are any changes for the current mask
+            current_any_changes=$(git diff --name-status ${{ github.event.before }} ${{ github.event.after }} | grep "${mask}" | wc -l)
+
+            # Append the current changed files to the overall list
+            if [ -n "$current_changed_files" ]; then
+              changed_files="$changed_files $current_changed_files"
+            fi
+
+            # Append the current deleted files to the overall list
+            if [ -n "$current_deleted_files" ]; then
+              deleted_files="$deleted_files $current_deleted_files"
+            fi
+
+            # Set any_changes to true if there are any changes for the current mask
+            if [ "$current_any_changes" -gt 0 ]; then
+              any_changes="true"
+            fi
+          done
+
+          # Set the outputs
+          echo "changed_files=${changed_files}" >> $GITHUB_OUTPUT
+          echo "deleted_files=${deleted_files}" >> $GITHUB_OUTPUT
+          echo "any_changes=${any_changes}" >> $GITHUB_OUTPUT
 
       - name: List changed files
         run: |
-            for file in ${{ steps.changed-markdown-files.outputs.changed_files }}; do
-                echo "$file was changed"
-            done
-
+          for file in ${{ steps.changed-markdown-files.outputs.changed_files }}; do
+            echo "$file was changed"
+          done
 
       - name: Install python3
         if: steps.changed-markdown-files.outputs.any_changed == 'true'
@@ -48,7 +85,7 @@ jobs:
       - name: Process *.md changes
         if: steps.changed-markdown-files.outputs.any_changed == 'true'
         env:
-          CHANGED_FILES: ${{ steps.changed-markdown-files.outputs.all_changed_files }}
+          CHANGED_FILES: ${{ steps.changed-markdown-files.outputs.changed_files }}
           DELETED_FILES: ${{ steps.changed-markdown-files.outputs.deleted_files }}
         run: |
           git config user.name "Chem O'Dun"
