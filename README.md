@@ -273,7 +273,7 @@ Please be aware - each release archive has an appropriate link to the [VirusTota
 ### [0.2.23] - 2025-03-15
 
 - Fixed:
-  - XMLDiff: fixed issue with the last sub element comparison
+  - XMLDiff: fixed issue with the last sub element comparison (index issue)
 
 ### [0.2.22] - 2025-03-10
 
