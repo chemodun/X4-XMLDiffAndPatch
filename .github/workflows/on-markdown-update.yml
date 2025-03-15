@@ -21,49 +21,13 @@ jobs:
         with:
           fetch-depth: 0
 
-
-      - name: Define file masks
-        id: define-file-masks
-        run: |
-          echo "file_masks='README.md'" >> $GITHUB_ENV
-
-      - name: Get changed files
+      - name: Get all markdown files
         id: changed-markdown-files
-        run: |
-          # Initialize variables
-          changed_files=""
-          deleted_files=""
-          any_changes="false"
-
-          # Loop through each file mask and check for changes
-          for mask in ${{ env.file_masks }}; do
-            # Get the list of changed files for the current mask
-            current_changed_files=$(git diff --name-status ${{ github.event.before }} ${{ github.event.after }} | grep '^[AM]' | grep "${mask}" | awk '{print $2}' | xargs)
-            # Get the list of deleted files for the current mask
-            current_deleted_files=$(git diff --name-status ${{ github.event.before }} ${{ github.event.after }} | grep '^D' | grep "${mask}" | awk '{print $2}' | xargs)
-            # Check if there are any changes for the current mask
-            current_any_changed=$(git diff --name-status ${{ github.event.before }} ${{ github.event.after }} | grep "${mask}" | wc -l)
-
-            # Append the current changed files to the overall list
-            if [ -n "$current_changed_files" ]; then
-              changed_files="$changed_files $current_changed_files"
-            fi
-
-            # Append the current deleted files to the overall list
-            if [ -n "$current_deleted_files" ]; then
-              deleted_files="$deleted_files $current_deleted_files"
-            fi
-
-            # Set any_changes to true if there are any changes for the current mask
-            if [ "$current_any_changed" -gt 0 ]; then
-              any_changes="true"
-            fi
-          done
-
-          # Set the outputs
-          echo "changed_files=${changed_files}" >> $GITHUB_OUTPUT
-          echo "deleted_files=${deleted_files}" >> $GITHUB_OUTPUT
-          echo "any_changed=${any_changes}" >> $GITHUB_OUTPUT
+        uses: chemodun/changed-files@0.1.0
+        with:
+          # Avoid using single or double quotes for multiline patterns
+          files: |
+            README.md
 
       - name: Install python3
         if: steps.changed-markdown-files.outputs.any_changed == 'true'
@@ -77,7 +41,7 @@ jobs:
       - name: Process *.md changes
         if: steps.changed-markdown-files.outputs.any_changed == 'true'
         env:
-          CHANGED_FILES: ${{ steps.changed-markdown-files.outputs.changed_files }}
+          CHANGED_FILES: ${{ steps.changed-markdown-files.outputs.all_changed_files }}
           DELETED_FILES: ${{ steps.changed-markdown-files.outputs.deleted_files }}
         run: |
           git config user.name "Chem O'Dun"
