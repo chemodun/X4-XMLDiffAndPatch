@@ -24,7 +24,7 @@ There is a command line help for the `XMLDiff` tool:
 
 ```shell
 XMLDiff 0.2.18
-Developed by Chem O`Dun
+Developed by Chem O`Dun 
 
   -o, --original_xml      Required. Path to the original XML file or directory.
 
