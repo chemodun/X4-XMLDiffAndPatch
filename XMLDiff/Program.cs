@@ -170,6 +170,7 @@ namespace X4XmlDiffAndPatch
 
       // Targets
       var logConsole = new NLog.Targets.ConsoleTarget("logConsole");
+      LogLevel minLogLevel = LogLevel.Info;
       if (!string.IsNullOrEmpty(logToFile))
       {
         var logFile = new NLog.Targets.FileTarget("logFile")
@@ -181,7 +182,7 @@ namespace X4XmlDiffAndPatch
           ArchiveAboveSize = 0,
           ConcurrentWrites = true,
         };
-        LogLevel minLogLevel = logToFile switch
+        minLogLevel = logToFile switch
         {
           "error" => LogLevel.Error,
           "warn" => LogLevel.Warn,
@@ -194,7 +195,7 @@ namespace X4XmlDiffAndPatch
       logConsole.Layout = "${longdate} ${level} ${message} ${exception}";
 
       // Rules
-      config.AddRule(LogLevel.Info, LogLevel.Fatal, logConsole);
+      config.AddRule(LogLevel.Info < minLogLevel ? minLogLevel : LogLevel.Info, LogLevel.Fatal, logConsole);
 
       // Apply config
       NLog.LogManager.Configuration = config;
