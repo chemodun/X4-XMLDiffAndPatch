@@ -25,7 +25,7 @@ If the [b]diff.xsd[/b] file if it located in the "current" folder it will be use
 There is a command line help for the [b]XMLDiff[/b] tool:
 
 [code]
-XMLDiff 0.2.18
+XMLDiff 0.2.24
 Developed by Chem O`Dun
 
   -o, --original_xml      Required. Path to the original XML file or directory.
@@ -40,7 +40,7 @@ Developed by Chem O`Dun
 
   -a, --append-to-log     (Default: false) Append logs to the existing log file.
 
-  --only-full-path        (Default: false) Generate only full path.
+  --anywhere-is-allowed   (Default: false) Generate a path using the anywhere '//' construction, if possible. Instead of full path.
 
   --use-all-attributes    (Default: false) Use all attributes in XPath.
 
@@ -282,7 +282,9 @@ Please be aware - each release archive has an appropriate link to the [url=https
 [/list]
 [*] Changed:
 [list]
+[*] XMLDiff: --only-full-path option replaced by --anywhere-is-allowed. And default behavior is to use full path.
 [*] Both utilities: log level of console will not be more detailed than for the log file.
+[*] Both utilities: the unknown options will be ignored.
 [/list]
 [*] Fixed:
 [list]
