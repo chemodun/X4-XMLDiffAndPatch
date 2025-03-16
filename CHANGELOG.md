@@ -1,5 +1,42 @@
 # Changelog
 
+## [0.2.24](https://github.com/chemodun/X4-XMLDiffAndPatch/compare/v0.2.23...v0.2.24) (2025-03-16)
+
+
+### Bug Fixes
+
+* **workflow:** add xargs to handle file names with spaces in markdown update workflow ([970f072](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/970f072010c9dfa0cc025b0944c6824c1cb48ed6))
+* **XMLDiff, XMLPatch:** log level of console will not be more detailed than for the log file. Resolves [#22](https://github.com/chemodun/X4-XMLDiffAndPatch/issues/22) ([12f9a48](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/12f9a486d6d477e5d3c98fe8bc96e9c428daa449))
+* **XMLDiff, XMLPatch:** result folder will be created in recursive processing too (as for the single file) Resolves [#21](https://github.com/chemodun/X4-XMLDiffAndPatch/issues/21) ([dd442ff](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/dd442ffa5ddd3e549ec1ad791d945d6db8748ea5))
+* **XMLDiff:** doubling the first attribute in XPath (Fixes [#20](https://github.com/chemodun/X4-XMLDiffAndPatch/issues/20)) ([c0d489d](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/c0d489da0b79182351e564e0faaecc157e4aca8e))
+* **XMLDiff:** sibling keyword usage in XPath ([c0d489d](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/c0d489da0b79182351e564e0faaecc157e4aca8e))
+
+
+### Code Refactoring
+
+* **workflow:** simplify markdown update process by using changed-files action ([44147e4](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/44147e47d974d721f00cb04d0586b40074e5cc52))
+* **XMLDiff:** --only-full-path option replaced by --anywhere-is-allowed. And default behavior is to use full path. ([50aa71f](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/50aa71fbcc71038a3d64a6b1432c3ad5aeb79086))
+* **XMLDiff, XMLPatch:** enable ignoring unknown arguments and improve help output ([50aa71f](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/50aa71fbcc71038a3d64a6b1432c3ad5aeb79086))
+* **XMLDiff:** improve XPath generation when the element has child elements, which can unique identify it ([c0d489d](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/c0d489da0b79182351e564e0faaecc157e4aca8e))
+
+
+### Miscellaneous Chores
+
+* **workflow:** fix ([f817944](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/f817944d2fde3421bfb503f143af97a5b2a04555))
+* **workflow:** simplify file specification in markdown update workflow ([4bfc97e](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/4bfc97ea13a1445e13583a468ae71abf3a2c4d22))
+* **workflow:** update changed-files action to version 0.1.1 ([17f189d](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/17f189d5c096dab85793211e39e083682feac39b))
+
+
+### Documentation
+
+* **bbcode:** Update bbcode files ([fc4d3e3](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/fc4d3e3785feadb3407012238a3ac24327a3f8de))
+* **readme:** correct spacing in developer attribution for XMLDiff tool ([17b8515](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/17b8515faa7e5faece828550ed903d3895126af9))
+* **readme:** fix formatting in command line help section for XMLDiff tool ([144b9e0](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/144b9e01db6e1f6a5a575a8a04edf80e780ff34f))
+* **readme:** fix formatting issue in command line help section for XMLDiff tool ([6d3b751](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/6d3b75142ee6ee90a9bdc21523ebf9415e4838e1))
+* **readme:** fix spacing in developer attribution for XMLDiff tool ([5949fc8](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/5949fc82e5a41c5d3effc7eeb6cb7cc0673882c0))
+* **readme:** update changelog for version 0.2.24 with improvements, changes, and fixes ([179faaf](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/179faaf8b928d9db938918a8fd98dc2d3906e620))
+* **readme:** update version to 0.2.24 and modify command line options description ([50aa71f](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/50aa71fbcc71038a3d64a6b1432c3ad5aeb79086))
+
 ## [0.2.23](https://github.com/chemodun/X4-XMLDiffAndPatch/compare/v0.2.22...v0.2.23) (2025-03-15)
 
 
