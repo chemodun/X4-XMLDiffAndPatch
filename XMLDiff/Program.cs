@@ -764,6 +764,18 @@ namespace X4XmlDiffAndPatch
       }
     }
 
+    private static string GetElementPathStep(XElement element)
+    {
+      if (element == null)
+        return string.Empty;
+      string step = element.Name.LocalName;
+      if (element.FirstAttribute != null)
+      {
+        step += AttributeToXpathElement(element.FirstAttribute);
+      }
+      return step;
+    }
+
     private static (string step, string patchForParent) GetElementPathStep(
       XElement element,
       XElement parent,
@@ -777,23 +789,18 @@ namespace X4XmlDiffAndPatch
       if (parent == null)
         return (string.Empty, string.Empty);
       string step = "";
-      if (patchForParent == "")
-        patchForParent = $"{element.Name.LocalName}";
-      List<XAttribute> attributes = [];
-      if (element.FirstAttribute != null)
-      {
-        patchForParent += AttributeToXpathElement(element.FirstAttribute);
-      }
+      patchForParent += GetElementPathStep(element);
       IEnumerable<XElement> matches = parent.XPathSelectElements(patchForParent);
+      List<XAttribute>? attributes = null;
       if (matches.Count() == 1 && matches.First() == element)
       {
         step = patchForParent;
       }
       else
       {
-        attributes = element.Attributes().ToList();
+        attributes = element.Attributes().Skip(1).ToList();
       }
-      if (attributes.Count > 0)
+      if (attributes?.Count > 0)
       {
         string xpath = $"{patchForParent}";
         if (pathOptions.UseAllAttributes)
@@ -881,33 +888,53 @@ namespace X4XmlDiffAndPatch
           }
           if (step == "")
           {
-            var siblings = parent.Elements().ToList();
-            string xpathWithSiblings = "";
-            int index = siblings.IndexOf(current);
-            if (index + 1 < siblings.Count)
+            if (path.Length > 0)
             {
-              XElement sibling = siblings[index + 1];
-              (step, xpathWithSiblings) = GetElementPathStep(
-                sibling,
-                parent,
-                doc,
-                pathOptions,
-                $"{patchForParent}/following-sibling::{sibling.Name.LocalName}"
-              );
-            }
-            if (step.StartsWith("//"))
-            {
-              return step;
-            }
-            else if (step == "")
-            {
-              if (siblings.Count == 1)
+              if (parent.XPathSelectElements($"{patchForParent}/{path}").Count() == 1)
               {
-                step = $"{patchForParent}";
+                step = GetElementPathStep(current);
               }
-              else
+            }
+            if (string.IsNullOrEmpty(step))
+            {
+              var siblings = parent.Elements().ToList();
+              string xpathWithSiblings = "";
+              int index = siblings.IndexOf(current);
+              if (index > 0)
               {
-                step = $"{patchForParent}[{index + 1}]";
+                XElement sibling = siblings[index - 1];
+                (step, xpathWithSiblings) = GetElementPathStep(sibling, parent, doc, pathOptions);
+                if (!string.IsNullOrEmpty(step))
+                {
+                  step += $"/following-sibling::{patchForParent}";
+                }
+              }
+              if (string.IsNullOrEmpty(step))
+              {
+                if (index + 1 < siblings.Count)
+                {
+                  XElement sibling = siblings[index + 1];
+                  (step, xpathWithSiblings) = GetElementPathStep(sibling, parent, doc, pathOptions);
+                  if (!string.IsNullOrEmpty(step))
+                  {
+                    step += $"/preceding-sibling::{patchForParent}";
+                  }
+                }
+              }
+              if (step.StartsWith("//"))
+              {
+                return step;
+              }
+              else if (string.IsNullOrEmpty(step))
+              {
+                if (siblings.Count == 1)
+                {
+                  step = $"{patchForParent}";
+                }
+                else
+                {
+                  step = $"{patchForParent}[{index + 1}]";
+                }
               }
             }
           }
