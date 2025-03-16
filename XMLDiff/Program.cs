@@ -46,7 +46,7 @@ namespace X4XmlDiffAndPatch
       bool diffIsDir = Directory.Exists(diffXmlPath);
 
       XmlReaderSettings? diffReaderSettings = CreateXmlReaderSettings(diffXsdPath!);
-      if (originalIsDir && modifiedIsDir && diffIsDir)
+      if (originalIsDir && modifiedIsDir)
       {
         Logger.Info("Processing directories recursively.");
         if (originalXmlPath != null && modifiedXmlPath != null && diffXmlPath != null)
