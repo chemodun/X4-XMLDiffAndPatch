@@ -272,6 +272,23 @@ Please be aware - each release archive has an appropriate link to the [url=https
 
 [size=3][u][b]Changelog[/b][/u][/size]
 
+[size=3][u][i][0.2.24] - 2025-03-17[/i][/u][/size]
+[list]
+[*] Improved:
+[list]
+[*] Both utilities: result folder will be created in recursive processing as it made now for the single file.
+[*] XMLDiff: sibling keyword usage in XPath for the elements.
+[*] XMLDiff: XPath generation when the element has child elements, which can unique identify it.
+[/list]
+[*] Changed:
+[list]
+[*] Both utilities: log level of console will not be more detailed than for the log file.
+[/list]
+[*] Fixed:
+[list]
+[*] XMLDiff: doubling the first attribute in XPath for the elements, if more than one attribute is used.
+[/list]
+[/list]
 [size=3][u][i][0.2.23] - 2025-03-15[/i][/u][/size]
 [list]
 [*] Fixed:
