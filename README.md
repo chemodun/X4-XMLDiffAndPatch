@@ -23,7 +23,7 @@ If the `diff.xsd` file if it located in the "current" folder it will be used aut
 There is a command line help for the `XMLDiff` tool:
 
 ```shell
-XMLDiff 0.2.18
+XMLDiff 0.2.24
 Developed by Chem O`Dun
 
   -o, --original_xml      Required. Path to the original XML file or directory.
@@ -38,7 +38,7 @@ Developed by Chem O`Dun
 
   -a, --append-to-log     (Default: false) Append logs to the existing log file.
 
-  --only-full-path        (Default: false) Generate only full path.
+  --anywhere-is-allowed   (Default: false) Generate a path using the anywhere '//' construction, if possible. Instead of full path.
 
   --use-all-attributes    (Default: false) Use all attributes in XPath.
 
@@ -278,7 +278,9 @@ Please be aware - each release archive has an appropriate link to the [VirusTota
   - XMLDiff: XPath generation when the element has child elements, which can unique identify it.
 
 - Changed:
+  - XMLDiff: --only-full-path option replaced by --anywhere-is-allowed. And default behavior is to use full path.
   - Both utilities: log level of console will not be more detailed than for the log file.
+  - Both utilities: the unknown options will be ignored.
 
 - Fixed:
   - XMLDiff: doubling the first attribute in XPath for the elements, if more than one attribute is used.

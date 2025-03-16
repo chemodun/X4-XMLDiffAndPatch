@@ -18,8 +18,18 @@ namespace X4XmlDiffAndPatch
     static void Main(string[] args)
     {
       var program = new XMLPatch();
-      Parser
-        .Default.ParseArguments<Options>(args)
+      if (args.Length == 0)
+        args = new[] { "--help" };
+      var parser = new Parser(config =>
+      {
+        config.IgnoreUnknownArguments = true; // Enable ignoring unknown arguments
+        config.AutoHelp = true; // Enable auto help
+        config.AutoVersion = true; // Enable auto version
+        config.CaseSensitive = true; // Enable case sensitivity
+        config.HelpWriter = Console.Out; // Set HelpWriter to Console.Out
+      });
+      parser
+        .ParseArguments<Options>(args)
         .WithParsed<Options>(opts => program.RunOptionsAndReturnExitCode(opts))
         .WithNotParsed<Options>((errs) => HandleParseError(errs));
     }

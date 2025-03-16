@@ -16,8 +16,18 @@ namespace X4XmlDiffAndPatch
 
     static void Main(string[] args)
     {
-      Parser
-        .Default.ParseArguments<Options>(args)
+      if (args.Length == 0)
+        args = new[] { "--help" };
+      var parser = new Parser(config =>
+      {
+        config.IgnoreUnknownArguments = true; // Enable ignoring unknown arguments
+        config.AutoHelp = true; // Enable auto help
+        config.AutoVersion = true; // Enable auto version
+        config.CaseSensitive = true; // Enable case sensitivity
+        config.HelpWriter = Console.Out; // Set HelpWriter to Console.Out
+      });
+      parser
+        .ParseArguments<Options>(args)
         .WithParsed<Options>(opts => RunOptionsAndReturnExitCode(opts))
         .WithNotParsed<Options>((errs) => HandleParseError(errs));
     }
@@ -39,7 +49,7 @@ namespace X4XmlDiffAndPatch
       var modifiedXmlPath = opts.ModifiedXml;
       var diffXmlPath = opts.DiffXml;
       var diffXsdPath = opts.Xsd ?? "diff.xsd";
-      var pathOptions = new PathOptions { OnlyFullPath = opts.OnlyFullPath, UseAllAttributes = opts.UseAllAttributes };
+      var pathOptions = new PathOptions { AnywhereIsAllowed = opts.AnywhereIsAllowed, UseAllAttributes = opts.UseAllAttributes };
 
       bool originalIsDir = Directory.Exists(originalXmlPath);
       bool modifiedIsDir = Directory.Exists(modifiedXmlPath);
@@ -90,7 +100,7 @@ namespace X4XmlDiffAndPatch
       private string? diffXml;
       private string? xsd;
       private string? logToFile;
-      private bool onlyFullPath;
+      private bool anywhereIsAllowed;
       private bool useAllAttributes;
       private bool appendToLog;
 
@@ -145,11 +155,16 @@ namespace X4XmlDiffAndPatch
         set => appendToLog = value;
       }
 
-      [Option("only-full-path", Required = false, HelpText = "Generate only full path.", Default = false)]
-      public bool OnlyFullPath
+      [Option(
+        "anywhere-is-allowed",
+        Required = false,
+        HelpText = "Generate a path using the anywhere '//' construction, if possible. Instead of full path.",
+        Default = false
+      )]
+      public bool AnywhereIsAllowed
       {
-        get => onlyFullPath;
-        set => onlyFullPath = value;
+        get => anywhereIsAllowed;
+        set => anywhereIsAllowed = value;
       }
 
       [Option("use-all-attributes", Required = false, HelpText = "Use all attributes in XPath.", Default = false)]
@@ -870,7 +885,7 @@ namespace X4XmlDiffAndPatch
       if (root == null)
         return string.Empty;
       XDocument? doc = null;
-      if (!pathOptions.OnlyFullPath)
+      if (pathOptions.AnywhereIsAllowed)
       {
         doc = element.Document;
       }
@@ -1057,7 +1072,7 @@ namespace X4XmlDiffAndPatch
 
   public class PathOptions
   {
-    public bool OnlyFullPath { get; set; }
+    public bool AnywhereIsAllowed { get; set; }
     public bool UseAllAttributes { get; set; }
   }
 }
