@@ -270,6 +270,19 @@ Please be aware - each release archive has an appropriate link to the [VirusTota
 
 ## Changelog
 
+### [0.2.24] - 2025-03-17
+
+- Improved:
+  - Both utilities: result folder will be created in recursive processing as it made now for the single file.
+  - XMLDiff: sibling keyword usage in XPath for the elements.
+  - XMLDiff: XPath generation when the element has child elements, which can unique identify it.
+
+- Changed:
+  - Both utilities: log level of console will not be more detailed than for the log file.
+
+- Fixed:
+  - XMLDiff: doubling the first attribute in XPath for the elements, if more than one attribute is used.
+
 ### [0.2.23] - 2025-03-15
 
 - Fixed:
