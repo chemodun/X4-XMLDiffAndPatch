@@ -421,6 +421,119 @@ namespace X4XmlDiffAndPatch
       return diffRoot;
     }
 
+    private static (bool matchedEnough, XElement? savedOp) CompareAttributes(
+      XElement originalElement,
+      XElement modifiedElement,
+      PathOptions pathOptions,
+      bool checkOnly = false
+    )
+    {
+      var originalAttributes = originalElement.Attributes().ToDictionary(a => a.Name.LocalName, a => a.Value);
+      var modifiedAttributes = modifiedElement.Attributes().ToDictionary(a => a.Name.LocalName, a => a.Value);
+      int differencesInAttributesCount = 0;
+
+      XElement? savedOp = null;
+
+      bool matchedEnough = true;
+
+      foreach (var attr in modifiedAttributes)
+      {
+        Logger.Debug($"Checking attribute '{attr.Key}' in original element attributes '{string.Join(", ", originalAttributes.Keys)}'.");
+        if (!originalAttributes.ContainsKey(attr.Key))
+        {
+          Logger.Debug($"Original attributes does not contain key '{attr.Key}'.");
+          differencesInAttributesCount++;
+          if (differencesInAttributesCount > 1)
+          {
+            differencesInAttributesCount++;
+            matchedEnough = false;
+            break;
+          }
+          string sel = GenerateXPath(originalElement, pathOptions);
+          savedOp = new XElement("add", new XAttribute("sel", sel), new XAttribute("type", $"@{attr.Key}"), attr.Value);
+          Logger.Debug($"Found added attribute '{attr.Key}' with value '{attr.Value}' to element '{originalElement.Name}'.");
+        }
+        else if (originalAttributes[attr.Key] != attr.Value)
+        {
+          Logger.Debug(
+            $"Original attributes value '{originalAttributes[attr.Key]}' does not match with modified attributes value '{attr.Value}'."
+          );
+          differencesInAttributesCount++;
+          if (differencesInAttributesCount > 1)
+          {
+            differencesInAttributesCount++;
+            matchedEnough = false;
+            break;
+          }
+          string sel = $"{GenerateXPath(originalElement, pathOptions)}/@{attr.Key}";
+          savedOp = new XElement("replace", new XAttribute("sel", sel), attr.Value);
+          /*! To add the children checks and next elements on this level. Only checks, without generation of the diff
+           */
+          Logger.Debug(
+            $"Found replaced attribute '{attr.Key}' value from '{originalAttributes[attr.Key]}' to '{attr.Value}' in element '{originalElement.Name}'."
+          );
+        }
+      }
+      if (matchedEnough)
+      {
+        foreach (var attr in originalAttributes)
+        {
+          if (!modifiedAttributes.ContainsKey(attr.Key))
+          {
+            Logger.Debug($"Modified attributes does not contain key '{attr.Key}'.");
+            if (checkOnly)
+            {
+              Logger.Debug(
+                $"Attribute '{attr}' from {GetElementInfo(originalElement)} not exists in {GetElementInfo(modifiedElement)} check only mode. Returning true."
+              );
+              return (true, null);
+            }
+            differencesInAttributesCount++;
+            if (differencesInAttributesCount > 1 || originalAttributes.Count == 1)
+            {
+              differencesInAttributesCount++;
+              matchedEnough = false;
+              break;
+            }
+            string sel = $"{GenerateXPath(originalElement, pathOptions)}/@{attr.Key}";
+            savedOp = new XElement("remove", new XAttribute("sel", sel));
+            break;
+          }
+        }
+      }
+      if (matchedEnough && differencesInAttributesCount == 1)
+      {
+        if (checkOnly)
+        {
+          Logger.Debug(
+            $"At least one attribute does not match {GetElementInfo(originalElement)} vs {GetElementInfo(modifiedElement)} in check only mode. Returning true."
+          );
+          return (true, null);
+        }
+        return (matchedEnough, savedOp);
+      }
+      return (matchedEnough, null);
+    }
+
+    private static void DiffRootAddOperation(XElement diffRoot, XElement operationElement)
+    {
+      XElement? lastOperation = diffRoot.Elements().LastOrDefault();
+      if (
+        lastOperation != null
+        && lastOperation.Name.LocalName == "remove"
+        && lastOperation.Attribute("sel")?.Value == operationElement.Attribute("sel")?.Value
+      )
+      {
+        lastOperation.AddBeforeSelf(operationElement);
+        Logger.Info($"Operation {GetElementInfo(operationElement)} added before last remove operation: {GetElementInfo(lastOperation)}");
+      }
+      else
+      {
+        diffRoot.Add(operationElement);
+        Logger.Info($"Operation {GetElementInfo(operationElement)} added to diff root.");
+      }
+    }
+
     private static bool CompareElements(
       XDocument original,
       XDocument modified,
@@ -469,7 +582,7 @@ namespace X4XmlDiffAndPatch
               return true;
             }
             XElement replaceOp = new XElement("replace", new XAttribute("sel", sel), modifiedText);
-            diffRoot.Add(replaceOp);
+            DiffRootAddOperation(diffRoot, replaceOp);
             Logger.Info($"[Operation Replace] Text in element '{GetElementInfo(originalElem)}' from '{originalText}' to '{modifiedText}'.");
           }
           else
@@ -480,7 +593,7 @@ namespace X4XmlDiffAndPatch
               return true;
             }
             XElement removeOp = new XElement("remove", new XAttribute("sel", $"{sel}/text()"));
-            diffRoot.Add(removeOp);
+            DiffRootAddOperation(diffRoot, removeOp);
             Logger.Info($"[Operation Remove] Text from element '{GetElementInfo(originalElem)}'.");
           }
         }
@@ -496,6 +609,16 @@ namespace X4XmlDiffAndPatch
       // Compare children
       var originalChildren = originalElem.Elements().ToList();
       var modifiedChildren = modifiedElem.Elements().ToList();
+
+      if (!checkOnly && originalElem == original.Root && modifiedElem == modified.Root)
+      {
+        (bool rootsMatchedEnough, XElement? rootSavedOp) = CompareAttributes(originalElem, modifiedElem, pathOptions);
+        if (rootsMatchedEnough && rootSavedOp != null)
+        {
+          DiffRootAddOperation(diffRoot, rootSavedOp);
+          Logger.Info($"[Operation {rootSavedOp.Name}] Added the saved operation to the diff.");
+        }
+      }
 
       if (checkOnly && originalChildren.Count != modifiedChildren.Count)
       {
@@ -528,104 +651,27 @@ namespace X4XmlDiffAndPatch
         }
         if (originalChild.Name == modifiedChild.Name)
         {
-          var originalAttributes = originalChild.Attributes().ToDictionary(a => a.Name.LocalName, a => a.Value);
-          var modifiedAttributes = modifiedChild.Attributes().ToDictionary(a => a.Name.LocalName, a => a.Value);
-
-          int differencesInAttributesCount = 0;
-
-          XElement? savedOp = null;
-
-          matchedEnough = true;
-
-          foreach (var attr in modifiedAttributes)
+          (matchedEnough, XElement? savedOp) = CompareAttributes(originalChild, modifiedChild, pathOptions, checkOnly);
+          if (matchedEnough == true && savedOp != null)
           {
-            Logger.Debug($"Checking attribute '{attr.Key}' in original element attributes '{string.Join(", ", originalAttributes.Keys)}'.");
-            if (!originalAttributes.ContainsKey(attr.Key))
-            {
-              Logger.Debug($"Original attributes does not contain key '{attr.Key}'.");
-              differencesInAttributesCount++;
-              if (differencesInAttributesCount > 1)
-              {
-                differencesInAttributesCount++;
-                matchedEnough = false;
-                break;
-              }
-              string sel = GenerateXPath(originalChild, pathOptions);
-              savedOp = new XElement("add", new XAttribute("sel", sel), new XAttribute("type", $"@{attr.Key}"), attr.Value);
-              Logger.Debug($"Found added attribute '{attr.Key}' with value '{attr.Value}' to element '{originalChild.Name}'.");
-            }
-            else if (originalAttributes[attr.Key] != attr.Value)
-            {
-              Logger.Debug(
-                $"Original attributes value '{originalAttributes[attr.Key]}' does not match with modified attributes value '{attr.Value}'."
-              );
-              differencesInAttributesCount++;
-              if (differencesInAttributesCount > 1)
-              {
-                differencesInAttributesCount++;
-                matchedEnough = false;
-                break;
-              }
-              string sel = $"{GenerateXPath(originalChild, pathOptions)}/@{attr.Key}";
-              savedOp = new XElement("replace", new XAttribute("sel", sel), attr.Value);
-              /*! To add the children checks and next elements on this level. Only checks, without generation of the diff
-               */
-              Logger.Debug(
-                $"Found replaced attribute '{attr.Key}' value from '{originalAttributes[attr.Key]}' to '{attr.Value}' in element '{originalChild.Name}'."
-              );
-            }
-          }
-          if (matchedEnough)
-          {
-            foreach (var attr in originalAttributes)
-            {
-              if (!modifiedAttributes.ContainsKey(attr.Key))
-              {
-                Logger.Debug($"Modified attributes does not contain key '{attr.Key}'.");
-                if (checkOnly)
-                {
-                  Logger.Debug(
-                    $"Attribute '{attr}' from {GetElementInfo(originalChild)} not exists in {GetElementInfo(modifiedChild)} check only mode. Returning true."
-                  );
-                  return true;
-                }
-                differencesInAttributesCount++;
-                if (differencesInAttributesCount > 1 || originalAttributes.Count == 1)
-                {
-                  differencesInAttributesCount++;
-                  matchedEnough = false;
-                  break;
-                }
-                string sel = $"{GenerateXPath(originalChild, pathOptions)}/@{attr.Key}";
-                savedOp = new XElement("remove", new XAttribute("sel", sel));
-                break;
-              }
-            }
-          }
-          if (matchedEnough && differencesInAttributesCount == 1)
-          {
-            if (checkOnly)
-            {
-              Logger.Debug(
-                $"At least one attribute does not match {GetElementInfo(originalChild)} vs {GetElementInfo(modifiedChild)} in check only mode. Returning true."
-              );
-              return true;
-            }
             matchedEnough = false;
             if (
-              !CompareElements(original, modified, diffRoot, pathOptions, originalChild, modifiedChild, true)
-              && (
-                i + 1 == originalChildren.Count
-                || j + 1 == modifiedChildren.Count
-                || originalChildren[i + 1].Name == modifiedChildren[j + 1].Name
-                  && originalChildren[i + 1].Attributes().Count() == modifiedChildren[j + 1].Attributes().Count()
-                  && originalChildren[i + 1].Attributes().All(attr => modifiedChildren[j + 1].Attribute(attr.Name)?.Value == attr.Value)
+              (originalChild.Parent == null && modifiedChild.Parent == null)
+              || (
+                !CompareElements(original, modified, diffRoot, pathOptions, originalChild, modifiedChild, true)
+                && (
+                  i + 1 == originalChildren.Count
+                  || j + 1 == modifiedChildren.Count
+                  || originalChildren[i + 1].Name == modifiedChildren[j + 1].Name
+                    && originalChildren[i + 1].Attributes().Count() == modifiedChildren[j + 1].Attributes().Count()
+                    && originalChildren[i + 1].Attributes().All(attr => modifiedChildren[j + 1].Attribute(attr.Name)?.Value == attr.Value)
+                )
               )
             )
             {
               if (savedOp != null)
               {
-                diffRoot.Add(savedOp);
+                DiffRootAddOperation(diffRoot, savedOp);
                 Logger.Info($"[Operation {savedOp.Name}] Added the saved operation to the diff.");
               }
               matchedEnough = true;
@@ -700,7 +746,7 @@ namespace X4XmlDiffAndPatch
                 addOp.Add(addedChild);
                 Logger.Info($"[Operation Add] Element '{GetElementInfo(addedChild)}' to parent '{GetElementInfo(originalElem)}'.");
               }
-              diffRoot.Add(addOp);
+              DiffRootAddOperation(diffRoot, addOp);
               j = k;
               foundMatch = true;
               break;
@@ -718,7 +764,7 @@ namespace X4XmlDiffAndPatch
               string sel = GenerateXPath(originalChild, pathOptions);
               XElement replaceOp = new XElement("replace", new XAttribute("sel", sel), modifiedChild);
               lastRemovedOrReplaced = i;
-              diffRoot.Add(replaceOp);
+              DiffRootAddOperation(diffRoot, replaceOp);
               Logger.Info($"[Operation replace] Element '{GetElementInfo(originalChild)}' with '{GetElementInfo(modifiedChild)}'.");
               i++;
               j++;
@@ -728,7 +774,7 @@ namespace X4XmlDiffAndPatch
               string sel = GenerateXPath(originalChild, pathOptions);
               XElement removeOp = new XElement("remove", new XAttribute("sel", sel));
               lastRemovedOrReplaced = i;
-              diffRoot.Add(removeOp);
+              DiffRootAddOperation(diffRoot, removeOp);
               Logger.Info($"[Operation remove] Element '{GetElementInfo(originalChild)}' from parent '{GetElementInfo(originalElem)}'.");
               i++;
             }
@@ -742,7 +788,7 @@ namespace X4XmlDiffAndPatch
         string sel = GenerateXPath(originalChild, pathOptions);
         XElement removeOp = new XElement("remove", new XAttribute("sel", sel));
         lastRemovedOrReplaced = i;
-        diffRoot.Add(removeOp);
+        DiffRootAddOperation(diffRoot, removeOp);
         Logger.Info($"[Operation remove] Element '{GetElementInfo(originalChild)}' from parent '{GetElementInfo(originalElem)}'.");
         i++;
       }
@@ -758,7 +804,7 @@ namespace X4XmlDiffAndPatch
           Logger.Info($"[Operation add] Element '{GetElementInfo(addedChild)}' to parent '{GetElementInfo(originalElem)}'.");
           j++;
         }
-        diffRoot.Add(addOp);
+        DiffRootAddOperation(diffRoot, addOp);
       }
       if (checkOnly)
       {
@@ -792,12 +838,12 @@ namespace X4XmlDiffAndPatch
       return step;
     }
 
-    private static (string step, string patchForParent) GetElementPathStep(
+    private static (string step, string pathForParent) GetElementPathStep(
       XElement element,
       XElement parent,
       XDocument? doc,
       PathOptions pathOptions,
-      string patchForParent = ""
+      string pathForParent = ""
     )
     {
       if (element == null)
@@ -805,12 +851,12 @@ namespace X4XmlDiffAndPatch
       if (parent == null)
         return (string.Empty, string.Empty);
       string step = "";
-      patchForParent += GetElementPathStep(element);
-      IEnumerable<XElement> matches = parent.XPathSelectElements(patchForParent);
+      pathForParent += GetElementPathStep(element);
+      IEnumerable<XElement> matches = parent.XPathSelectElements(pathForParent);
       List<XAttribute>? attributes = null;
       if (matches.Count() == 1 && matches.First() == element)
       {
-        step = patchForParent;
+        step = pathForParent;
       }
       else
       {
@@ -818,7 +864,7 @@ namespace X4XmlDiffAndPatch
       }
       if (attributes?.Count > 0)
       {
-        string xpath = $"{patchForParent}";
+        string xpath = $"{pathForParent}";
         if (pathOptions.UseAllAttributes)
         {
           foreach (var attr in attributes)
@@ -833,11 +879,11 @@ namespace X4XmlDiffAndPatch
             {
               var doc_matches = doc.XPathSelectElements($"//{xpath}");
               if (doc_matches.Count() == 1)
-                return ($"//{xpath}", patchForParent);
+                return ($"//{xpath}", pathForParent);
             }
           }
         }
-        xpath = $"{patchForParent}";
+        xpath = $"{pathForParent}";
         foreach (var attr in attributes)
         {
           string attrValue = attr.Value.Replace("\"", "&quot;");
@@ -852,11 +898,11 @@ namespace X4XmlDiffAndPatch
               var doc_matches = doc.XPathSelectElements($"//{xpath}");
               if (doc_matches.Count() == 1)
               {
-                return ($"//{xpath}", patchForParent);
+                return ($"//{xpath}", pathForParent);
               }
               else
               {
-                return (xpath, patchForParent);
+                return (xpath, pathForParent);
               }
             }
           }
@@ -864,17 +910,17 @@ namespace X4XmlDiffAndPatch
       }
       else if (doc != null)
       {
-        var doc_matches = doc.XPathSelectElements($"//{patchForParent}");
+        var doc_matches = doc.XPathSelectElements($"//{pathForParent}");
         if (doc_matches.Count() == 1)
         {
-          return ($"//{patchForParent}", patchForParent);
+          return ($"//{pathForParent}", pathForParent);
         }
         else
         {
-          return (patchForParent, patchForParent);
+          return (pathForParent, pathForParent);
         }
       }
-      return (step, patchForParent);
+      return (step, pathForParent);
     }
 
     private static string GenerateXPath(XElement element, PathOptions pathOptions)
@@ -896,7 +942,7 @@ namespace X4XmlDiffAndPatch
         XElement? parent = current.Parent;
         if (parent != null)
         {
-          (string step, string patchForParent) = GetElementPathStep(current, parent, doc, pathOptions);
+          (string step, string pathForParent) = GetElementPathStep(current, parent, doc, pathOptions);
           if (step.StartsWith("//"))
           {
             path.Insert(0, step);
@@ -906,7 +952,7 @@ namespace X4XmlDiffAndPatch
           {
             if (path.Length > 0)
             {
-              if (parent.XPathSelectElements($"{patchForParent}/{path}").Count() == 1)
+              if (parent.XPathSelectElements($"{pathForParent}/{path}").Count() == 1)
               {
                 step = GetElementPathStep(current);
               }
@@ -914,15 +960,16 @@ namespace X4XmlDiffAndPatch
             if (string.IsNullOrEmpty(step))
             {
               var siblings = parent.Elements().ToList();
+              string stepSibling = "";
               string xpathWithSiblings = "";
               int index = siblings.IndexOf(current);
               if (index > 0)
               {
                 XElement sibling = siblings[index - 1];
-                (step, xpathWithSiblings) = GetElementPathStep(sibling, parent, doc, pathOptions);
-                if (!string.IsNullOrEmpty(step))
+                (stepSibling, xpathWithSiblings) = GetElementPathStep(sibling, parent, doc, pathOptions);
+                if (!string.IsNullOrEmpty(stepSibling))
                 {
-                  step += $"/following-sibling::{patchForParent}";
+                  step += $"{stepSibling}/following-sibling::{pathForParent}[1]";
                 }
               }
               if (string.IsNullOrEmpty(step))
@@ -930,10 +977,10 @@ namespace X4XmlDiffAndPatch
                 if (index + 1 < siblings.Count)
                 {
                   XElement sibling = siblings[index + 1];
-                  (step, xpathWithSiblings) = GetElementPathStep(sibling, parent, doc, pathOptions);
-                  if (!string.IsNullOrEmpty(step))
+                  (stepSibling, xpathWithSiblings) = GetElementPathStep(sibling, parent, doc, pathOptions);
+                  if (!string.IsNullOrEmpty(stepSibling))
                   {
-                    step += $"/preceding-sibling::{patchForParent}";
+                    step += $"{stepSibling}/preceding-sibling::{pathForParent}[1]";
                   }
                 }
               }
@@ -945,11 +992,19 @@ namespace X4XmlDiffAndPatch
               {
                 if (siblings.Count == 1)
                 {
-                  step = $"{patchForParent}";
+                  step = $"{pathForParent}";
                 }
                 else
                 {
-                  step = $"{patchForParent}[{index + 1}]";
+                  int samePreCount = 0;
+                  for (int i = 0; i < index; i++)
+                  {
+                    if (siblings[i].Name == current.Name)
+                    {
+                      samePreCount++;
+                    }
+                  }
+                  step = $"{pathForParent}[{samePreCount + 1}]";
                 }
               }
             }

@@ -270,6 +270,14 @@ Please be aware - each release archive has an appropriate link to the [VirusTota
 
 ## Changelog
 
+### [0.2.25] - 2025-03-31
+
+- Fixed:
+  - XMLDiff: fixed issue missed root element attributes comparison
+  - XMLDiff: fixed usage of the removed element path for the further diff operations
+  - XMLDiff: fixed incorrect index number when addressing the elements in XPath
+  - XMLDiff: fixed identification elements via `sibling` keyword in XPath
+
 ### [0.2.24] - 2025-03-17
 
 - Improved:
