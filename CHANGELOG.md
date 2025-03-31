@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.2.25](https://github.com/chemodun/X4-XMLDiffAndPatch/compare/v0.2.24...v0.2.25) (2025-03-31)
+
+
+### Bug Fixes
+
+* **XMLDiff:** fixed not comparing the attributes in the root node ([43c9e2b](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/43c9e2b8e2bee9ccef170ca2be998cf31fb2b22a))
+* **XMLDiff:** fixed numbering an elements (was wrong index) ([43c9e2b](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/43c9e2b8e2bee9ccef170ca2be998cf31fb2b22a))
+* **XMLDiff:** identification of element via sibling now fully comply to XMLPath requirements ([43c9e2b](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/43c9e2b8e2bee9ccef170ca2be998cf31fb2b22a))
+* **XMLDiff:** relation on removed element in next operations, now remove operation will be shifted after the referred ([43c9e2b](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/43c9e2b8e2bee9ccef170ca2be998cf31fb2b22a))
+
+
+### Code Refactoring
+
+* **XMLDiff:** `pathForParent` now is right named ([43c9e2b](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/43c9e2b8e2bee9ccef170ca2be998cf31fb2b22a))
+
 ## [0.2.24](https://github.com/chemodun/X4-XMLDiffAndPatch/compare/v0.2.23...v0.2.24) (2025-03-16)
 
 
