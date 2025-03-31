@@ -272,6 +272,16 @@ Please be aware - each release archive has an appropriate link to the [url=https
 
 [size=3][u][b]Changelog[/b][/u][/size]
 
+[size=3][u][i][0.2.25] - 2025-03-31[/i][/u][/size]
+[list]
+[*] Fixed:
+[list]
+[*] XMLDiff: fixed issue missed root element attributes comparison
+[*] XMLDiff: fixed usage of the removed element path for the further diff operations
+[*] XMLDiff: fixed incorrect index number when addressing the elements in XPath
+[*] XMLDiff: fixed identification elements via [b]sibling[/b] keyword in XPath
+[/list]
+[/list]
 [size=3][u][i][0.2.24] - 2025-03-17[/i][/u][/size]
 [list]
 [*] Improved:
