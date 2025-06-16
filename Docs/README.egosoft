@@ -132,6 +132,11 @@ Example:
 </diff>
 [/code]
 
+[size=120][u]Defining the position generation for the diff by in-line comment[/u][/size]
+
+The [b]pos[/b] attribute of the [b]add[/b] usually is set to [b]after[/b], taking in account the common logic of how the program is working. But in some cases, you may want to have a diff file with the [b]pos[/b] attribute set to [b]before[/b]. Mostly it is useful when it working in conjunction with the vscode - [url=https://github.com/chemodun/X4-XMLDiffAndPatch/raw/main//forVSCode/XMLDIffwithVSCode.md]XMLDiff with VSCode[/url].
+From version 0.2.26, you can define the position of the [b]add[/b] element in the diff file by using an in-line comment in the original XML file. The comment should be placed before the element you want to add and should contain the text [b]<!-- pos="before" -->[/b].
+
 [size=125][u]How to apply a diff file[/u][/size]
 
 There is a command line help for the [b]XMLPatch[/b] tool:
@@ -272,6 +277,13 @@ Please be aware - each release archive has an appropriate link to the [url=https
 
 [size=130][u]Changelog[/u][/size]
 
+[size=125][u][0.2.26] - 2025-06-16[/u][/size]
+[list]
+[*] Improved:
+[list]
+[*] Added in-line comments processing for the [b]add[/b] elements in the modified XML file. It allows to define the position attribute of the [b]add[/b] element in the diff file.
+[/list]
+[/list]
 [size=125][u][0.2.25] - 2025-03-31[/u][/size]
 [list]
 [*] Fixed:
