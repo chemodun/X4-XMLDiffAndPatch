@@ -134,7 +134,7 @@ Example:
 
 [size=120][u]Defining the position generation for the diff by in-line comment[/u][/size]
 
-The [b]pos[/b] attribute of the [b]add[/b] usually is set to [b]after[/b], taking in account the common logic of how the program is working. But in some cases, you may want to have a diff file with the [b]pos[/b] attribute set to [b]before[/b]. Mostly it is useful when it working in conjunction with the vscode - [url=https://github.com/chemodun/X4-XMLDiffAndPatch/raw/main//forVSCode/XMLDIffwithVSCode.md]XMLDiff with VSCode[/url].
+The [b]pos[/b] attribute of the [b]add[/b] usually is set to [b]after[/b], taking in account the common logic of how the program is working. But in some cases, you may want to have a diff file with the [b]pos[/b] attribute set to [b]before[/b]. Mostly it is useful when it working in conjunction with the vscode - [url=https://github.com/chemodun/X4-XMLDiffAndPatch/raw/main//XMLDIffWithVSCode.md]XMLDiff with VSCode[/url].
 From version 0.2.26, you can define the position of the [b]add[/b] element in the diff file by using an in-line comment in the original XML file. The comment should be placed before the element you want to add and should contain the text [b]<!-- pos="before" -->[/b].
 
 [size=125][u]How to apply a diff file[/u][/size]
