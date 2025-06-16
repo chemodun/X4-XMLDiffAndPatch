@@ -109,11 +109,16 @@ The script will output error messages and exit with a non-zero status code if an
 
 If the script runs successfully, it will output a message indicating that the XMLDiff operation completed successfully and provide the path to the generated diff file.
 
-### Notes
+## Notes
 
 - Ensure that the `XMLDiff.exe` utility is accessible and has the necessary permissions to execute.
 - The script assumes that the modified file path follows the convention where the last folder in the path is of the form `type.modified`.
+- If you have some beautification plugins for XML use the alternative save (Ctrl + K  S, i.e. "Save without Formatting), which will not involve them, to get the diff as small as possible.
 
-### License
+## Small demo
+
+![Small demo video](https://www.youtube.com/watch?v=Jm5Yfu7PrmI)
+
+## License
 
 This script is provided "as-is" without any warranty. Use it at your own risk.
