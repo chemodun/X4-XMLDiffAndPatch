@@ -115,7 +115,7 @@ If the script runs successfully, it will output a message indicating that the XM
 - The script assumes that the modified file path follows the convention where the last folder in the path is of the form `type.modified`.
 - If you have some beautification plugins for XML use the alternative save (Ctrl + K  S, i.e. "Save without Formatting), which will not involve them, to get the diff as small as possible.
 
-## Small demo
+## Demo
 
 ![Small demo video](https://www.youtube.com/watch?v=Jm5Yfu7PrmI)
 
