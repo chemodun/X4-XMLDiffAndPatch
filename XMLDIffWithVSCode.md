@@ -55,6 +55,8 @@ This document describes how to use XMLDiff with Visual Studio Code.
     ]
     ```
 
+    Take in account that with the `extracted` folder you still can use the `*.original` folders for original files. It will be used first, if they exist, otherwise the script will use the `extracted` folder.
+
 8. Save the settings and close the settings tab.
 
 Now you can modify the `*.modified` files and the `RunXMLDiff.bat` will be executed automatically on save.
