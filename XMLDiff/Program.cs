@@ -740,13 +740,47 @@ namespace X4XmlDiffAndPatch
                   new XAttribute("pos", "prepend")
                 );
               }
+              // Process each added child, checking for pos=before comments
               for (int l = j; l < k; l++)
               {
                 var addedChild = modifiedChildren[l];
-                addOp.Add(addedChild);
-                Logger.Info($"[Operation Add] Element '{GetElementInfo(addedChild)}' to parent '{GetElementInfo(originalElem)}'.");
+
+                // Check if this specific element should use pos=before
+                if (IsElementPrecededByPosBeforeComment(addedChild))
+                {
+                  // Create a separate add operation with pos=before for this element
+                  string posBeforeXpath = GenerateXPath(addedChild, pathOptions);
+                  if (!NumericIdsPattern.IsMatch(posBeforeXpath))
+                  {
+                    XElement posBeforeAddOp = new XElement("add", new XAttribute("sel", posBeforeXpath), new XAttribute("pos", "before"));
+                    posBeforeAddOp.Add(addedChild);
+                    DiffRootAddOperation(diffRoot, posBeforeAddOp);
+                    Logger.Info(
+                      $"[Operation Add] Element '{GetElementInfo(addedChild)}' with pos=before to parent '{GetElementInfo(originalElem)}'."
+                    );
+                  }
+                  else
+                  {
+                    // Fall back to the regular add operation if XPath contains numeric IDs
+                    addOp.Add(addedChild);
+                    Logger.Info(
+                      $"[Operation Add] Element '{GetElementInfo(addedChild)}' to parent '{GetElementInfo(originalElem)}' (pos=before comment found but using regular add due to numeric XPath)."
+                    );
+                  }
+                }
+                else
+                {
+                  // Use the regular add operation
+                  addOp.Add(addedChild);
+                  Logger.Info($"[Operation Add] Element '{GetElementInfo(addedChild)}' to parent '{GetElementInfo(originalElem)}'.");
+                }
               }
-              DiffRootAddOperation(diffRoot, addOp);
+
+              // Only add the regular addOp if it has children
+              if (addOp.HasElements)
+              {
+                DiffRootAddOperation(diffRoot, addOp);
+              }
               j = k;
               foundMatch = true;
               break;
@@ -800,11 +834,44 @@ namespace X4XmlDiffAndPatch
         while (j < modifiedChildren.Count)
         {
           var addedChild = modifiedChildren[j];
-          addOp.Add(addedChild);
-          Logger.Info($"[Operation add] Element '{GetElementInfo(addedChild)}' to parent '{GetElementInfo(originalElem)}'.");
+
+          // Check if this specific element should use pos=before
+          if (IsElementPrecededByPosBeforeComment(addedChild))
+          {
+            // Create a separate add operation with pos=before for this element
+            string posBeforeXpath = GenerateXPath(addedChild, pathOptions);
+            if (!NumericIdsPattern.IsMatch(posBeforeXpath))
+            {
+              XElement posBeforeAddOp = new XElement("add", new XAttribute("sel", posBeforeXpath), new XAttribute("pos", "before"));
+              posBeforeAddOp.Add(addedChild);
+              DiffRootAddOperation(diffRoot, posBeforeAddOp);
+              Logger.Info(
+                $"[Operation add] Element '{GetElementInfo(addedChild)}' with pos=before to parent '{GetElementInfo(originalElem)}'."
+              );
+            }
+            else
+            {
+              // Fall back to the regular add operation if XPath contains numeric IDs
+              addOp.Add(addedChild);
+              Logger.Info(
+                $"[Operation add] Element '{GetElementInfo(addedChild)}' to parent '{GetElementInfo(originalElem)}' (pos=before comment found but using regular add due to numeric XPath)."
+              );
+            }
+          }
+          else
+          {
+            // Use the regular add operation
+            addOp.Add(addedChild);
+            Logger.Info($"[Operation add] Element '{GetElementInfo(addedChild)}' to parent '{GetElementInfo(originalElem)}'.");
+          }
           j++;
         }
-        DiffRootAddOperation(diffRoot, addOp);
+
+        // Only add the regular addOp if it has children
+        if (addOp.HasElements)
+        {
+          DiffRootAddOperation(diffRoot, addOp);
+        }
       }
       if (checkOnly)
       {
@@ -1120,6 +1187,52 @@ namespace X4XmlDiffAndPatch
         }
       }
       return settings;
+    }
+
+    #endregion
+
+    #region Helper Methods for Comment Detection
+
+    /// <summary>
+    /// Checks if the given element is preceded by an XML comment containing "pos=before"
+    /// </summary>
+    /// <param name="element">The element to check</param>
+    /// <returns>True if the element is preceded by a comment with pos=before, false otherwise</returns>
+    private static bool IsElementPrecededByPosBeforeComment(XElement element)
+    {
+      if (element.Parent == null)
+        return false;
+
+      // Get all nodes from the parent
+      var allNodes = element.Parent.Nodes().ToList();
+      var elementIndex = allNodes.IndexOf(element);
+
+      if (elementIndex <= 0)
+        return false;
+
+      // Check the immediate preceding node
+      var precedingNode = allNodes[elementIndex - 1];
+
+      // Check if it's a comment containing "pos=before"
+      if (precedingNode is XComment comment)
+      {
+        string commentText = comment.Value.Trim();
+        Logger.Debug($"Found comment preceding element '{element.Name}': '{commentText}'");
+
+        // Check if comment contains pos=before (case insensitive)
+        bool containsPosBeforePattern =
+          commentText.Contains("pos=before", StringComparison.OrdinalIgnoreCase)
+          || commentText.Contains("pos=\"before\"", StringComparison.OrdinalIgnoreCase)
+          || commentText.Contains("pos='before'", StringComparison.OrdinalIgnoreCase);
+
+        if (containsPosBeforePattern)
+        {
+          Logger.Info($"Element '{element.Name}' is preceded by pos=before comment: '{commentText}'");
+          return true;
+        }
+      }
+
+      return false;
     }
 
     #endregion

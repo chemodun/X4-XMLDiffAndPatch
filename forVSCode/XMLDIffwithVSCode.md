@@ -27,7 +27,7 @@ This document describes how to use XMLDiff with Visual Studio Code.
     │   md.original
     ```
 
-2. You can script creation `*.original` folders, if you will use the `extracted` files folder.
+2. You can skip creation `*.original` folders, if you will use the `extracted` files folder.
 3. Copy the [RunXMLDiff.bat](/forVSCode/RunXMLDiff.bat) file to the root of your project.
 4. Copy the `XMLDiff.exe` file to the `XMLDiffAndPatch` folder in the root of your project.
 5. Install the VSCode extension [Run on Save](https://marketplace.visualstudio.com/items?itemName=emeraldwalk.RunOnSave) by [emeraldwalk](https://marketplace.visualstudio.com/publishers/emeraldwalk)
@@ -35,24 +35,25 @@ This document describes how to use XMLDiff with Visual Studio Code.
 7. Add the following configuration to the settings:
     7.1 In case of not to use the "Extracted" files folder, i.e. with `*.original` folders:
 
-        ```json
-        "commands": [
-            {
-                "match": "\\.modified\\\\.+?\\.xml$",
-                "cmd": "${workspaceFolder}\\RunXMLDiff.bat ${file} ${workspaceFolder}\\XMLDiffAndPatch\\XMLDiff.exe
-            }
-        ]
-        ```
+    ```json
+    "commands": [
+        {
+            "match": "\\.modified\\\\.+?\\.xml$",
+            "cmd": "${workspaceFolder}\\RunXMLDiff.bat ${file} ${workspaceFolder}\\XMLDiffAndPatch\\XMLDiff.exe
+        }
+    ]
+    ```
 
     7.2. With the `extracted` folder, which is outside the project folder:
 
-        ```json
-        "commands": [
-            {
-                "match": "\\.modified\\\\.+?\\.xml$",
-                "cmd": "${workspaceFolder}\\RunXMLDiff.bat ${file} ${workspaceFolder}\\XMLDiffAndPatch\\XMLDiff.exe" ${workspaceFolder}\\..\\extracted"
-            }
-        ]
+    ```json
+    "commands": [
+        {
+            "match": "\\.modified\\\\.+?\\.xml$",
+            "cmd": "${workspaceFolder}\\RunXMLDiff.bat ${file} ${workspaceFolder}\\XMLDiffAndPatch\\XMLDiff.exe" ${workspaceFolder}\\..\\extracted"
+        }
+    ]
+    ```
 
 8. Save the settings and close the settings tab.
 

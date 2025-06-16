@@ -130,6 +130,11 @@ Example:
 </diff>
 ```
 
+#### Defining the position generation for the diff by in-line comment
+
+The `pos` attribute of the `add` usually is set to `after`, taking in account the common logic of how the program is working. But in some cases, you may want to have a diff file with the `pos` attribute set to `before`. Mostly it is useful when it working in conjunction with the vscode - [XMLDiff with VSCode](forVSCode/XMLDIffwithVSCode.md).
+From version 0.2.26, you can define the position of the `add` element in the diff file by using an in-line comment in the original XML file. The comment should be placed before the element you want to add and should contain the text `<!-- pos="before" -->`.
+
 ### How to apply a diff file
 
 There is a command line help for the `XMLPatch` tool:
@@ -269,6 +274,11 @@ There is a topic on the [EGOSOFT forum](https://forum.egosoft.com/viewtopic.php?
 Please be aware - each release archive has an appropriate link to the [VirusTotal](https://www.virustotal.com). Follow the link to be sure that the archive is safe.
 
 ## Changelog
+
+### [0.2.26] - 2025-06-16
+
+- Improved:
+  - Added in-line comments processing for the `add` elements in the modified XML file. It allows to define the position attribute of the `add` element in the diff file.
 
 ### [0.2.25] - 2025-03-31
 

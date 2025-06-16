@@ -24,7 +24,12 @@ set "TargetFilePath=%ModifiedFilePath:.modified=%"
 
 REM Determine the original file path
 if not "%OriginalFilesPath%"=="" (
-    set "OriginalFilePath=%OriginalFilesPath%\%Type%\%ModifiedFileName%"
+    set "OriginalFilePathLocal=%ModifiedFilePath:.modified=.original%"
+    if not exist "%OriginalFilePathLocal%" (
+        set "OriginalFilePath=%OriginalFilesPath%\%Type%\%ModifiedFileName%"
+    ) else (
+        set "OriginalFilePath=%OriginalFilePathLocal"
+    )
 ) else (
     set "OriginalFilePath=%ModifiedFilePath:.modified=.original%"
 )
