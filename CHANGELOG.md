@@ -1,5 +1,29 @@
 # Changelog
 
+## [0.2.26](https://github.com/chemodun/X4-XMLDiffAndPatch/compare/v0.2.25...v0.2.26) (2025-06-16)
+
+
+### Bug Fixes
+
+* **RunXMLDiff.bat:** improve original file path determination logic ([b6be689](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/b6be689bad753436161b764faa95a01f5b9c2b2e))
+* **XMLDiff:** previously implemented handling of in-line comments for defining position of added elements in diff ([abf81f8](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/abf81f8f6ac684dc1b15de4a507743711ee05665))
+
+
+### Miscellaneous Chores
+
+* **XMLDiff:** implement handling of in-line comments for defining position of added elements in diff ([b6be689](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/b6be689bad753436161b764faa95a01f5b9c2b2e))
+
+
+### Documentation
+
+* **bbcode:** Update bbcode files ([6ca6a97](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/6ca6a970af6c88ed3a7c2a26eb955cbea57df567))
+* **bbcode:** Update bbcode files ([adb84d1](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/adb84d12420941045a465d9e36853e270948b856))
+* **readme:** enhance documentation for in-line comment position generation and update changelog for version 0.2.26 ([b6be689](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/b6be689bad753436161b764faa95a01f5b9c2b2e))
+* **readme:** reallocate the file XMLDiff with VSCode documentation and correct link to it ([46592c1](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/46592c13f155d30a510aa9dacfba78d41856826a))
+* **vscode:** clarify usage of original and extracted folders in instructions ([ea88515](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/ea88515b055fdf77f5ea4b44056acd0c6b991ee0))
+* **vscode:** update notes and add demo video for better usage guidance ([30818d1](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/30818d14b14c189823f6ba5cc8b82dc13cd8ea2b))
+* **vscode:** update section title from "Small demo" to "Demo" ([07beece](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/07beece128a332f39284a170af84126941dba555))
+
 ## [0.2.25](https://github.com/chemodun/X4-XMLDiffAndPatch/compare/v0.2.24...v0.2.25) (2025-03-31)
 
 
