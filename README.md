@@ -132,7 +132,7 @@ Example:
 
 #### Defining the position generation for the diff by in-line comment
 
-The `pos` attribute of the `add` usually is set to `after`, taking in account the common logic of how the program is working. But in some cases, you may want to have a diff file with the `pos` attribute set to `before`. Mostly it is useful when it working in conjunction with the vscode - [XMLDiff with VSCode](forVSCode/XMLDIffwithVSCode.md).
+The `pos` attribute of the `add` usually is set to `after`, taking in account the common logic of how the program is working. But in some cases, you may want to have a diff file with the `pos` attribute set to `before`. Mostly it is useful when it working in conjunction with the vscode - [XMLDiff with VSCode](XMLDIffWithVSCode.md).
 From version 0.2.26, you can define the position of the `add` element in the diff file by using an in-line comment in the original XML file. The comment should be placed before the element you want to add and should contain the text `<!-- pos="before" -->`.
 
 ### How to apply a diff file
