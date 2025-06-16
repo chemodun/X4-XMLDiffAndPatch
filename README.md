@@ -278,7 +278,7 @@ Please be aware - each release archive has an appropriate link to the [VirusTota
 ### [0.2.26] - 2025-06-16
 
 - Improved:
-  - Added in-line comments processing for the `add` elements in the modified XML file. It allows to define the position attribute of the `add` element in the diff file.
+  - XMLDiff: added in-line comments processing for the `add` elements in the modified XML file. It allows to define the position attribute of the `add` element in the diff file.
 
 ### [0.2.25] - 2025-03-31
 
