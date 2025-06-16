@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.2.27](https://github.com/chemodun/X4-XMLDiffAndPatch/compare/v0.2.26...v0.2.27) (2025-06-16)
+
+
+### Documentation
+
+* **bbcode:** Update bbcode files ([03ae262](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/03ae26249c2fe870538862ce33b2bd9dd74b75af))
+* **bbcode:** Update bbcode files ([b290772](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/b290772290c182d4a867befc6ced9de07f89b03d))
+* **README:** clarify Changelog ([ad600b0](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/ad600b04f1f741e35ce7c0cadca0c678a0c45326))
+* **vscode:** Fix list formatting and improve clarity in instructions in nexus version ([21111ae](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/21111ae98da364de98debec8c6ba1dcc29589c6f))
+* **vscode:** update demo video formatting ([0f6e003](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/0f6e00371c2138eed4d30547f35a67c7fc41eef0))
+
 ## [0.2.26](https://github.com/chemodun/X4-XMLDiffAndPatch/compare/v0.2.25...v0.2.26) (2025-06-16)
 
 
