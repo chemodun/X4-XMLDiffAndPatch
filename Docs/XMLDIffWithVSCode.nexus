@@ -11,9 +11,8 @@ This document describes how to use XMLDiff with Visual Studio Code.
 [*] VSCode extension [url=https://marketplace.visualstudio.com/items?itemName=emeraldwalk.RunOnSave]Run on Save[/url] by [url=https://marketplace.visualstudio.com/publishers/emeraldwalk]emeraldwalk[/url]
 [/list]
 [size=3][u][b]Steps[/b][/u][/size]
-[olist]
+[list=1]
 [*] Prepare a folders structure like the following:
-[/olist]
     [code]
     RootExtensionFolder
     │   XMLDiffAndPatch
@@ -26,14 +25,14 @@ This document describes how to use XMLDiff with Visual Studio Code.
     │   md.modified
     │   md.original
     [/code]
-[olist]
 [*] You can skip creation [b]*.original[/b] folders, if you will use the [b]extracted[/b] files folder.
 [*] Copy the [url=https://github.com/chemodun/X4-XMLDiffAndPatch/raw/main///forVSCode/RunXMLDiff.bat]RunXMLDiff.bat[/url] file to the root of your project.
 [*] Copy the [b]XMLDiff.exe[/b] file to the [b]XMLDiffAndPatch[/b] folder in the root of your project.
 [*] Install the VSCode extension [url=https://marketplace.visualstudio.com/items?itemName=emeraldwalk.RunOnSave]Run on Save[/url] by [url=https://marketplace.visualstudio.com/publishers/emeraldwalk]emeraldwalk[/url]
 [*] Open the settings of the extension by pressing [b]Ctrl + ,[/b] and search for [b]runOnSave.commands[/b]
 [*] Add the following configuration to the settings:
-[/olist]    7.1 In case of not to use the "Extracted" files folder, i.e. with [b]*.original[/b] folders:
+    [list=1]
+    [*]In case of not to use the "Extracted" files folder, i.e. with [b]*.original[/b] folders:
 
     [code]
     "commands": [
@@ -44,7 +43,7 @@ This document describes how to use XMLDiff with Visual Studio Code.
     ]
     [/code]
 
-    7.2. With the [b]extracted[/b] folder, which is outside the project folder:
+    [*]With the [b]extracted[/b] folder, which is outside the project folder:
 
     [code]
     "commands": [
@@ -56,9 +55,9 @@ This document describes how to use XMLDiff with Visual Studio Code.
     [/code]
 
     Take in account that with the [b]extracted[/b] folder you still can use the [b]*.original[/b] folders for original files. It will be used first, if they exist, otherwise the script will use the [b]extracted[/b] folder.
-[olist]
+    [/list]
 [*] Save the settings and close the settings tab.
-[/olist]
+[/list]
 Now you can modify the [b]*.modified[/b] files and the [b]RunXMLDiff.bat[/b] will be executed automatically on save.
 
 You can check an output in the [b]OUTPUT[/b] tab in the VSCode, selecting the [b]Run on Save[/b] item in the dropdown list.
@@ -86,19 +85,16 @@ RunXMLDiff.bat "C:\path\to\md.modified\file.xml" "C:\path\to\XMLDiff.exe" "C:\pa
 [/code]
 
 [size=3][u]How It Works[/u][/size]
-[olist]
+[list=1]
 [*] [b]Extract Type and Filename[/b]: The script extracts the type (e.g., [b]aiscript[/b] or [b]md[/b]) and filename from the modified file path.
 [*] [b]Determine Target File Path[/b]: The script constructs the target file path by removing [b].modified[/b] from the modified file path.
 [*] [b]Determine Original File Path[/b]:
-[/olist][list][list]
 [*] If the [b]OriginalFilesPath[/b] is provided, the original file path is constructed as [b]OriginalFilesPath\type\filename[/b].
 [*] If the [b]OriginalFilesPath[/b] is not provided, the original file path is constructed by replacing [b].modified[/b] with [b].original[/b] in the modified file path.
-[/list]
-[/list]4. [b]Check Existence[/b]:
-[list][list]
+[*] [b]Check Existence[/b]:
 [*] The script checks for the existence of [b]XMLDiff.exe[/b], the modified file, the original file, and the target file directory.
+[*][b]Run XMLDiff[/b]: If all checks pass, the script runs [b]XMLDiff.exe[/b] with the appropriate parameters to generate the diff file.
 [/list]
-[/list]5. [b]Run XMLDiff[/b]: If all checks pass, the script runs [b]XMLDiff.exe[/b] with the appropriate parameters to generate the diff file.
 
 [size=3][u][i]Error Handling[/i][/u][/size]
 
