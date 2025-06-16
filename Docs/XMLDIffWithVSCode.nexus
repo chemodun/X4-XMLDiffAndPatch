@@ -1,0 +1,128 @@
+[size=4][u]Using XMLDIff with Visual Studio Code[/u][/size]
+
+[size=3][u][b]Introduction[/b][/u][/size]
+
+This document describes how to use XMLDiff with Visual Studio Code.
+
+[size=3][u][b]Prerequisites[/b][/u][/size]
+[list]
+[*] Visual Studio Code
+[*] XMLDiff.exe and [url=https://github.com/chemodun/X4-XMLDiffAndPatch/raw/main///forVSCode/RunXMLDiff.bat]RunXMLDiff.bat[/url] from this repository
+[*] VSCode extension [url=https://marketplace.visualstudio.com/items?itemName=emeraldwalk.RunOnSave]Run on Save[/url] by [url=https://marketplace.visualstudio.com/publishers/emeraldwalk]emeraldwalk[/url]
+[/list]
+[size=3][u][b]Steps[/b][/u][/size]
+[olist]
+[*] Prepare a folders structure like the following:
+[/olist]
+    [code]
+    RootExtensionFolder
+    │   XMLDiffAndPatch
+    │   │   XMLDiff.exe
+    │   RunXMLDiff.bat
+    │   aiscripts
+    │   aiscripts.modified
+    │   aiscripts.original
+    │   md
+    │   md.modified
+    │   md.original
+    [/code]
+[olist]
+[*] You can skip creation [b]*.original[/b] folders, if you will use the [b]extracted[/b] files folder.
+[*] Copy the [url=https://github.com/chemodun/X4-XMLDiffAndPatch/raw/main///forVSCode/RunXMLDiff.bat]RunXMLDiff.bat[/url] file to the root of your project.
+[*] Copy the [b]XMLDiff.exe[/b] file to the [b]XMLDiffAndPatch[/b] folder in the root of your project.
+[*] Install the VSCode extension [url=https://marketplace.visualstudio.com/items?itemName=emeraldwalk.RunOnSave]Run on Save[/url] by [url=https://marketplace.visualstudio.com/publishers/emeraldwalk]emeraldwalk[/url]
+[*] Open the settings of the extension by pressing [b]Ctrl + ,[/b] and search for [b]runOnSave.commands[/b]
+[*] Add the following configuration to the settings:
+[/olist]    7.1 In case of not to use the "Extracted" files folder, i.e. with [b]*.original[/b] folders:
+
+    [code]
+    "commands": [
+        {
+            "match": "\\.modified\\\\.+?\\.xml$",
+            "cmd": "${workspaceFolder}\\RunXMLDiff.bat ${file} ${workspaceFolder}\\XMLDiffAndPatch\\XMLDiff.exe
+        }
+    ]
+    [/code]
+
+    7.2. With the [b]extracted[/b] folder, which is outside the project folder:
+
+    [code]
+    "commands": [
+        {
+            "match": "\\.modified\\\\.+?\\.xml$",
+            "cmd": "${workspaceFolder}\\RunXMLDiff.bat ${file} ${workspaceFolder}\\XMLDiffAndPatch\\XMLDiff.exe" ${workspaceFolder}\\..\\extracted"
+        }
+    ]
+    [/code]
+
+    Take in account that with the [b]extracted[/b] folder you still can use the [b]*.original[/b] folders for original files. It will be used first, if they exist, otherwise the script will use the [b]extracted[/b] folder.
+[olist]
+[*] Save the settings and close the settings tab.
+[/olist]
+Now you can modify the [b]*.modified[/b] files and the [b]RunXMLDiff.bat[/b] will be executed automatically on save.
+
+You can check an output in the [b]OUTPUT[/b] tab in the VSCode, selecting the [b]Run on Save[/b] item in the dropdown list.
+
+[size=3][u][b]Description of the RunXMLDiff.bat[/b][/u][/size]
+
+[b]RunXMLDiff.bat[/b] is a batch script that compares a modified XML file with its original version using the [b]XMLDiff.exe[/b] utility. The script takes the paths to the modified file, the XMLDiff utility, and optionally the path to the original files as input. It then constructs the appropriate paths, checks for the existence of necessary files and directories, and runs the XMLDiff utility to generate a diff file.
+
+[size=3][u][i]Usage[/i][/u][/size]
+
+[code]
+RunXMLDiff.bat <ModifiedFilePath> <XMLDiffPath> [OriginalFilesPath]
+[/code]
+
+[size=3][u]Parameters[/u][/size]
+[list]
+[*] [b]<ModifiedFilePath>[/b]: The full path to the modified XML file. This parameter is mandatory.
+[*] [b]<XMLDiffPath>[/b]: The full path to the [b]XMLDiff.exe[/b] utility. This parameter is mandatory.
+[*] [b][OriginalFilesPath][/b]: The full path to the directory containing the original XML files. This parameter is optional.
+[/list]
+[size=3][u]Example[/u][/size]
+
+[code]
+RunXMLDiff.bat "C:\path\to\md.modified\file.xml" "C:\path\to\XMLDiff.exe" "C:\path\to\original\files"
+[/code]
+
+[size=3][u]How It Works[/u][/size]
+[olist]
+[*] [b]Extract Type and Filename[/b]: The script extracts the type (e.g., [b]aiscript[/b] or [b]md[/b]) and filename from the modified file path.
+[*] [b]Determine Target File Path[/b]: The script constructs the target file path by removing [b].modified[/b] from the modified file path.
+[*] [b]Determine Original File Path[/b]:
+[/olist][list][list]
+[*] If the [b]OriginalFilesPath[/b] is provided, the original file path is constructed as [b]OriginalFilesPath\type\filename[/b].
+[*] If the [b]OriginalFilesPath[/b] is not provided, the original file path is constructed by replacing [b].modified[/b] with [b].original[/b] in the modified file path.
+[/list]
+[/list]4. [b]Check Existence[/b]:
+[list][list]
+[*] The script checks for the existence of [b]XMLDiff.exe[/b], the modified file, the original file, and the target file directory.
+[/list]
+[/list]5. [b]Run XMLDiff[/b]: If all checks pass, the script runs [b]XMLDiff.exe[/b] with the appropriate parameters to generate the diff file.
+
+[size=3][u][i]Error Handling[/i][/u][/size]
+
+The script will output error messages and exit with a non-zero status code if any of the following conditions are met:
+[list]
+[*] [b]XMLDiff.exe[/b] is not found at the specified path.
+[*] The modified file is not found at the specified path.
+[*] The original file is not found at the constructed path.
+[*] The target file directory does not exist.
+[/list]
+[size=3][u][i]Output[/i][/u][/size]
+
+If the script runs successfully, it will output a message indicating that the XMLDiff operation completed successfully and provide the path to the generated diff file.
+
+[size=3][u][b]Notes[/b][/u][/size]
+[list]
+[*] Ensure that the [b]XMLDiff.exe[/b] utility is accessible and has the necessary permissions to execute.
+[*] The script assumes that the modified file path follows the convention where the last folder in the path is of the form [b]type.modified[/b].
+[*] If you have some beautification plugins for XML use the alternative save (Ctrl + K  S, i.e. "Save without Formatting), which will not involve them, to get the diff as small as possible.
+[/list]
+[size=3][u][b]Demo[/b][/u][/size]
+
+[img]https://www.youtube.com/watch?v=Jm5Yfu7PrmI[/img]
+
+[size=3][u][b]License[/b][/u][/size]
+
+This script is provided "as-is" without any warranty. Use it at your own risk.
