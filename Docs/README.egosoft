@@ -281,7 +281,7 @@ Please be aware - each release archive has an appropriate link to the [url=https
 [list]
 [*] Improved:
 [list]
-[*] Added in-line comments processing for the [b]add[/b] elements in the modified XML file. It allows to define the position attribute of the [b]add[/b] element in the diff file.
+[*] XMLDiff: added in-line comments processing for the [b]add[/b] elements in the modified XML file. It allows to define the position attribute of the [b]add[/b] element in the diff file.
 [/list]
 [/list]
 [size=125][u][0.2.25] - 2025-03-31[/u][/size]
