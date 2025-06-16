@@ -117,7 +117,7 @@ If the script runs successfully, it will output a message indicating that the XM
 
 ## Demo
 
-![Small demo video](https://www.youtube.com/watch?v=Jm5Yfu7PrmI)
+[Small demo video](https://www.youtube.com/watch?v=Jm5Yfu7PrmI)
 
 ## License
 
