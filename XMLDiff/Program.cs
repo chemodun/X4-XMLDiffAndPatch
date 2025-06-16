@@ -720,7 +720,11 @@ namespace X4XmlDiffAndPatch
               {
                 string xpath = GenerateXPath(originalChildren[i - 1], pathOptions);
                 string pos = "after";
-                if (lastRemovedOrReplaced == i - 1 || NumericIdsPattern.IsMatch(xpath))
+                if (
+                  lastRemovedOrReplaced == i - 1
+                  || NumericIdsPattern.IsMatch(xpath)
+                  || IsElementPrecededByPosBeforeComment(modifiedChildren[j])
+                )
                 {
                   string xpathBefore = GenerateXPath(originalChild, pathOptions);
                   if (!NumericIdsPattern.IsMatch(xpathBefore))
@@ -744,43 +748,10 @@ namespace X4XmlDiffAndPatch
               for (int l = j; l < k; l++)
               {
                 var addedChild = modifiedChildren[l];
-
-                // Check if this specific element should use pos=before
-                if (IsElementPrecededByPosBeforeComment(addedChild))
-                {
-                  // Create a separate add operation with pos=before for this element
-                  string posBeforeXpath = GenerateXPath(addedChild, pathOptions);
-                  if (!NumericIdsPattern.IsMatch(posBeforeXpath))
-                  {
-                    XElement posBeforeAddOp = new XElement("add", new XAttribute("sel", posBeforeXpath), new XAttribute("pos", "before"));
-                    posBeforeAddOp.Add(addedChild);
-                    DiffRootAddOperation(diffRoot, posBeforeAddOp);
-                    Logger.Info(
-                      $"[Operation Add] Element '{GetElementInfo(addedChild)}' with pos=before to parent '{GetElementInfo(originalElem)}'."
-                    );
-                  }
-                  else
-                  {
-                    // Fall back to the regular add operation if XPath contains numeric IDs
-                    addOp.Add(addedChild);
-                    Logger.Info(
-                      $"[Operation Add] Element '{GetElementInfo(addedChild)}' to parent '{GetElementInfo(originalElem)}' (pos=before comment found but using regular add due to numeric XPath)."
-                    );
-                  }
-                }
-                else
-                {
-                  // Use the regular add operation
-                  addOp.Add(addedChild);
-                  Logger.Info($"[Operation Add] Element '{GetElementInfo(addedChild)}' to parent '{GetElementInfo(originalElem)}'.");
-                }
+                addOp.Add(addedChild);
+                Logger.Info($"[Operation Add] Element '{GetElementInfo(addedChild)}' to parent '{GetElementInfo(originalElem)}'.");
               }
-
-              // Only add the regular addOp if it has children
-              if (addOp.HasElements)
-              {
-                DiffRootAddOperation(diffRoot, addOp);
-              }
+              DiffRootAddOperation(diffRoot, addOp);
               j = k;
               foundMatch = true;
               break;
@@ -834,44 +805,11 @@ namespace X4XmlDiffAndPatch
         while (j < modifiedChildren.Count)
         {
           var addedChild = modifiedChildren[j];
-
-          // Check if this specific element should use pos=before
-          if (IsElementPrecededByPosBeforeComment(addedChild))
-          {
-            // Create a separate add operation with pos=before for this element
-            string posBeforeXpath = GenerateXPath(addedChild, pathOptions);
-            if (!NumericIdsPattern.IsMatch(posBeforeXpath))
-            {
-              XElement posBeforeAddOp = new XElement("add", new XAttribute("sel", posBeforeXpath), new XAttribute("pos", "before"));
-              posBeforeAddOp.Add(addedChild);
-              DiffRootAddOperation(diffRoot, posBeforeAddOp);
-              Logger.Info(
-                $"[Operation add] Element '{GetElementInfo(addedChild)}' with pos=before to parent '{GetElementInfo(originalElem)}'."
-              );
-            }
-            else
-            {
-              // Fall back to the regular add operation if XPath contains numeric IDs
-              addOp.Add(addedChild);
-              Logger.Info(
-                $"[Operation add] Element '{GetElementInfo(addedChild)}' to parent '{GetElementInfo(originalElem)}' (pos=before comment found but using regular add due to numeric XPath)."
-              );
-            }
-          }
-          else
-          {
-            // Use the regular add operation
-            addOp.Add(addedChild);
-            Logger.Info($"[Operation add] Element '{GetElementInfo(addedChild)}' to parent '{GetElementInfo(originalElem)}'.");
-          }
+          addOp.Add(addedChild);
+          Logger.Info($"[Operation add] Element '{GetElementInfo(addedChild)}' to parent '{GetElementInfo(originalElem)}'.");
           j++;
         }
-
-        // Only add the regular addOp if it has children
-        if (addOp.HasElements)
-        {
-          DiffRootAddOperation(diffRoot, addOp);
-        }
+        DiffRootAddOperation(diffRoot, addOp);
       }
       if (checkOnly)
       {
