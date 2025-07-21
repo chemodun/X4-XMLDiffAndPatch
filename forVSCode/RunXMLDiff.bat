@@ -21,17 +21,17 @@ for %%I in ("%ModifiedFilePath%") do set "ModifiedDirectory=%%~dpI"
 for %%I in ("%ModifiedDirectory:~0,-1%") do set "Type=%%~nxI"
 set "Type=%Type:.modified=%"
 set "TargetFilePath=%ModifiedFilePath:.modified=%"
+set "OriginalFilePathLocal=%ModifiedFilePath:.modified=.original%"
 
 REM Determine the original file path
 if not "%OriginalFilesPath%"=="" (
-    set "OriginalFilePathLocal=%ModifiedFilePath:.modified=.original%"
     if not exist "%OriginalFilePathLocal%" (
         set "OriginalFilePath=%OriginalFilesPath%\%Type%\%ModifiedFileName%"
     ) else (
-        set "OriginalFilePath=%OriginalFilePathLocal"
+        set "OriginalFilePath=%OriginalFilePathLocal%"
     )
 ) else (
-    set "OriginalFilePath=%ModifiedFilePath:.modified=.original%"
+    set "OriginalFilePath=%OriginalFilePathLocal%"
 )
 
 REM Check existence of XMLDiff.exe
