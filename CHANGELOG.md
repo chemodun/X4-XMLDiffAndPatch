@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.2.27](https://github.com/chemodun/X4-XMLDiffAndPatch/compare/v0.2.26...v0.2.27) (2025-08-27)
+
+
+### Bug Fixes
+
+* **bat:** Correct original file path assignment in RunXMLDiff.bat ([c4cb9ed](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/c4cb9ed32e338245467d12b396f34accd2eefec1))
+
+
+### Code Refactoring
+
+* **XMLDiff:** add --ignore-diff-in-attribute option to ignore differences in the specified attribute ([c8deb05](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/c8deb0510513c78774954d0c3c44615a6aa4d358))
+
+
+### Documentation
+
+* **bbcode:** Update bbcode files ([03ae262](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/03ae26249c2fe870538862ce33b2bd9dd74b75af))
+* **bbcode:** Update bbcode files ([b290772](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/b290772290c182d4a867befc6ced9de07f89b03d))
+* **README:** clarify Changelog ([ad600b0](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/ad600b04f1f741e35ce7c0cadca0c678a0c45326))
+* **vscode:** Fix list formatting and improve clarity in instructions in nexus version ([21111ae](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/21111ae98da364de98debec8c6ba1dcc29589c6f))
+* **vscode:** update demo video formatting ([0f6e003](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/0f6e00371c2138eed4d30547f35a67c7fc41eef0))
+* **XMLDiff:** Improve formatting and clarity in XMLDiff with VSCode documentation ([890528a](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/890528a786b73f672340d06956b8d33d0dbfd0ee))
+* **XMLDiff:** reflect improvement in documentation ([c8deb05](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/c8deb0510513c78774954d0c3c44615a6aa4d358))
+
 ## [0.2.26](https://github.com/chemodun/X4-XMLDiffAndPatch/compare/v0.2.25...v0.2.26) (2025-06-16)
 
 
