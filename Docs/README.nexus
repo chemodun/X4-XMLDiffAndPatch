@@ -25,7 +25,7 @@ If the [b]diff.xsd[/b] file if it located in the "current" folder it will be use
 There is a command line help for the [b]XMLDiff[/b] tool:
 
 [code]
-XMLDiff 0.2.24
+XMLDiff 0.2.27
 Developed by Chem O`Dun
 
   -o, --original_xml      Required. Path to the original XML file or directory.
@@ -43,6 +43,8 @@ Developed by Chem O`Dun
   --anywhere-is-allowed   (Default: false) Generate a path using the anywhere '//' construction, if possible. Instead of full path.
 
   --use-all-attributes    (Default: false) Use all attributes in XPath.
+
+  --ignore-diff-in-attribute    Ignore differences in the specified attribute when comparing elements.
 
   --help                  Display this help screen.
 
@@ -131,6 +133,10 @@ Example:
 </add>
 </diff>
 [/code]
+
+[size=2][u][i]Ignore differences in the specified attribute[/i][/u][/size]
+
+The [b]--ignore-diff-in-attribute[/b] option will ignore differences in the specified attribute when comparing elements. It is useful when you want to ignore differences in attributes like [b]version[/b], [b]comment[/b], etc.
 
 [size=3][u]Defining the position generation for the diff by in-line comment[/u][/size]
 
@@ -277,6 +283,13 @@ Please be aware - each release archive has an appropriate link to the [url=https
 
 [size=3][u][b]Changelog[/b][/u][/size]
 
+[size=3][u][i][0.2.27] - 2025-08-28[/i][/u][/size]
+[list]
+[*] Improved:
+[list]
+[*] XMLDiff: added --ignore-diff-in-attribute option to ignore differences in the specified attribute when comparing elements. It is useful when you want to ignore differences in attribute [b]version[/b] in X4 script files.
+[/list]
+[/list]
 [size=3][u][i][0.2.26] - 2025-06-16[/i][/u][/size]
 [list]
 [*] Improved:
