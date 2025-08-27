@@ -49,8 +49,6 @@ namespace X4XmlDiffAndPatch
       var modifiedXmlPath = opts.ModifiedXml;
       var diffXmlPath = opts.DiffXml;
       var diffXsdPath = opts.Xsd ?? "diff.xsd";
-      var pathOptions = new PathOptions { AnywhereIsAllowed = opts.AnywhereIsAllowed, UseAllAttributes = opts.UseAllAttributes };
-
       bool originalIsDir = Directory.Exists(originalXmlPath);
       bool modifiedIsDir = Directory.Exists(modifiedXmlPath);
       bool diffIsDir = Directory.Exists(diffXmlPath);
@@ -61,7 +59,7 @@ namespace X4XmlDiffAndPatch
         Logger.Info("Processing directories recursively.");
         if (originalXmlPath != null && modifiedXmlPath != null && diffXmlPath != null)
         {
-          ProcessDirectories(originalXmlPath, modifiedXmlPath, diffXmlPath, diffReaderSettings, pathOptions);
+          ProcessDirectories(originalXmlPath, modifiedXmlPath, diffXmlPath, diffReaderSettings, opts);
         }
         else
         {
@@ -72,7 +70,7 @@ namespace X4XmlDiffAndPatch
       else if (!originalIsDir && !modifiedIsDir)
       {
         Logger.Info("Processing single trio of files.");
-        ProcessSingleFile(originalXmlPath!, modifiedXmlPath!, diffXmlPath!, diffReaderSettings, pathOptions);
+        ProcessSingleFile(originalXmlPath!, modifiedXmlPath!, diffXmlPath!, diffReaderSettings, opts);
       }
       else
       {
@@ -103,6 +101,7 @@ namespace X4XmlDiffAndPatch
       private bool anywhereIsAllowed;
       private bool useAllAttributes;
       private bool appendToLog;
+      private string? ignoreDiffInAttribute;
 
       [Option('o', "original_xml", Required = true, HelpText = "Path to the original XML file or directory.")]
       public string? OriginalXml
@@ -173,6 +172,17 @@ namespace X4XmlDiffAndPatch
         get => useAllAttributes;
         set => useAllAttributes = value;
       }
+
+      [Option(
+        "ignore-diff-in-attribute",
+        Required = false,
+        HelpText = "Ignore differences in the specified attribute when comparing elements."
+      )]
+      public string? IgnoreDiffInAttribute
+      {
+        get => ignoreDiffInAttribute;
+        set => ignoreDiffInAttribute = value?.Trim();
+      }
     }
 
     #endregion
@@ -225,7 +235,7 @@ namespace X4XmlDiffAndPatch
       string modifiedXmlPath,
       string diffXmlPath,
       XmlReaderSettings? diffReaderSettings,
-      PathOptions pathOptions
+      Options options
     )
     {
       Logger.Info($"Comparing original XML '{originalXmlPath}' with modified XML '{modifiedXmlPath}' to the diff XML at '{diffXmlPath}'");
@@ -288,7 +298,7 @@ namespace X4XmlDiffAndPatch
           Logger.Debug($"Deleted diff file at {diffXmlPath}.");
         }
 
-        XElement diffRoot = GenerateDiff(originalDoc, modifiedDoc, pathOptions);
+        XElement diffRoot = GenerateDiff(originalDoc, modifiedDoc, options);
 
         if (!diffRoot.HasElements)
         {
@@ -339,7 +349,7 @@ namespace X4XmlDiffAndPatch
       string modifiedDir,
       string diffDir,
       XmlReaderSettings? diffReaderSettings,
-      PathOptions pathOptions
+      Options options
     )
     {
       foreach (var modifiedFilePath in Directory.EnumerateFiles(modifiedDir, "*.xml", SearchOption.AllDirectories))
@@ -369,7 +379,7 @@ namespace X4XmlDiffAndPatch
           }
         }
 
-        ProcessSingleFile(originalFilePath, modifiedFilePath, diffFilePath, diffReaderSettings, pathOptions);
+        ProcessSingleFile(originalFilePath, modifiedFilePath, diffFilePath, diffReaderSettings, options);
       }
     }
 
@@ -409,7 +419,7 @@ namespace X4XmlDiffAndPatch
 
     #region Diff Generation
 
-    private static XElement GenerateDiff(XDocument original, XDocument modified, PathOptions pathOptions)
+    private static XElement GenerateDiff(XDocument original, XDocument modified, Options options)
     {
       XElement diffRoot = new XElement("diff");
       if (original.Root == null || modified.Root == null)
@@ -417,14 +427,14 @@ namespace X4XmlDiffAndPatch
         Logger.Error("Original or modified XML does not have a root element.");
         return diffRoot;
       }
-      CompareElements(original, modified, diffRoot, pathOptions);
+      CompareElements(original, modified, diffRoot, options);
       return diffRoot;
     }
 
     private static (bool matchedEnough, XElement? savedOp) CompareAttributes(
       XElement originalElement,
       XElement modifiedElement,
-      PathOptions pathOptions,
+      Options options,
       bool checkOnly = false
     )
     {
@@ -438,6 +448,8 @@ namespace X4XmlDiffAndPatch
 
       foreach (var attr in modifiedAttributes)
       {
+        if (attr.Key == options.IgnoreDiffInAttribute)
+          continue;
         Logger.Debug($"Checking attribute '{attr.Key}' in original element attributes '{string.Join(", ", originalAttributes.Keys)}'.");
         if (!originalAttributes.ContainsKey(attr.Key))
         {
@@ -445,11 +457,10 @@ namespace X4XmlDiffAndPatch
           differencesInAttributesCount++;
           if (differencesInAttributesCount > 1)
           {
-            differencesInAttributesCount++;
             matchedEnough = false;
             break;
           }
-          string sel = GenerateXPath(originalElement, pathOptions);
+          string sel = GenerateXPath(originalElement, options);
           savedOp = new XElement("add", new XAttribute("sel", sel), new XAttribute("type", $"@{attr.Key}"), attr.Value);
           Logger.Debug($"Found added attribute '{attr.Key}' with value '{attr.Value}' to element '{originalElement.Name}'.");
         }
@@ -461,11 +472,10 @@ namespace X4XmlDiffAndPatch
           differencesInAttributesCount++;
           if (differencesInAttributesCount > 1)
           {
-            differencesInAttributesCount++;
             matchedEnough = false;
             break;
           }
-          string sel = $"{GenerateXPath(originalElement, pathOptions)}/@{attr.Key}";
+          string sel = $"{GenerateXPath(originalElement, options)}/@{attr.Key}";
           savedOp = new XElement("replace", new XAttribute("sel", sel), attr.Value);
           /*! To add the children checks and next elements on this level. Only checks, without generation of the diff
            */
@@ -478,6 +488,8 @@ namespace X4XmlDiffAndPatch
       {
         foreach (var attr in originalAttributes)
         {
+          if (attr.Key == options.IgnoreDiffInAttribute)
+            continue;
           if (!modifiedAttributes.ContainsKey(attr.Key))
           {
             Logger.Debug($"Modified attributes does not contain key '{attr.Key}'.");
@@ -491,11 +503,10 @@ namespace X4XmlDiffAndPatch
             differencesInAttributesCount++;
             if (differencesInAttributesCount > 1 || originalAttributes.Count == 1)
             {
-              differencesInAttributesCount++;
               matchedEnough = false;
               break;
             }
-            string sel = $"{GenerateXPath(originalElement, pathOptions)}/@{attr.Key}";
+            string sel = $"{GenerateXPath(originalElement, options)}/@{attr.Key}";
             savedOp = new XElement("remove", new XAttribute("sel", sel));
             break;
           }
@@ -538,7 +549,7 @@ namespace X4XmlDiffAndPatch
       XDocument original,
       XDocument modified,
       XElement diffRoot,
-      PathOptions pathOptions,
+      Options options,
       XElement? originalElem = null,
       XElement? modifiedElem = null,
       bool checkOnly = false
@@ -546,8 +557,8 @@ namespace X4XmlDiffAndPatch
     {
       if (originalElem != null && modifiedElem != null)
       {
-        string sel = GenerateXPath(originalElem, pathOptions);
-        string selModified = GenerateXPath(modifiedElem, pathOptions);
+        string sel = GenerateXPath(originalElem, options);
+        string selModified = GenerateXPath(modifiedElem, options);
         if (checkOnly)
         {
           Logger.Debug(
@@ -612,7 +623,7 @@ namespace X4XmlDiffAndPatch
 
       if (!checkOnly && originalElem == original.Root && modifiedElem == modified.Root)
       {
-        (bool rootsMatchedEnough, XElement? rootSavedOp) = CompareAttributes(originalElem, modifiedElem, pathOptions);
+        (bool rootsMatchedEnough, XElement? rootSavedOp) = CompareAttributes(originalElem, modifiedElem, options);
         if (rootsMatchedEnough && rootSavedOp != null)
         {
           DiffRootAddOperation(diffRoot, rootSavedOp);
@@ -651,14 +662,14 @@ namespace X4XmlDiffAndPatch
         }
         if (originalChild.Name == modifiedChild.Name)
         {
-          (matchedEnough, XElement? savedOp) = CompareAttributes(originalChild, modifiedChild, pathOptions, checkOnly);
+          (matchedEnough, XElement? savedOp) = CompareAttributes(originalChild, modifiedChild, options, checkOnly);
           if (matchedEnough == true && savedOp != null)
           {
             matchedEnough = false;
             if (
               (originalChild.Parent == null && modifiedChild.Parent == null)
               || (
-                !CompareElements(original, modified, diffRoot, pathOptions, originalChild, modifiedChild, true)
+                !CompareElements(original, modified, diffRoot, options, originalChild, modifiedChild, true)
                 && (
                   i + 1 == originalChildren.Count
                   || j + 1 == modifiedChildren.Count
@@ -680,7 +691,7 @@ namespace X4XmlDiffAndPatch
           Logger.Debug($"Matched enough: {matchedEnough}, i: {i}, j: {j}");
           if (matchedEnough)
           {
-            if (CompareElements(original, modified, diffRoot, pathOptions, originalChild, modifiedChild, checkOnly))
+            if (CompareElements(original, modified, diffRoot, options, originalChild, modifiedChild, checkOnly))
             {
               if (checkOnly)
               {
@@ -718,7 +729,7 @@ namespace X4XmlDiffAndPatch
               XElement addOp;
               if (i > 0)
               {
-                string xpath = GenerateXPath(originalChildren[i - 1], pathOptions);
+                string xpath = GenerateXPath(originalChildren[i - 1], options);
                 string pos = "after";
                 if (
                   lastRemovedOrReplaced == i - 1
@@ -726,7 +737,7 @@ namespace X4XmlDiffAndPatch
                   || IsElementPrecededByPosBeforeComment(modifiedChildren[j])
                 )
                 {
-                  string xpathBefore = GenerateXPath(originalChild, pathOptions);
+                  string xpathBefore = GenerateXPath(originalChild, options);
                   if (!NumericIdsPattern.IsMatch(xpathBefore))
                   {
                     xpath = xpathBefore;
@@ -738,11 +749,7 @@ namespace X4XmlDiffAndPatch
               }
               else
               {
-                addOp = new XElement(
-                  "add",
-                  new XAttribute("sel", GenerateXPath(originalElem, pathOptions)),
-                  new XAttribute("pos", "prepend")
-                );
+                addOp = new XElement("add", new XAttribute("sel", GenerateXPath(originalElem, options)), new XAttribute("pos", "prepend"));
               }
               // Process each added child, checking for pos=before comments
               for (int l = j; l < k; l++)
@@ -766,7 +773,7 @@ namespace X4XmlDiffAndPatch
               && originalChildren[i].Attributes().Any(attr => modifiedChildren[j].Attribute(attr.Name)?.Value == attr.Value)
             )
             {
-              string sel = GenerateXPath(originalChild, pathOptions);
+              string sel = GenerateXPath(originalChild, options);
               XElement replaceOp = new XElement("replace", new XAttribute("sel", sel), modifiedChild);
               lastRemovedOrReplaced = i;
               DiffRootAddOperation(diffRoot, replaceOp);
@@ -776,7 +783,7 @@ namespace X4XmlDiffAndPatch
             }
             else
             {
-              string sel = GenerateXPath(originalChild, pathOptions);
+              string sel = GenerateXPath(originalChild, options);
               XElement removeOp = new XElement("remove", new XAttribute("sel", sel));
               lastRemovedOrReplaced = i;
               DiffRootAddOperation(diffRoot, removeOp);
@@ -790,7 +797,7 @@ namespace X4XmlDiffAndPatch
       while (i < originalChildren.Count)
       {
         var originalChild = originalChildren[i];
-        string sel = GenerateXPath(originalChild, pathOptions);
+        string sel = GenerateXPath(originalChild, options);
         XElement removeOp = new XElement("remove", new XAttribute("sel", sel));
         lastRemovedOrReplaced = i;
         DiffRootAddOperation(diffRoot, removeOp);
@@ -801,7 +808,7 @@ namespace X4XmlDiffAndPatch
       if (j + 1 <= modifiedChildren.Count)
       {
         XElement addOp;
-        addOp = new XElement("add", new XAttribute("sel", GenerateXPath(originalElem, pathOptions)));
+        addOp = new XElement("add", new XAttribute("sel", GenerateXPath(originalElem, options)));
         while (j < modifiedChildren.Count)
         {
           var addedChild = modifiedChildren[j];
@@ -847,7 +854,7 @@ namespace X4XmlDiffAndPatch
       XElement element,
       XElement parent,
       XDocument? doc,
-      PathOptions pathOptions,
+      Options options,
       string pathForParent = ""
     )
     {
@@ -870,7 +877,7 @@ namespace X4XmlDiffAndPatch
       if (attributes?.Count > 0)
       {
         string xpath = $"{pathForParent}";
-        if (pathOptions.UseAllAttributes)
+        if (options.UseAllAttributes)
         {
           foreach (var attr in attributes)
           {
@@ -928,7 +935,7 @@ namespace X4XmlDiffAndPatch
       return (step, pathForParent);
     }
 
-    private static string GenerateXPath(XElement element, PathOptions pathOptions)
+    private static string GenerateXPath(XElement element, Options options)
     {
       if (element == null)
         return string.Empty;
@@ -936,7 +943,7 @@ namespace X4XmlDiffAndPatch
       if (root == null)
         return string.Empty;
       XDocument? doc = null;
-      if (pathOptions.AnywhereIsAllowed)
+      if (options.AnywhereIsAllowed)
       {
         doc = element.Document;
       }
@@ -947,7 +954,7 @@ namespace X4XmlDiffAndPatch
         XElement? parent = current.Parent;
         if (parent != null)
         {
-          (string step, string pathForParent) = GetElementPathStep(current, parent, doc, pathOptions);
+          (string step, string pathForParent) = GetElementPathStep(current, parent, doc, options);
           if (step.StartsWith("//"))
           {
             path.Insert(0, step);
@@ -971,7 +978,7 @@ namespace X4XmlDiffAndPatch
               if (index > 0)
               {
                 XElement sibling = siblings[index - 1];
-                (stepSibling, xpathWithSiblings) = GetElementPathStep(sibling, parent, doc, pathOptions);
+                (stepSibling, xpathWithSiblings) = GetElementPathStep(sibling, parent, doc, options);
                 if (!string.IsNullOrEmpty(stepSibling))
                 {
                   step += $"{stepSibling}/following-sibling::{pathForParent}[1]";
@@ -982,7 +989,7 @@ namespace X4XmlDiffAndPatch
                 if (index + 1 < siblings.Count)
                 {
                   XElement sibling = siblings[index + 1];
-                  (stepSibling, xpathWithSiblings) = GetElementPathStep(sibling, parent, doc, pathOptions);
+                  (stepSibling, xpathWithSiblings) = GetElementPathStep(sibling, parent, doc, options);
                   if (!string.IsNullOrEmpty(stepSibling))
                   {
                     step += $"{stepSibling}/preceding-sibling::{pathForParent}[1]";
@@ -1174,11 +1181,5 @@ namespace X4XmlDiffAndPatch
     }
 
     #endregion
-  }
-
-  public class PathOptions
-  {
-    public bool AnywhereIsAllowed { get; set; }
-    public bool UseAllAttributes { get; set; }
   }
 }
