@@ -25,7 +25,14 @@ This document describes how to use XMLDiff with Visual Studio Code.
     │   md
     │   md.modified
     │   md.original
+    │   subdir1
+    │   │   subdir2
+    │   │   │   aiscripts
+    │   │   │   aiscripts.modified
+    │   │   │   aiscripts.original
     ```
+
+    The structure now supports any depth of subdirectories between the workspace root and the type folders.
 
 2. You can skip creation `*.original` folders, if you will use the `extracted` files folder.
 3. Copy the [RunXMLDiff.bat](/forVSCode/RunXMLDiff.bat) file to the root of your project.
@@ -39,7 +46,7 @@ This document describes how to use XMLDiff with Visual Studio Code.
     "commands": [
         {
             "match": "\\.modified\\\\.+?\\.xml$",
-            "cmd": "${workspaceFolder}\\RunXMLDiff.bat ${file} ${workspaceFolder}\\XMLDiffAndPatch\\XMLDiff.exe
+            "cmd": "${workspaceFolder}\\RunXMLDiff.bat ${file} ${workspaceFolder}\\XMLDiffAndPatch\\XMLDiff.exe ${workspaceFolder}"
         }
     ]
     ```
@@ -50,7 +57,7 @@ This document describes how to use XMLDiff with Visual Studio Code.
     "commands": [
         {
             "match": "\\.modified\\\\.+?\\.xml$",
-            "cmd": "${workspaceFolder}\\RunXMLDiff.bat ${file} ${workspaceFolder}\\XMLDiffAndPatch\\XMLDiff.exe" ${workspaceFolder}\\..\\extracted"
+            "cmd": "${workspaceFolder}\\RunXMLDiff.bat ${file} ${workspaceFolder}\\XMLDiffAndPatch\\XMLDiff.exe ${workspaceFolder} ${workspaceFolder}\\..\\extracted"
         }
     ]
     ```
@@ -70,36 +77,41 @@ You can check an output in the `OUTPUT` tab in the VSCode, selecting the `Run on
 ### Usage
 
 ```batch
-RunXMLDiff.bat <ModifiedFilePath> <XMLDiffPath> [OriginalFilesPath]
+RunXMLDiff.bat <ModifiedFilePath> <XMLDiffPath> <WorkspacePath> [OriginalFilesPath]
 ```
 
 #### Parameters
 
 - `<ModifiedFilePath>`: The full path to the modified XML file. This parameter is mandatory.
 - `<XMLDiffPath>`: The full path to the `XMLDiff.exe` utility. This parameter is mandatory.
+- `<WorkspacePath>`: The full path to the workspace root directory. The modified file must be located inside this workspace. This parameter is mandatory.
 - `[OriginalFilesPath]`: The full path to the directory containing the original XML files. This parameter is optional.
 
 #### Example
 
 ```batch
-RunXMLDiff.bat "C:\path\to\md.modified\file.xml" "C:\path\to\XMLDiff.exe" "C:\path\to\original\files"
+RunXMLDiff.bat "C:\path\to\workspace\subdir\md.modified\file.xml" "C:\path\to\XMLDiff.exe" "C:\path\to\workspace" "C:\path\to\original\files"
 ```
 
 #### How It Works
 
-1. **Extract Type and Filename**: The script extracts the type (e.g., `aiscript` or `md`) and filename from the modified file path.
-2. **Determine Target File Path**: The script constructs the target file path by removing `.modified` from the modified file path.
-3. **Determine Original File Path**:
-   - If the `OriginalFilesPath` is provided, the original file path is constructed as `OriginalFilesPath\type\filename`.
-   - If the `OriginalFilesPath` is not provided, the original file path is constructed by replacing `.modified` with `.original` in the modified file path.
-4. **Check Existence**:
+1. **Validate Workspace**: The script validates that the modified file path is inside the workspace path. If not, it exits with an error.
+2. **Calculate Relative Path**: The script calculates the relative path from the workspace to the modified file, preserving the full directory structure.
+3. **Extract Type and Filename**: The script extracts the type (e.g., `aiscript` or `md`) and filename from the relative path. The type is determined from the parent folder of the `.modified` folder.
+4. **Determine Target File Path**: The script constructs the target file path by replacing `.modified` with `.diff` in the relative path structure, maintaining any subdirectories.
+5. **Determine Original File Path**:
+   - First, it looks for a local `.original` folder following the same relative path structure.
+   - If the `OriginalFilesPath` is provided and local original file doesn't exist, the original file path is constructed using the same relative directory structure under `OriginalFilesPath`.
+   - If the `OriginalFilesPath` is not provided, it uses the local `.original` folder path.
+6. **Check Existence**:
    - The script checks for the existence of `XMLDiff.exe`, the modified file, the original file, and the target file directory.
-5. **Run XMLDiff**: If all checks pass, the script runs `XMLDiff.exe` with the appropriate parameters to generate the diff file.
+7. **Run XMLDiff**: If all checks pass, the script runs `XMLDiff.exe` with the appropriate parameters to generate the diff file.
 
 ### Error Handling
 
 The script will output error messages and exit with a non-zero status code if any of the following conditions are met:
 
+- The modified file path is not inside the workspace path.
 - `XMLDiff.exe` is not found at the specified path.
 - The modified file is not found at the specified path.
 - The original file is not found at the constructed path.
@@ -112,7 +124,8 @@ If the script runs successfully, it will output a message indicating that the XM
 ## Notes
 
 - Ensure that the `XMLDiff.exe` utility is accessible and has the necessary permissions to execute.
-- The script assumes that the modified file path follows the convention where the last folder in the path is of the form `type.modified`.
+- The script assumes that the modified file path follows the convention where one of the folders in the relative path is of the form `type.modified`.
+- The script now supports any depth of subdirectories between the workspace root and the type folders, preserving the full directory structure in the output.
 - If you have some beautification plugins for XML use the alternative save (Ctrl + K  S, i.e. "Save without Formatting), which will not involve them, to get the diff as small as possible.
 
 ## Demo
