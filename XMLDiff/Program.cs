@@ -769,8 +769,9 @@ namespace X4XmlDiffAndPatch
           {
             Logger.Debug($"Trying to identify - is it replace or remove operation.");
             if (
-              (originalChildren[i].Name == modifiedChildren[j].Name)
-              && originalChildren[i].Attributes().Any(attr => modifiedChildren[j].Attribute(attr.Name)?.Value == attr.Value)
+              originalChildren[i].Name == modifiedChildren[j].Name
+                && originalChildren[i].Attributes().Any(attr => modifiedChildren[j].Attribute(attr.Name)?.Value == attr.Value)
+              || i + 1 == originalChildren.Count && j + 1 == modifiedChildren.Count
             )
             {
               string sel = GenerateXPath(originalChild, options);
