@@ -771,16 +771,34 @@ namespace X4XmlDiffAndPatch
             if (
               originalChildren[i].Name == modifiedChildren[j].Name
                 && originalChildren[i].Attributes().Any(attr => modifiedChildren[j].Attribute(attr.Name)?.Value == attr.Value)
-              || i + 1 == originalChildren.Count && j + 1 == modifiedChildren.Count
+              || i + 1 == originalChildren.Count
             )
             {
               string sel = GenerateXPath(originalChild, options);
               XElement replaceOp = new XElement("replace", new XAttribute("sel", sel), modifiedChild);
+              // Look ahead: bundle additional modified children that are not matched by the
+              // next original child into this replace op (1-element → many-elements replacement).
+              int k = j + 1;
+              while (k < modifiedChildren.Count)
+              {
+                bool matchesNextOriginal =
+                  i + 1 < originalChildren.Count
+                  && modifiedChildren[k].Name == originalChildren[i + 1].Name
+                  && modifiedChildren[k].Attributes().Count() == originalChildren[i + 1].Attributes().Count()
+                  && modifiedChildren[k].Attributes().All(attr => originalChildren[i + 1].Attribute(attr.Name)?.Value == attr.Value);
+                if (matchesNextOriginal)
+                  break;
+                replaceOp.Add(new XElement(modifiedChildren[k]));
+                Logger.Info(
+                  $"[Operation replace] Bundling extra element '{GetElementInfo(modifiedChildren[k])}' into replace of '{GetElementInfo(originalChild)}'."
+                );
+                k++;
+              }
               lastRemovedOrReplaced = i;
               DiffRootAddOperation(diffRoot, replaceOp);
               Logger.Info($"[Operation replace] Element '{GetElementInfo(originalChild)}' with '{GetElementInfo(modifiedChild)}'.");
               i++;
-              j++;
+              j = k;
             }
             else
             {
