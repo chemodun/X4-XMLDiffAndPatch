@@ -592,16 +592,21 @@ namespace X4XmlDiffAndPatch
       {
         if (targetObj is XElement target)
         {
-          string targetName = target.Name.LocalName;
-          XElement? replaceSubElement = replaceElement.Element(targetName);
+          var replaceChildren = replaceElement.Elements().ToList();
           XElement? parent = target.Parent;
           string targetInfo = GetElementInfo(target);
           string parentInfo = GetElementInfo(parent);
-          if (replaceSubElement != null)
+          if (replaceChildren.Count > 0)
           {
-            string replaceInfo = GetElementInfo(replaceSubElement);
-            target.ReplaceWith(replaceSubElement);
-            Logger.Info($"Replaced element '{targetInfo}' with '{replaceInfo}' in '{parentInfo}'.");
+            // Insert all child elements from the replace operation
+            XNode lastInserted = target;
+            for (int i = replaceChildren.Count - 1; i >= 0; i--)
+            {
+              target.AddAfterSelf(replaceChildren[i]);
+            }
+            target.Remove();
+            string replaceInfo = GetElementInfo(replaceChildren[0]);
+            Logger.Info($"Replaced element '{targetInfo}' with '{replaceInfo}'{(replaceChildren.Count > 1 ? $" and {replaceChildren.Count - 1} sibling(s)" : "")} in '{parentInfo}'.");
           }
           else
           {
