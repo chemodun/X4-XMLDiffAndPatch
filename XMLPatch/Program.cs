@@ -592,15 +592,14 @@ namespace X4XmlDiffAndPatch
       {
         if (targetObj is XElement target)
         {
-          string targetName = target.Name.LocalName;
-          XElement? replaceSubElement = replaceElement.Element(targetName);
           XElement? parent = target.Parent;
           string targetInfo = GetElementInfo(target);
           string parentInfo = GetElementInfo(parent);
-          if (replaceSubElement != null)
+          var replaceContent = replaceElement.Elements().Select(e => new XElement(e)).ToArray();
+          if (replaceContent.Length > 0)
           {
-            string replaceInfo = GetElementInfo(replaceSubElement);
-            target.ReplaceWith(replaceSubElement);
+            string replaceInfo = string.Join(", ", replaceContent.Select(e => GetElementInfo(e)));
+            target.ReplaceWith(replaceContent);
             Logger.Info($"Replaced element '{targetInfo}' with '{replaceInfo}' in '{parentInfo}'.");
           }
           else
