@@ -8,6 +8,9 @@ Also, you can use appropriate tool to patch XML files with diff files, this acti
 ## Important note
 
 It is highly recommended to use the `diff.xsd` file to validate the diff XML files. It is especially important when you creating them by `XMLDiff.exe`.
+
+But there is one **significant limitation** of the current version of the `diff.xsd` file (distributed with game version 8.00HF3/4)- it has strict rules for the `replace` operation. It has to support only one element in the `replace` element. It is means - if your files have more than one element in the `replace` element, the validation will fail. So, not use the `diff.xsd` file for validation in this case at all.
+
 If the `diff.xsd` file if it located in the "current" folder it will be used automatically. If you want to use another `diff.xsd` file, you can specify it with the `-x` option.
 
 ## How to use
@@ -280,6 +283,11 @@ There is a topic on the [EGOSOFT forum](https://forum.egosoft.com/viewtopic.php?
 Please be aware - each release archive has an appropriate link to the [VirusTotal](https://www.virustotal.com). Follow the link to be sure that the archive is safe.
 
 ## Changelog
+
+### [0.2.28] - 2026-02-22
+
+- Improved:
+  - XMLDiff and XMLPatch: added possibility to process multi-line `replace` diff elements.
 
 ### [0.2.27] - 2025-08-28
 
