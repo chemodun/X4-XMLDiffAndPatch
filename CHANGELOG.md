@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.2.28](https://github.com/chemodun/X4-XMLDiffAndPatch/compare/v0.2.27...v0.2.28) (2026-02-22)
+
+
+### Bug Fixes
+
+* **XMLDiff:** correct logic in child element comparison for replace or remove operations ([3b31f25](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/3b31f25bf9550f1e032235c7f5945d3bf4d7440a))
+* **XMLDiff:** enhance element replacement logic to process multiple elements in one replace ([f3eb29e](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/f3eb29eccb890502a53759522b55eb0a5dfd9b3a))
+* **XMLPatch:** update element replacement logic to handle multiple sub-elements ([7119438](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/7119438a4da96d8d4ce9bb9d9e4a4ae7675e7fae))
+
+
+### Code Refactoring
+
+* **RunXMLDiff:** enhance script to support workspace path and relative directory structure ([f681bf7](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/f681bf7aa1a941825543a8f74871fa803114862e))
+
+
+### Documentation
+
+* **bbcode:** Update bbcode files ([f6c8590](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/f6c85906b4164c2fb5c4f785fd4a2afba05fcfaf))
+* **README:** clarify limitations of diff.xsd for multi-element replace operations ([b0c86b1](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/b0c86b1ae8721333ce929f0946dd8fc012310cef))
+
 ## [0.2.27](https://github.com/chemodun/X4-XMLDiffAndPatch/compare/v0.2.26...v0.2.27) (2025-08-27)
 
 
