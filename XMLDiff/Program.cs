@@ -768,10 +768,22 @@ namespace X4XmlDiffAndPatch
           if (!foundMatch)
           {
             Logger.Debug($"Trying to identify - is it replace or remove operation.");
+            // Check if the next original element (i+1) appears somewhere later in modifiedChildren (j+1 or beyond).
+            // If so, the current modifiedChildren[j] is replacing originalChildren[i], not just an unrelated insert.
+            bool nextOriginalFoundLaterInModified =
+              i + 1 < originalChildren.Count
+              && Enumerable
+                .Range(j + 1, modifiedChildren.Count - j - 1)
+                .Any(m =>
+                  modifiedChildren[m].Name == originalChildren[i + 1].Name
+                  && modifiedChildren[m].Attributes().Count() == originalChildren[i + 1].Attributes().Count()
+                  && originalChildren[i + 1].Attributes().All(attr => modifiedChildren[m].Attribute(attr.Name)?.Value == attr.Value)
+                );
             if (
               originalChildren[i].Name == modifiedChildren[j].Name
                 && originalChildren[i].Attributes().Any(attr => modifiedChildren[j].Attribute(attr.Name)?.Value == attr.Value)
               || i + 1 == originalChildren.Count
+              || nextOriginalFoundLaterInModified
             )
             {
               string sel = GenerateXPath(originalChild, options);
