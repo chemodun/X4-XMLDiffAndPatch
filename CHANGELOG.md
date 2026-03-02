@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.2.29](https://github.com/chemodun/X4-XMLDiffAndPatch/compare/v0.2.28...v0.2.29) (2026-03-02)
+
+
+### Bug Fixes
+
+* **XMLDiff:** enhance logic to identify replacement operations for subsequent elements ([4799871](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/479987113e50e7ee9fe42ea1588cca43db1d093c))
+
+
+### Miscellaneous Chores
+
+* **README:** update changelog for version 0.2.29 with improved replace operation detection logic ([cddcf2f](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/cddcf2f3db875f1bbfd2fec53cee547c4bbded78))
+
 ## [0.2.28](https://github.com/chemodun/X4-XMLDiffAndPatch/compare/v0.2.27...v0.2.28) (2026-02-22)
 
 
