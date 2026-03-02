@@ -284,6 +284,11 @@ Please be aware - each release archive has an appropriate link to the [VirusTota
 
 ## Changelog
 
+### [0.2.29] - 2026-03-02
+
+- Improved:
+  - XMLDiff: `replace` operation detection logic
+
 ### [0.2.28] - 2026-02-22
 
 - Improved:
