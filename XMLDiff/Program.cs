@@ -779,11 +779,23 @@ namespace X4XmlDiffAndPatch
                   && modifiedChildren[m].Attributes().Count() == originalChildren[i + 1].Attributes().Count()
                   && originalChildren[i + 1].Attributes().All(attr => modifiedChildren[m].Attribute(attr.Name)?.Value == attr.Value)
                 );
+            // Check if modifiedChildren[j] matches ANY later original element (i+1, i+2, ...).
+            // If so, originalChildren[i] (and any skipped ones) were simply removed, not replaced.
+            bool nextOriginalIsCurrentModified = Enumerable
+              .Range(i + 1, originalChildren.Count - i - 1)
+              .Any(k =>
+                modifiedChildren[j].Name == originalChildren[k].Name
+                && modifiedChildren[j].Attributes().Count() == originalChildren[k].Attributes().Count()
+                && originalChildren[k].Attributes().All(attr => modifiedChildren[j].Attribute(attr.Name)?.Value == attr.Value)
+              );
             if (
-              originalChildren[i].Name == modifiedChildren[j].Name
-                && originalChildren[i].Attributes().Any(attr => modifiedChildren[j].Attribute(attr.Name)?.Value == attr.Value)
-              || i + 1 == originalChildren.Count
-              || nextOriginalFoundLaterInModified
+              !nextOriginalIsCurrentModified
+              && (
+                originalChildren[i].Name == modifiedChildren[j].Name
+                  && originalChildren[i].Attributes().Any(attr => modifiedChildren[j].Attribute(attr.Name)?.Value == attr.Value)
+                || i + 1 == originalChildren.Count
+                || nextOriginalFoundLaterInModified
+              )
             )
             {
               string sel = GenerateXPath(originalChild, options);
