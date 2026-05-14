@@ -286,6 +286,13 @@ Please be aware - each release archive has an appropriate link to the [url=https
 
 [size=130][u]Changelog[/u][/size]
 
+[size=125][u][0.2.30] - 2026-05-15[/u][/size]
+[list]
+[*] Fix:
+[list]
+[*] XMLDiff: [b]replace[/b]/[b]remove[/b] operation detection logic
+[/list]
+[/list]
 [size=125][u][0.2.29] - 2026-03-02[/u][/size]
 [list]
 [*] Improved:
