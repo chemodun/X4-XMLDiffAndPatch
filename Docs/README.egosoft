@@ -288,7 +288,7 @@ Please be aware - each release archive has an appropriate link to the [url=https
 
 [size=125][u][0.2.30] - 2026-05-15[/u][/size]
 [list]
-[*] Fix:
+[*] Fixed:
 [list]
 [*] XMLDiff: [b]replace[/b]/[b]remove[/b] operation detection logic
 [/list]
