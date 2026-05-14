@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.2.30](https://github.com/chemodun/X4-XMLDiffAndPatch/compare/v0.2.29...v0.2.30) (2026-05-14)
+
+
+### Bug Fixes
+
+* **XMLDiff:** improve logic to differentiate between removed and replaced elements in XML comparison ([84a87f6](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/84a87f664aa37c58391f8f9bfae2b008afed12c2))
+
+
+### Miscellaneous Chores
+
+* **README:** update changelog for version 0.2.30 with fix for XMLDiff operation detection logic ([e16f286](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/e16f286f051edbb321191e68f41e5f8bccc92a12))
+
 ## [0.2.29](https://github.com/chemodun/X4-XMLDiffAndPatch/compare/v0.2.28...v0.2.29) (2026-03-02)
 
 
