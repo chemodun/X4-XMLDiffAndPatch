@@ -28,7 +28,7 @@ If the [b]diff.xsd[/b] file if it located in the "current" folder it will be use
 There is a command line help for the [b]XMLDiff[/b] tool:
 
 [code]
-XMLDiff 1.0.0
+XMLDiff 1.0.1
 Developed by Chem O`Dun
 
   -o, --original_xml            Required. Original XML file or directory.
@@ -174,7 +174,7 @@ You can define the position of the [b]add[/b] element in the diff file by using 
 There is a command line help for the [b]XMLPatch[/b] tool:
 
 [code]
-XMLPatch 1.0.0
+XMLPatch 1.0.1
 Developed by Chem O`Dun
 
   -o, --original_xml    Required. Path to the original XML file or directory.
@@ -309,7 +309,7 @@ Please be aware - each release archive has an appropriate link to the [url=https
 
 [size=3][u][b]Changelog[/b][/u][/size]
 
-[size=3][u][i][1.0.0] - 2026-05-15[/i][/u][/size]
+[size=3][u][i][1.0.1] - 2026-05-15[/i][/u][/size]
 [list]
 [*] Improved:
 [list]
