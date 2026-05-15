@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.0.3](https://github.com/chemodun/X4-XMLDiffAndPatch/compare/v1.0.2...v1.0.3) (2026-05-15)
+
+
+### Bug Fixes
+
+* **diff:** trim whitespace from text values and enhance logic for attribute comparison ([ca8f0b4](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/ca8f0b4464d81b2dd6b87d7898b70a9b4a4dc428))
+
+
+### Documentation
+
+* **README:** update changelog for version 1.0.3 with fixes for attribute handling and text nodes comparison ([cd4777b](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/cd4777ba728ca12a26998879757e10b55aeb734c))
+
 ## [1.0.2](https://github.com/chemodun/X4-XMLDiffAndPatch/compare/v1.0.1...v1.0.2) (2026-05-15)
 
 
