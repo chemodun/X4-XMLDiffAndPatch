@@ -291,7 +291,7 @@ To create such a log file, use the `-l` option with the `debug` level, e.g. `-l 
 
 ## License
 
-There is a MIT license for this tool. You can find it in the [LICENSE](LICENSE) file.
+This tool is licensed under the Apache License, Version 2.0. You can find it in the [LICENSE](LICENSE) file.
 
 ## Credits
 
