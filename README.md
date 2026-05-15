@@ -19,37 +19,37 @@ If the `diff.xsd` file if it located in the "current" folder it will be used aut
   - GitHub [releases page](https://github.com/chemodun/X4-XMLDiffAndPatch/releases/) - there is an archive file `XMLDiffAndPatch.zip`.
   - [NexusMods](https://www.nexusmods.com/x4foundations/mods/1578) - there is an archive file `XMLDiffAndPatch.zip`.
 - Extract the archive file to any useful location.
-- Inside will be a folder, named XMLDiffAndPatch with two executables - `XMLDiff.exe` and `XMLPatch.exe`.
+- Inside will be a folder named `XMLDiffAndPatch` with two executables - `XMLDiff.exe` and `XMLPatch.exe`.
 
 ### How to create a diff file
 
 There is a command line help for the `XMLDiff` tool:
 
 ```shell
-XMLDiff 0.2.27
+XMLDiff 1.0.0
 Developed by Chem O`Dun
 
-  -o, --original_xml      Required. Path to the original XML file or directory.
+  -o, --original_xml            Required. Original XML file or directory.
 
-  -m, --modified_xml      Required. Path to the modified XML file or directory.
+  -m, --modified_xml            Required. Modified XML file or directory.
 
-  -d, --diff_xml          Required. Path for the diff XML file or directory.
+  -d, --diff_xml                Required. Output diff file or directory.
 
-  -x, --xsd               Path to the diff.xsd schema file.
+  -x, --xsd                     Path to diff.xsd (default: diff.xsd).
 
-  -l, --log-to-file       Log level (error, warn, info, debug).
+  -l, --log-to-file             File log level: error|warn|info|debug.
 
-  -a, --append-to-log     (Default: false) Append logs to the existing log file.
+  -a, --append-to-log           (Default: false) Append to existing log file instead of overwriting.
 
-  --anywhere-is-allowed   (Default: false) Generate a path using the anywhere '//' construction, if possible. Instead of full path.
+  --only-full-path              (Default: false) Generate only full absolute XPath (no // shorthand).
 
-  --use-all-attributes    (Default: false) Use all attributes in XPath.
+  --use-all-attributes          (Default: false) Include all attributes in XPath predicates.
 
-  --ignore-diff-in-attribute    Ignore differences in the specified attribute when comparing elements.
+  --ignore-diff-in-attribute    Attribute name to ignore when comparing elements.
 
-  --help                  Display this help screen.
+  --help                        Display this help screen.
 
-  --version               Display version information.
+  --version                     Display version information.
 ```
 
 Example:
@@ -91,9 +91,26 @@ There the is example of the diff files created by tool:
 
 #### Path options
 
-##### Only full path
+##### Default: `//` shorthand when globally unique
 
-The `--only-full-path` option will generate only the full path to the element in the XML file. It is mean - there no `//` will be in the `sel` attribute of the `add`, `replace` or `remove` element.
+By default the tool uses the `//` XPath shorthand when an element is globally unique in the document, producing shorter and more readable `sel` paths.
+
+Example:
+
+```xml
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<diff>
+<add sel="//ware[@id=&quot;scanningarrays&quot;]" pos="before">
+    <ware id="xenon_psi_emitter_mk1" ...>
+    ...
+    </ware>
+</add>
+</diff>
+```
+
+##### `--only-full-path`: always use full absolute path
+
+The `--only-full-path` option forces the tool to always generate a full path (starting from `/rootElement/...`) and never use the `//` shorthand.
 
 Example:
 
@@ -113,9 +130,15 @@ Example:
 </diff>
 ```
 
+##### Minimal XPath attribute predicates
+
+The tool adds attribute predicates to a path step only as needed to make it unique within its parent. If the element name alone is already unique at that level, no attributes are added. Additional attributes are appended one by one only until uniqueness is achieved.
+
+This produces cleaner, more readable `sel` paths compared to always including the first attribute regardless of need.
+
 ##### Use all attributes in XPath
 
-The `--use-all-attributes` option will generate the `sel` attribute with all attributes of the element in the XML file. It is mean - there will be all attributes of the element in the `sel` attribute of the `add`, `replace` or `remove` element.
+The `--use-all-attributes` option forces all attributes of an element to be included in its XPath predicate, regardless of uniqueness. Useful when maximum specificity is preferred.
 
 Example:
 
@@ -141,34 +164,34 @@ The `--ignore-diff-in-attribute` option will ignore differences in the specified
 
 #### Defining the position generation for the diff by in-line comment
 
-The `pos` attribute of the `add` usually is set to `after`, taking in account the common logic of how the program is working. But in some cases, you may want to have a diff file with the `pos` attribute set to `before`. Mostly it is useful when it working in conjunction with the vscode - [XMLDiff with VSCode](XMLDIffWithVSCode.md).
-From version 0.2.26, you can define the position of the `add` element in the diff file by using an in-line comment in the original XML file. The comment should be placed before the element you want to add and should contain the text `<!-- pos="before" -->`.
+The `pos` attribute of the `add` is usually set to `after`, taking in account the common logic of how the program is working. But in some cases, you may want to have a diff file with the `pos` attribute set to `before`. Mostly it is useful when working in conjunction with VS Code.
+You can define the position of the `add` element in the diff file by using an in-line comment in the original XML file. The comment should be placed before the element you want to add and should contain the text `<!-- pos="before" -->`.
 
 ### How to apply a diff file
 
 There is a command line help for the `XMLPatch` tool:
 
 ```shell
-XMLPatch 0.2.20
+XMLPatch 1.0.0
 Developed by Chem O`Dun
 
-  -o, --original_xml     Required. Path to the original XML file or directory.
+  -o, --original_xml    Required. Path to the original XML file or directory.
 
-  -d, --diff_xml         Required. Path to the diff XML file or directory.
+  -d, --diff_xml        Required. Path to the diff XML file or directory.
 
-  -u, --output_xml       Required. Path for the output XML file or directory.
+  -u, --output_xml      Required. Path for the output XML file or directory.
 
-  -x, --xsd              Path to the diff.xsd schema file.
+  -x, --xsd             Path to diff.xsd (default: diff.xsd).
 
-  -l, --log-to-file      Log level (error, warn, info, debug).
+  -l, --log-to-file     File log level: error|warn|info|debug.
 
-  -a, --append-to-log    (Default: false) Append logs to the existing log file.
+  -a, --append-to-log   (Default: false) Append to existing log file instead of overwriting.
 
-  --allow-doubles        (Default: false) Allow doubles in the diff XML. Useful for scripts patching.
+  --allow-doubles       (Default: false) Skip duplicate-element guard when applying <add> operations.
 
-  --help                 Display this help screen.
+  --help                Display this help screen.
 
-  --version              Display version information.
+  --version             Display version information.
 ```
 
 Example:
@@ -226,14 +249,14 @@ There is an example of the patched XML files created by the tool:
 If the output XML is a directory, the tool will create a new XML file with the same name as the original XML file in the output directory.
 For example, if the original XML file is `vanilla.xml` and the output directory is `output`, the tool will create a new XML file `output/vanilla.xml`.
 
-### How to apply a tools to a directories
+### How to apply the tools to directories
 
 #### Applying XMLDiff to directories
 
 You can apply the XMLDiff tool to directories. In this case, the tool will traverse the directory structure and create diff files for XML files with identical names and relative paths. The process is as follows:
 
 - If all input parameters are directories, the tool will create diff files for all XML files in the directories.
-- The tool will recursively go through the directory structure, using modified files as a "keys" for it
+- The tool will recursively go through the directory structure, using modified files as a "key" for it.
 - For each changed file, the corresponding original XML file in the original directory with the same relative path will be checked.
 - If the original XML file is not found, the operation will be skipped.
 - If the original XML file is found, the diff file will be created in the output directory with the same relative path.
@@ -249,7 +272,7 @@ XMLDiff.exe -o vanilla_dir -m modified_dir -d diff_dir
 You can apply the XMLPatch tool to directories. In this case, the tool will traverse the directory structure and apply the patch to XML files with identical names and relative paths. The process is as follows:
 
 - If all input parameters are directories, the tool will apply the patch to all XML files in the directories.
-- The tool will recursively go through the directory structure, using diff files as a "keys" for it
+- The tool will recursively go through the directory structure, using diff files as a "key" for it.
 - For each diff file, the corresponding original XML file in the original directory with the same relative path will be checked.
 - If the original XML file is not found, the operation will be skipped.
 - If the original XML file is found, the diff file will be patched with the original XML file, and a new patched XML file will be created in the output directory with the same relative path.
@@ -262,9 +285,9 @@ XMLPatch.exe -o vanilla_dir -d diff_dir -u modified_dir
 
 ## Issues reporting
 
-If you have any issues with the tool, please create an issue in the [issues page](https://github.com/chemodun/x4_XMLDiffAndPatch/issues).
-Will be highly appreciated if you will provide a version of used tool and XMLDiff.log or XMLPatch.log file respectively to the tool.
-To create such debug file please use the `--log-to-file` option with `debug` level.
+If you have any issues with the tool, please create an issue on the [issues page](https://github.com/chemodun/x4_XMLDiffAndPatch/issues).
+It will be highly appreciated if you provide the version of the used tool and the `XMLDiff.log` or `XMLPatch.log` file respectively.
+To create such a debug file, use the `--log-to-file` option with `debug` level.
 
 ## License
 
@@ -283,6 +306,11 @@ There is a topic on the [EGOSOFT forum](https://forum.egosoft.com/viewtopic.php?
 Please be aware - each release archive has an appropriate link to the [VirusTotal](https://www.virustotal.com). Follow the link to be sure that the archive is safe.
 
 ## Changelog
+
+### [1.0.0] - 2026-05-15
+
+- Improved:
+  - Full internal rewrite.
 
 ### [0.2.31] - 2026-05-15
 
