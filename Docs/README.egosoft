@@ -293,7 +293,7 @@ To create such a log file, use the [b]-l[/b] option with the [b]debug[/b] level,
 
 [size=130][u]License[/u][/size]
 
-There is a MIT license for this tool. You can find it in the [url=https://github.com/chemodun/X4-XMLDiffAndPatch/raw/main/LICENSE]LICENSE[/url] file.
+This tool is licensed under the Apache License, Version 2.0. You can find it in the [url=https://github.com/chemodun/X4-XMLDiffAndPatch/raw/main/LICENSE]LICENSE[/url] file.
 
 [size=130][u]Credits[/u][/size]
 
