@@ -408,3 +408,5 @@ diff.xsd
 
 dist/*
 
+# lscache
+*.csproj.lscache
