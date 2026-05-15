@@ -39,7 +39,7 @@ Developed by Chem O`Dun
 
   -x, --xsd                     Path to diff.xsd (default: diff.xsd).
 
-  -l, --log-to-file             File log level: error|warn|info|debug.
+  -l, --log-to-file             Enable file logging at the specified level: error|warn|info|debug. Console always logs at info level.
 
   -a, --append-to-log           (Default: false) Append to existing log file instead of overwriting.
 
@@ -185,7 +185,7 @@ Developed by Chem O`Dun
 
   -x, --xsd             Path to diff.xsd (default: diff.xsd).
 
-  -l, --log-to-file     File log level: error|warn|info|debug.
+  -l, --log-to-file     Enable file logging at the specified level: error|warn|info|debug. Console always logs at info level.
 
   -a, --append-to-log   (Default: false) Append to existing log file instead of overwriting.
 
@@ -289,7 +289,7 @@ XMLPatch.exe -o vanilla_dir -d diff_dir -u modified_dir
 
 If you have any issues with the tool, please create an issue on the [url=https://github.com/chemodun/x4_XMLDiffAndPatch/issues]issues page[/url].
 It will be highly appreciated if you provide the version of the used tool and the [b]XMLDiff.log[/b] or [b]XMLPatch.log[/b] file respectively.
-To create such a debug file, use the [b]--log-to-file[/b] option with [b]debug[/b] level.
+To create such a log file, use the [b]-l[/b] option with the [b]debug[/b] level, e.g. [b]-l debug[/b]. The console output is always at [b]info[/b] level; detailed debug information is written only to the file.
 
 [size=130][u]License[/u][/size]
 
@@ -309,6 +309,13 @@ Please be aware - each release archive has an appropriate link to the [url=https
 
 [size=130][u]Changelog[/u][/size]
 
+[size=125][u][1.0.2] - 2026-05-15[/u][/size]
+[list]
+[*] Improved:
+[list]
+[*] Logging.
+[/list]
+[/list]
 [size=125][u][1.0.1] - 2026-05-15[/u][/size]
 [list]
 [*] Improved:
