@@ -307,6 +307,12 @@ Please be aware - each release archive has an appropriate link to the [VirusTota
 
 ## Changelog
 
+### [1.0.3] - 2026-05-15
+
+- Fixed:
+  - Single attribute change handling.
+  - Text nodes comparison.
+
 ### [1.0.2] - 2026-05-15
 
 - Improved:
