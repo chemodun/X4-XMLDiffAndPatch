@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.2.31](https://github.com/chemodun/X4-XMLDiffAndPatch/compare/v0.2.30...v0.2.31) (2026-05-15)
+
+
+### Bug Fixes
+
+* **README:** correct tense in changelog for version 0.2.30 ([1445775](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/14457756d1990e7e0c56bb19d5d62955a684ebde))
+* **README:** update changelog for version 0.2.31 with fix for XMLDiff operation detection logic ([4a473f1](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/4a473f183c2357480f7172b169daecbebf9986e4))
+* **XMLDiff:** enhance attribute comparison logic in diff generation ([9c21a5e](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/9c21a5ea8e3d7a975abd4576c9146fdd54aa5bac))
+
+
+### Documentation
+
+* **bbcode:** Update bbcode files ([0211827](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/0211827ad5232e262371060a5148b3caffe39671))
+
 ## [0.2.30](https://github.com/chemodun/X4-XMLDiffAndPatch/compare/v0.2.29...v0.2.30) (2026-05-14)
 
 
