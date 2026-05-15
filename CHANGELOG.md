@@ -1,5 +1,27 @@
 # Changelog
 
+## [1.0.2](https://github.com/chemodun/X4-XMLDiffAndPatch/compare/v1.0.1...v1.0.2) (2026-05-15)
+
+
+### Code Refactoring
+
+* **diff:** improve info and debug logging logic ([c9ea7bf](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/c9ea7bf27dc9e1789f694b2cad8b0b368a69f50d))
+* **Program:** enhance argument parsing and logging configuration in XMLDiff and XMLPatch ([6467b24](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/6467b244859eb9b80ccda46f40f077ccf7479679))
+* **XmlUtils:** streamline indentation detection and improve logging configuration ([994302a](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/994302a6279b726d442ac94a46d333e8ebfd8998))
+
+
+### Miscellaneous Chores
+
+* **ci:** include README and LICENSE in the build artifacts ([0133582](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/0133582d30c90051cc08a652ed6291efa119f525))
+* update license information in README and replace MIT with Apache License, Version 2.0 ([a82d424](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/a82d424b66a283e87c38a0eb61348b3199bef756))
+
+
+### Documentation
+
+* **bbcode:** Update bbcode files ([d6ba1c5](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/d6ba1c58f62ac8a59446a873563053afa19f4c64))
+* **bbcode:** Update bbcode files ([edc3301](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/edc3301dabc2f4f7cb0d9352b56fe981334193f2))
+* **README:** enhance logging instructions and update version to 1.0.2 ([184a5f1](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/184a5f1d009bb91be1403155a623945d52c58b51))
+
 ## [1.0.1](https://github.com/chemodun/X4-XMLDiffAndPatch/compare/v1.0.0...v1.0.1) (2026-05-15)
 
 
