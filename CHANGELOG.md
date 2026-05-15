@@ -1,5 +1,28 @@
 # Changelog
 
+## [1.0.0](https://github.com/chemodun/X4-XMLDiffAndPatch/compare/v0.2.31...v1.0.0) (2026-05-15)
+
+
+### Bug Fixes
+
+* **.gitignore:** add lscache files to ignore list ([1738f73](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/1738f73121bfe19e45d7a856bfa7e38f24199fc2))
+
+
+### Code Refactoring
+
+* Full internal rewrite ([abf964e](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/abf964e3cf91fc6f9bfab4d75537699c212e70be))
+
+
+### Miscellaneous Chores
+
+* release 1.0.0 ([8ec81da](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/8ec81dabad9c7d3b6d64387edca767a9501db1d7))
+
+
+### Documentation
+
+* **bbcode:** Update bbcode files ([d7e5c43](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/d7e5c432e9a12a4117173455db0ba999fa2a8ff9))
+* **README:** update XMLDiff and XMLPatch version numbers and improve command line help formatting ([9d4fdaa](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/9d4fdaa1f2fabf7a23c262bb4dc8683e63f24de8))
+
 ## [0.2.31](https://github.com/chemodun/X4-XMLDiffAndPatch/compare/v0.2.30...v0.2.31) (2026-05-15)
 
 
