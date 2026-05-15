@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.0.1](https://github.com/chemodun/X4-XMLDiffAndPatch/compare/v1.0.0...v1.0.1) (2026-05-15)
+
+
+### Bug Fixes
+
+* **ci:** specify project files in build step for XMLDiff and XMLPatch ([022846c](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/022846c26020f818beb928c3daada0bb8e827f33))
+
+
+### Documentation
+
+* **README:** update version numbers for XMLDiff and XMLPatch to 1.0.1 ([b9c6421](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/b9c6421acd1c5bc12f9eef5bffd5bb202eb2ac43))
+
 ## [1.0.0](https://github.com/chemodun/X4-XMLDiffAndPatch/compare/v0.2.31...v1.0.0) (2026-05-15)
 
 
