@@ -26,7 +26,7 @@ If the `diff.xsd` file if it located in the "current" folder it will be used aut
 There is a command line help for the `XMLDiff` tool:
 
 ```shell
-XMLDiff 1.0.0
+XMLDiff 1.0.1
 Developed by Chem O`Dun
 
   -o, --original_xml            Required. Original XML file or directory.
@@ -172,7 +172,7 @@ You can define the position of the `add` element in the diff file by using an in
 There is a command line help for the `XMLPatch` tool:
 
 ```shell
-XMLPatch 1.0.0
+XMLPatch 1.0.1
 Developed by Chem O`Dun
 
   -o, --original_xml    Required. Path to the original XML file or directory.
@@ -307,7 +307,7 @@ Please be aware - each release archive has an appropriate link to the [VirusTota
 
 ## Changelog
 
-### [1.0.0] - 2026-05-15
+### [1.0.1] - 2026-05-15
 
 - Improved:
   - Full internal rewrite.
