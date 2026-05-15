@@ -37,7 +37,7 @@ Developed by Chem O`Dun
 
   -x, --xsd                     Path to diff.xsd (default: diff.xsd).
 
-  -l, --log-to-file             File log level: error|warn|info|debug.
+  -l, --log-to-file             Enable file logging at the specified level: error|warn|info|debug. Console always logs at info level.
 
   -a, --append-to-log           (Default: false) Append to existing log file instead of overwriting.
 
@@ -183,7 +183,7 @@ Developed by Chem O`Dun
 
   -x, --xsd             Path to diff.xsd (default: diff.xsd).
 
-  -l, --log-to-file     File log level: error|warn|info|debug.
+  -l, --log-to-file     Enable file logging at the specified level: error|warn|info|debug. Console always logs at info level.
 
   -a, --append-to-log   (Default: false) Append to existing log file instead of overwriting.
 
@@ -287,7 +287,7 @@ XMLPatch.exe -o vanilla_dir -d diff_dir -u modified_dir
 
 If you have any issues with the tool, please create an issue on the [issues page](https://github.com/chemodun/x4_XMLDiffAndPatch/issues).
 It will be highly appreciated if you provide the version of the used tool and the `XMLDiff.log` or `XMLPatch.log` file respectively.
-To create such a debug file, use the `--log-to-file` option with `debug` level.
+To create such a log file, use the `-l` option with the `debug` level, e.g. `-l debug`. The console output is always at `info` level; detailed debug information is written only to the file.
 
 ## License
 
@@ -306,6 +306,11 @@ There is a topic on the [EGOSOFT forum](https://forum.egosoft.com/viewtopic.php?
 Please be aware - each release archive has an appropriate link to the [VirusTotal](https://www.virustotal.com). Follow the link to be sure that the archive is safe.
 
 ## Changelog
+
+### [1.0.2] - 2026-05-15
+
+- Improved:
+  - Logging.
 
 ### [1.0.1] - 2026-05-15
 
