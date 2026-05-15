@@ -38,6 +38,8 @@ jobs:
           mkdir -p XMLDiffAndPatch
           cp -r XMLPatch\bin\Release\net8.0\win-x64\publish\XMLPatch.exe XMLDiffAndPatch
           cp -r XMLDiff\bin\Release\net8.0\win-x64\publish\XMLDiff.exe XMLDiffAndPatch
+          cp README.md XMLDiffAndPatch
+          cp LICENSE XMLDiffAndPatch
           7z a -tzip XMLDiffAndPatch.zip XMLDiffAndPatch
         shell: powershell
 
