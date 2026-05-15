@@ -64,8 +64,8 @@ public class DiffEngine
         return true; // name mismatch — only valid in checkOnly context
       }
 
-      var origText = XmlUtils.GetTextValue(originalElem);
-      var modText = XmlUtils.GetTextValue(modifiedElem);
+      var origText = XmlUtils.GetTextValue(originalElem).Trim();
+      var modText = XmlUtils.GetTextValue(modifiedElem).Trim();
 
       if (origText != modText)
       {
@@ -144,8 +144,12 @@ public class DiffEngine
               && CompareAttributes(originalChildren[i + 1], modifiedChildren[j + 1], checkOnly: true).matchedEnough
             );
 
-          Logger.Debug($"[Attrs] savedOp lookahead: childrenMatch={childrenMatch} siblingsAlign={siblingsAlign}");
-          if (childrenMatch && siblingsAlign)
+          bool modifiedMatchesLaterOriginal = originalChildren
+            .Skip(i + 1)
+            .Any(oc => ExactlyMatches(oc, modifiedChild));
+
+          Logger.Debug($"[Attrs] savedOp lookahead: childrenMatch={childrenMatch} siblingsAlign={siblingsAlign} modMatchesLater={modifiedMatchesLaterOriginal}");
+          if (childrenMatch && siblingsAlign && !modifiedMatchesLaterOriginal)
           {
             if (!checkOnly)
             {
