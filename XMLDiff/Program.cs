@@ -1,1227 +1,311 @@
-﻿using System.Reflection;
-using System.Text.RegularExpressions;
+using System.Reflection;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Schema;
-using System.Xml.XPath;
 using CommandLine;
 using NLog;
+using X4XmlDiffAndPatch;
 
-namespace X4XmlDiffAndPatch
+namespace X4XmlDiffAndPatch.Diff;
+
+class Program
 {
-  class XMLDiff
-  {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-    private static readonly Regex NumericIdsPattern = new Regex(@"\[\d+\]");
 
     static void Main(string[] args)
     {
-      if (args.Length == 0)
-        args = new[] { "--help" };
-      var parser = new Parser(config =>
-      {
-        config.IgnoreUnknownArguments = true; // Enable ignoring unknown arguments
-        config.AutoHelp = true; // Enable auto help
-        config.AutoVersion = true; // Enable auto version
-        config.CaseSensitive = true; // Enable case sensitivity
-        config.HelpWriter = Console.Out; // Set HelpWriter to Console.Out
-      });
-      parser
-        .ParseArguments<Options>(args)
-        .WithParsed<Options>(opts => RunOptionsAndReturnExitCode(opts))
-        .WithNotParsed<Options>((errs) => HandleParseError(errs));
-    }
+        if (args.Length == 0)
+            args = new[] { "--help" };
 
-    private static void RunOptionsAndReturnExitCode(Options opts)
-    {
-      ConfigureLogging(opts.LogToFile, opts.AppendToLog);
-      Assembly assembly = Assembly.GetExecutingAssembly();
-      AssemblyName assemblyName = assembly.GetName();
-
-      Logger.Info($"Running {assemblyName.Name} v{assemblyName.Version}");
-      string param = "";
-      foreach (var prop in typeof(Options).GetProperties())
-      {
-        param += (string.IsNullOrEmpty(param) ? "" : ", ") + $"{prop.Name}: '{prop.GetValue(opts)}'";
-      }
-      Logger.Info($"Parameters: {param}");
-      var originalXmlPath = opts.OriginalXml;
-      var modifiedXmlPath = opts.ModifiedXml;
-      var diffXmlPath = opts.DiffXml;
-      var diffXsdPath = opts.Xsd ?? "diff.xsd";
-      bool originalIsDir = Directory.Exists(originalXmlPath);
-      bool modifiedIsDir = Directory.Exists(modifiedXmlPath);
-      bool diffIsDir = Directory.Exists(diffXmlPath);
-
-      XmlReaderSettings? diffReaderSettings = CreateXmlReaderSettings(diffXsdPath!);
-      if (originalIsDir && modifiedIsDir)
-      {
-        Logger.Info("Processing directories recursively.");
-        if (originalXmlPath != null && modifiedXmlPath != null && diffXmlPath != null)
+        var parser = new Parser(cfg =>
         {
-          ProcessDirectories(originalXmlPath, modifiedXmlPath, diffXmlPath, diffReaderSettings, opts);
-        }
-        else
-        {
-          Logger.Error("One or more required paths are null.");
-          Environment.Exit(1);
-        }
-      }
-      else if (!originalIsDir && !modifiedIsDir)
-      {
-        Logger.Info("Processing single trio of files.");
-        ProcessSingleFile(originalXmlPath!, modifiedXmlPath!, diffXmlPath!, diffReaderSettings, opts);
-      }
-      else
-      {
-        Logger.Error("Mismatch in input paths. Original and modified paths should both be directories or both be files.");
-        Environment.Exit(1);
-      }
+            cfg.IgnoreUnknownArguments = true;
+            cfg.AutoHelp = true;
+            cfg.AutoVersion = true;
+            cfg.CaseSensitive = true;
+            cfg.HelpWriter = Console.Out;
+        });
+
+        parser
+            .ParseArguments<Options>(args)
+            .WithParsed(Run)
+            .WithNotParsed(errs =>
+            {
+                foreach (var e in errs)
+                    Console.Error.WriteLine($"Argument error: {e}");
+                Environment.Exit(1);
+            });
     }
 
-    private static void HandleParseError(IEnumerable<Error> errs)
-    {
-      // Handle errors
-      foreach (var err in errs)
-      {
-        Logger.Error($"Error parsing arguments: {err}");
-      }
-      Environment.Exit(1);
-    }
-
-    #region Argument Parsing
+    // ─── Options ─────────────────────────────────────────────────────────────────
 
     public class Options
     {
-      private string? originalXml;
-      private string? modifiedXml;
-      private string? diffXml;
-      private string? xsd;
-      private string? logToFile;
-      private bool anywhereIsAllowed;
-      private bool useAllAttributes;
-      private bool appendToLog;
-      private string? ignoreDiffInAttribute;
+        private string? _originalXml;
+        private string? _modifiedXml;
+        private string? _diffXml;
+        private string? _xsd;
+        private string? _logToFile;
 
-      [Option('o', "original_xml", Required = true, HelpText = "Path to the original XML file or directory.")]
-      public string? OriginalXml
-      {
-        get => originalXml;
-        set => originalXml = value?.Trim();
-      }
-
-      [Option('m', "modified_xml", Required = true, HelpText = "Path to the modified XML file or directory.")]
-      public string? ModifiedXml
-      {
-        get => modifiedXml;
-        set => modifiedXml = value?.Trim();
-      }
-
-      [Option('d', "diff_xml", Required = true, HelpText = "Path for the diff XML file or directory.")]
-      public string? DiffXml
-      {
-        get => diffXml;
-        set => diffXml = value?.Trim();
-      }
-
-      [Option('x', "xsd", Required = false, HelpText = "Path to the diff.xsd schema file.")]
-      public string? Xsd
-      {
-        get => xsd;
-        set => xsd = value?.Trim();
-      }
-
-      [Option('l', "log-to-file", HelpText = "Log level (error, warn, info, debug).")]
-      public string? LogToFile
-      {
-        get => logToFile;
-        set
+        [Option('o', "original_xml", Required = true, HelpText = "Original XML file or directory.")]
+        public string? OriginalXml
         {
-          string input = value?.Trim() ?? "info";
-          var validLogLevels = new[] { "error", "warn", "info", "debug" };
-          if (!validLogLevels.Contains(input.ToLower()))
-          {
-            throw new ArgumentException($"Invalid log level: {input}. Valid values are: error, warn, info, debug.");
-          }
-          logToFile = input.ToLower();
-        }
-      }
-
-      [Option('a', "append-to-log", Required = false, HelpText = "Append logs to the existing log file.", Default = false)]
-      public bool AppendToLog
-      {
-        get => appendToLog;
-        set => appendToLog = value;
-      }
-
-      [Option(
-        "anywhere-is-allowed",
-        Required = false,
-        HelpText = "Generate a path using the anywhere '//' construction, if possible. Instead of full path.",
-        Default = false
-      )]
-      public bool AnywhereIsAllowed
-      {
-        get => anywhereIsAllowed;
-        set => anywhereIsAllowed = value;
-      }
-
-      [Option("use-all-attributes", Required = false, HelpText = "Use all attributes in XPath.", Default = false)]
-      public bool UseAllAttributes
-      {
-        get => useAllAttributes;
-        set => useAllAttributes = value;
-      }
-
-      [Option(
-        "ignore-diff-in-attribute",
-        Required = false,
-        HelpText = "Ignore differences in the specified attribute when comparing elements."
-      )]
-      public string? IgnoreDiffInAttribute
-      {
-        get => ignoreDiffInAttribute;
-        set => ignoreDiffInAttribute = value?.Trim();
-      }
-    }
-
-    #endregion
-
-    #region Logging Configuration
-
-    private static void ConfigureLogging(string? logToFile, bool appendToLog = false)
-    {
-      var config = new NLog.Config.LoggingConfiguration();
-
-      // Targets
-      var logConsole = new NLog.Targets.ConsoleTarget("logConsole");
-      LogLevel minLogLevel = LogLevel.Info;
-      if (!string.IsNullOrEmpty(logToFile))
-      {
-        var logFile = new NLog.Targets.FileTarget("logFile")
-        {
-          FileName = Path.Combine(Environment.CurrentDirectory, "${processname}.log"),
-          Layout = "${longdate} ${level} ${message} ${exception}",
-          KeepFileOpen = true,
-          DeleteOldFileOnStartup = !appendToLog, // Overwrite the log file on each run
-          ArchiveAboveSize = 0,
-          ConcurrentWrites = true,
-        };
-        minLogLevel = logToFile switch
-        {
-          "error" => LogLevel.Error,
-          "warn" => LogLevel.Warn,
-          "info" => LogLevel.Info,
-          "debug" => LogLevel.Debug,
-          _ => LogLevel.Info,
-        };
-        config.AddRule(minLogLevel, LogLevel.Fatal, logFile);
-      }
-      logConsole.Layout = "${longdate} ${level} ${message} ${exception}";
-
-      // Rules
-      config.AddRule(LogLevel.Info < minLogLevel ? minLogLevel : LogLevel.Info, LogLevel.Fatal, logConsole);
-
-      // Apply config
-      NLog.LogManager.Configuration = config;
-    }
-
-    #endregion
-
-    #region Processing
-
-    private static void ProcessSingleFile(
-      string originalXmlPath,
-      string modifiedXmlPath,
-      string diffXmlPath,
-      XmlReaderSettings? diffReaderSettings,
-      Options options
-    )
-    {
-      Logger.Info($"Comparing original XML '{originalXmlPath}' with modified XML '{modifiedXmlPath}' to the diff XML at '{diffXmlPath}'");
-      if (!File.Exists(originalXmlPath))
-      {
-        Logger.Error($"Original XML file does not exist: {originalXmlPath}");
-        return;
-      }
-
-      if (!File.Exists(modifiedXmlPath))
-      {
-        Logger.Error($"Modified XML file does not exist: {modifiedXmlPath}");
-        return;
-      }
-
-      // If diffXmlPath is a directory, append the original filename
-      if (Directory.Exists(diffXmlPath))
-      {
-        string originalFileName = Path.GetFileName(originalXmlPath);
-        diffXmlPath = Path.Combine(diffXmlPath, originalFileName);
-        Logger.Info($"Diff XML will be saved as: {diffXmlPath}");
-      }
-      else
-      {
-        // Ensure the output directory exists
-        string? diffXmlDir = Path.GetDirectoryName(diffXmlPath);
-        if (string.IsNullOrEmpty(diffXmlDir))
-        {
-          Logger.Info("Output directory is null or empty. Using current directory.");
-        }
-        else if (!Directory.Exists(diffXmlDir))
-        {
-          try
-          {
-            Directory.CreateDirectory(diffXmlDir);
-            Logger.Info($"Created output directory: {diffXmlDir}");
-          }
-          catch (Exception e)
-          {
-            Logger.Error($"Failed to create output directory '{diffXmlDir}': {e.Message}");
-            return;
-          }
-        }
-      }
-
-      try
-      {
-        XDocument originalDoc = XDocument.Load(originalXmlPath);
-        Logger.Info($"Parsed original XML: {originalXmlPath}");
-
-        int indent = DetectIndentation(originalXmlPath);
-        Logger.Info($"Detected indentation: {indent}");
-
-        XDocument modifiedDoc = XDocument.Load(modifiedXmlPath);
-        Logger.Info($"Parsed modified XML: {modifiedXmlPath}");
-
-        if (File.Exists(diffXmlPath))
-        {
-          File.Delete(diffXmlPath);
-          Logger.Debug($"Deleted diff file at {diffXmlPath}.");
+            get => _originalXml;
+            set => _originalXml = value?.Trim();
         }
 
-        XElement diffRoot = GenerateDiff(originalDoc, modifiedDoc, options);
-
-        if (!diffRoot.HasElements)
+        [Option('m', "modified_xml", Required = true, HelpText = "Modified XML file or directory.")]
+        public string? ModifiedXml
         {
-          Logger.Info("No differences found. Diff file will not be created.");
-          return;
+            get => _modifiedXml;
+            set => _modifiedXml = value?.Trim();
         }
 
-        XDocument diffDoc = new XDocument(new XDeclaration("1.0", "utf-8", "yes"), diffRoot);
-
-        var settings = new XmlWriterSettings { Indent = true, IndentChars = new string(' ', indent) };
-        using (var writer = XmlWriter.Create(diffXmlPath, settings))
+        [Option('d', "diff_xml", Required = true, HelpText = "Output diff file or directory.")]
+        public string? DiffXml
         {
-          diffDoc.Save(writer);
+            get => _diffXml;
+            set => _diffXml = value?.Trim();
         }
 
-        if (diffReaderSettings != null)
+        [Option('x', "xsd", Required = false, HelpText = "Path to diff.xsd (default: diff.xsd).")]
+        public string? Xsd
         {
-          Logger.Info($"Diff XML written to {diffXmlPath} and will be validated");
-          using (XmlReader reader = XmlReader.Create(diffXmlPath, diffReaderSettings))
-          {
-            try
+            get => _xsd;
+            set => _xsd = value?.Trim();
+        }
+
+        [Option(
+            'l',
+            "log-to-file",
+            Required = false,
+            HelpText = "File log level: error|warn|info|debug."
+        )]
+        public string? LogToFile
+        {
+            get => _logToFile;
+            set
             {
-              while (reader.Read()) { }
+                var v = value?.Trim();
+                if (v != null && !new[] { "error", "warn", "info", "debug" }.Contains(v.ToLower()))
+                    throw new ArgumentException(
+                        $"Invalid log level '{v}'. Valid: error|warn|info|debug."
+                    );
+                _logToFile = v?.ToLower();
             }
-            catch (XmlSchemaValidationException ex)
-            {
-              Logger.Error($"Validation failed: {ex.Message}");
-              if (File.Exists(diffXmlPath))
-              {
-                File.Delete(diffXmlPath);
-                Logger.Debug($"Deleted diff file at {diffXmlPath}.");
-              }
-              return;
-            }
-          }
-          Logger.Info($"Validation successful: {diffXmlPath} is valid against diff.xsd");
         }
-        Logger.Info($"Diff XML written to {diffXmlPath}");
-      }
-      catch (Exception ex)
-      {
-        Logger.Error($"Error processing files: {ex.Message}");
-      }
+
+        [Option(
+            'a',
+            "append-to-log",
+            Required = false,
+            Default = false,
+            HelpText = "Append to existing log file instead of overwriting."
+        )]
+        public bool AppendToLog { get; set; }
+
+        [Option(
+            "only-full-path",
+            Required = false,
+            Default = false,
+            HelpText = "Generate only full absolute XPath (no // shorthand)."
+        )]
+        public bool OnlyFullPath { get; set; }
+
+        [Option(
+            "use-all-attributes",
+            Required = false,
+            Default = false,
+            HelpText = "Include all attributes in XPath predicates."
+        )]
+        public bool UseAllAttributes { get; set; }
+
+        [Option(
+            "ignore-diff-in-attribute",
+            Required = false,
+            HelpText = "Attribute name to ignore when comparing elements."
+        )]
+        public string? IgnoreDiffInAttribute { get; set; }
     }
+
+    // ─── Main logic ──────────────────────────────────────────────────────────────
+
+    private static void Run(Options opts)
+    {
+        XmlUtils.ConfigureLogging(opts.LogToFile, opts.AppendToLog);
+
+        var asm = Assembly.GetExecutingAssembly();
+        Logger.Info($"Running {asm.GetName().Name} v{asm.GetName().Version}");
+
+        var originalPath = opts.OriginalXml!;
+        var modifiedPath = opts.ModifiedXml!;
+        var diffPath = opts.DiffXml!;
+        var xsdPath = opts.Xsd ?? "diff.xsd";
+
+        bool originalIsDir = Directory.Exists(originalPath);
+        bool modifiedIsDir = Directory.Exists(modifiedPath);
+
+        var xsdSettings = XmlUtils.CreateXmlReaderSettings(xsdPath);
+        var diffOptions = new DiffOptions
+        {
+            OnlyFullPath = opts.OnlyFullPath,
+            UseAllAttributes = opts.UseAllAttributes,
+            IgnoreDiffInAttribute = opts.IgnoreDiffInAttribute,
+        };
+
+        if (originalIsDir && modifiedIsDir)
+        {
+            ProcessDirectories(originalPath, modifiedPath, diffPath, xsdSettings, diffOptions);
+        }
+        else if (!originalIsDir && !modifiedIsDir)
+        {
+            ProcessSingleFile(originalPath, modifiedPath, diffPath, xsdSettings, diffOptions);
+        }
+        else
+        {
+            Logger.Error(
+                "Mismatch: original and modified must both be files or both be directories."
+            );
+            Environment.Exit(1);
+        }
+    }
+
+    // ─── Directory mode ──────────────────────────────────────────────────────────
 
     private static void ProcessDirectories(
-      string originalDir,
-      string modifiedDir,
-      string diffDir,
-      XmlReaderSettings? diffReaderSettings,
-      Options options
+        string originalDir,
+        string modifiedDir,
+        string diffDir,
+        XmlReaderSettings? xsdSettings,
+        DiffOptions options
     )
     {
-      foreach (var modifiedFilePath in Directory.EnumerateFiles(modifiedDir, "*.xml", SearchOption.AllDirectories))
-      {
-        string relativePath = Path.GetRelativePath(modifiedDir, modifiedFilePath);
-        string originalFilePath = Path.Combine(originalDir, relativePath);
-        string diffFilePath = Path.Combine(diffDir, relativePath);
-
-        if (!File.Exists(modifiedFilePath))
+        Logger.Info("Processing directories recursively.");
+        foreach (
+            var modFile in Directory.EnumerateFiles(
+                modifiedDir,
+                "*.xml",
+                SearchOption.AllDirectories
+            )
+        )
         {
-          Logger.Warn($"Modified file does not exist: {modifiedFilePath}. Skipping.");
-          continue;
-        }
+            var rel = Path.GetRelativePath(modifiedDir, modFile);
+            var origFile = Path.Combine(originalDir, rel);
+            var diffFile = Path.Combine(diffDir, rel);
 
-        string? diffFileDir = Path.GetDirectoryName(diffFilePath);
-        if (!Directory.Exists(diffFileDir))
-        {
-          try
-          {
-            Directory.CreateDirectory(diffFileDir!);
-            Logger.Info($"Created directory: {diffFileDir}");
-          }
-          catch (Exception e)
-          {
-            Logger.Error($"Failed to create directory '{diffFileDir}': {e.Message}");
-            continue;
-          }
-        }
-
-        ProcessSingleFile(originalFilePath, modifiedFilePath, diffFilePath, diffReaderSettings, options);
-      }
-    }
-
-    #endregion
-
-    #region Indentation Detection
-
-    private static int DetectIndentation(string xmlPath)
-    {
-      var indentationLevels = new HashSet<string>();
-      var indentPattern = new Regex(@"^(\s+)<");
-
-      foreach (var line in File.ReadLines(xmlPath))
-      {
-        var match = indentPattern.Match(line);
-        if (match.Success)
-        {
-          indentationLevels.Add(match.Groups[1].Value);
-        }
-      }
-
-      if (indentationLevels.Count == 0)
-        return 4;
-
-      var sortedIndents = indentationLevels.OrderBy(s => s.Length).ToList();
-
-      var indentLengths = sortedIndents.Where(s => s.Length > 0).Select(s => s.Length).OrderBy(n => n).ToList();
-
-      var differences = indentLengths.Skip(1).Select((len, idx) => len - indentLengths[idx]).Where(diff => diff > 0).ToList();
-
-      int perLevelIndentLen = differences.Any() ? differences.Min() : (sortedIndents[0].Length);
-
-      return perLevelIndentLen;
-    }
-
-    #endregion
-
-    #region Diff Generation
-
-    private static XElement GenerateDiff(XDocument original, XDocument modified, Options options)
-    {
-      XElement diffRoot = new XElement("diff");
-      if (original.Root == null || modified.Root == null)
-      {
-        Logger.Error("Original or modified XML does not have a root element.");
-        return diffRoot;
-      }
-      CompareElements(original, modified, diffRoot, options);
-      return diffRoot;
-    }
-
-    private static (bool matchedEnough, XElement? savedOp) CompareAttributes(
-      XElement originalElement,
-      XElement modifiedElement,
-      Options options,
-      bool checkOnly = false
-    )
-    {
-      var originalAttributes = originalElement.Attributes().ToDictionary(a => a.Name.LocalName, a => a.Value);
-      var modifiedAttributes = modifiedElement.Attributes().ToDictionary(a => a.Name.LocalName, a => a.Value);
-      int differencesInAttributesCount = 0;
-
-      XElement? savedOp = null;
-
-      bool matchedEnough = true;
-
-      foreach (var attr in modifiedAttributes)
-      {
-        if (attr.Key == options.IgnoreDiffInAttribute)
-          continue;
-        Logger.Debug($"Checking attribute '{attr.Key}' in original element attributes '{string.Join(", ", originalAttributes.Keys)}'.");
-        if (!originalAttributes.ContainsKey(attr.Key))
-        {
-          Logger.Debug($"Original attributes does not contain key '{attr.Key}'.");
-          differencesInAttributesCount++;
-          if (differencesInAttributesCount > 1)
-          {
-            matchedEnough = false;
-            break;
-          }
-          string sel = GenerateXPath(originalElement, options);
-          savedOp = new XElement("add", new XAttribute("sel", sel), new XAttribute("type", $"@{attr.Key}"), attr.Value);
-          Logger.Debug($"Found added attribute '{attr.Key}' with value '{attr.Value}' to element '{originalElement.Name}'.");
-        }
-        else if (originalAttributes[attr.Key] != attr.Value)
-        {
-          Logger.Debug(
-            $"Original attributes value '{originalAttributes[attr.Key]}' does not match with modified attributes value '{attr.Value}'."
-          );
-          differencesInAttributesCount++;
-          if (differencesInAttributesCount > 1)
-          {
-            matchedEnough = false;
-            break;
-          }
-          string sel = $"{GenerateXPath(originalElement, options)}/@{attr.Key}";
-          savedOp = new XElement("replace", new XAttribute("sel", sel), attr.Value);
-          /*! To add the children checks and next elements on this level. Only checks, without generation of the diff
-           */
-          Logger.Debug(
-            $"Found replaced attribute '{attr.Key}' value from '{originalAttributes[attr.Key]}' to '{attr.Value}' in element '{originalElement.Name}'."
-          );
-        }
-      }
-      if (matchedEnough)
-      {
-        foreach (var attr in originalAttributes)
-        {
-          if (attr.Key == options.IgnoreDiffInAttribute)
-            continue;
-          if (!modifiedAttributes.ContainsKey(attr.Key))
-          {
-            Logger.Debug($"Modified attributes does not contain key '{attr.Key}'.");
-            if (checkOnly)
+            var diffFileDir = Path.GetDirectoryName(diffFile);
+            if (!string.IsNullOrEmpty(diffFileDir) && !Directory.Exists(diffFileDir))
             {
-              Logger.Debug(
-                $"Attribute '{attr}' from {GetElementInfo(originalElement)} not exists in {GetElementInfo(modifiedElement)} check only mode. Returning true."
-              );
-              return (true, null);
+                try
+                {
+                    Directory.CreateDirectory(diffFileDir);
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error($"Cannot create directory '{diffFileDir}': {ex.Message}");
+                    continue;
+                }
             }
-            differencesInAttributesCount++;
-            if (differencesInAttributesCount > 1 || originalAttributes.Count == 1)
-            {
-              matchedEnough = false;
-              break;
-            }
-            string sel = $"{GenerateXPath(originalElement, options)}/@{attr.Key}";
-            savedOp = new XElement("remove", new XAttribute("sel", sel));
-            break;
-          }
+
+            ProcessSingleFile(origFile, modFile, diffFile, xsdSettings, options);
         }
-      }
-      if (matchedEnough && differencesInAttributesCount == 1)
-      {
-        if (checkOnly)
-        {
-          Logger.Debug(
-            $"At least one attribute does not match {GetElementInfo(originalElement)} vs {GetElementInfo(modifiedElement)} in check only mode. Returning true."
-          );
-          return (true, null);
-        }
-        return (matchedEnough, savedOp);
-      }
-      return (matchedEnough, null);
     }
 
-    private static void DiffRootAddOperation(XElement diffRoot, XElement operationElement)
-    {
-      XElement? lastOperation = diffRoot.Elements().LastOrDefault();
-      if (
-        lastOperation != null
-        && lastOperation.Name.LocalName == "remove"
-        && lastOperation.Attribute("sel")?.Value == operationElement.Attribute("sel")?.Value
-      )
-      {
-        lastOperation.AddBeforeSelf(operationElement);
-        Logger.Info($"Operation {GetElementInfo(operationElement)} added before last remove operation: {GetElementInfo(lastOperation)}");
-      }
-      else
-      {
-        diffRoot.Add(operationElement);
-        Logger.Info($"Operation {GetElementInfo(operationElement)} added to diff root.");
-      }
-    }
+    // ─── Single-file mode ────────────────────────────────────────────────────────
 
-    private static bool CompareElements(
-      XDocument original,
-      XDocument modified,
-      XElement diffRoot,
-      Options options,
-      XElement? originalElem = null,
-      XElement? modifiedElem = null,
-      bool checkOnly = false
+    private static void ProcessSingleFile(
+        string originalPath,
+        string modifiedPath,
+        string diffPath,
+        XmlReaderSettings? xsdSettings,
+        DiffOptions options
     )
     {
-      if (originalElem != null && modifiedElem != null)
-      {
-        string sel = GenerateXPath(originalElem, options);
-        string selModified = GenerateXPath(modifiedElem, options);
-        if (checkOnly)
+        Logger.Info($"Comparing '{originalPath}' vs '{modifiedPath}' → '{diffPath}'");
+
+        if (!File.Exists(originalPath))
         {
-          Logger.Debug(
-            $"Comparing elements '{GetElementInfo(originalElem)}'({sel}) vs '{GetElementInfo(modifiedElem)}'({selModified}). Check only: {checkOnly}"
-          );
+            Logger.Error($"Original file not found: {originalPath}");
+            return;
         }
+        if (!File.Exists(modifiedPath))
+        {
+            Logger.Error($"Modified file not found: {modifiedPath}");
+            return;
+        }
+
+        // Resolve output path
+        if (Directory.Exists(diffPath))
+            diffPath = Path.Combine(diffPath, Path.GetFileName(originalPath));
         else
         {
-          Logger.Info($"Comparing elements '{GetElementInfo(originalElem)}'({sel}) vs '{GetElementInfo(modifiedElem)}'({selModified}).");
-        }
-        if (originalElem.Name != modifiedElem.Name)
-        {
-          // Process can be there only in case of changes detection, not for the real diff generation
-          Logger.Debug(
-            $"Warning. Element names do not match: {originalElem.Name} vs {modifiedElem.Name}. Check only: {checkOnly}. Returning true."
-          );
-          return true;
-        }
-
-        // Compare text
-        string originalText = GetValue(originalElem);
-        string modifiedText = GetValue(modifiedElem);
-
-        Logger.Debug($"Comparing text in element '{originalElem.Name}': '{originalText}' vs '{modifiedText}'");
-        if (originalText != modifiedText)
-        {
-          if (!string.IsNullOrEmpty(modifiedText))
-          {
-            if (checkOnly)
+            var dir = Path.GetDirectoryName(diffPath);
+            if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
             {
-              Logger.Debug($"Text in element '{GetElementInfo(originalElem)}' does not match in check only mode. Returning true.");
-              return true;
-            }
-            XElement replaceOp = new XElement("replace", new XAttribute("sel", sel), modifiedText);
-            DiffRootAddOperation(diffRoot, replaceOp);
-            Logger.Info($"[Operation Replace] Text in element '{GetElementInfo(originalElem)}' from '{originalText}' to '{modifiedText}'.");
-          }
-          else
-          {
-            if (checkOnly)
-            {
-              Logger.Debug($"Text in element '{originalElem.Name}' removed in check only mode. Returning true.");
-              return true;
-            }
-            XElement removeOp = new XElement("remove", new XAttribute("sel", $"{sel}/text()"));
-            DiffRootAddOperation(diffRoot, removeOp);
-            Logger.Info($"[Operation Remove] Text from element '{GetElementInfo(originalElem)}'.");
-          }
-        }
-      }
-
-      originalElem = originalElem ?? original.Root;
-      modifiedElem = modifiedElem ?? modified.Root;
-      if (originalElem == null || modifiedElem == null)
-      {
-        Logger.Debug("Warning: Original or modified element is null.");
-        return true;
-      }
-      // Compare children
-      var originalChildren = originalElem.Elements().ToList();
-      var modifiedChildren = modifiedElem.Elements().ToList();
-
-      if (!checkOnly && originalElem == original.Root && modifiedElem == modified.Root)
-      {
-        (bool rootsMatchedEnough, XElement? rootSavedOp) = CompareAttributes(originalElem, modifiedElem, options);
-        if (rootsMatchedEnough && rootSavedOp != null)
-        {
-          DiffRootAddOperation(diffRoot, rootSavedOp);
-          Logger.Info($"[Operation {rootSavedOp.Name}] Added the saved operation to the diff.");
-        }
-      }
-
-      if (checkOnly && originalChildren.Count != modifiedChildren.Count)
-      {
-        Logger.Debug(
-          $"Children count does not match for {GetElementInfo(originalElem)} and {GetElementInfo(modifiedElem)}: {originalChildren.Count} vs {modifiedChildren.Count} in check only mode. Returning true."
-        );
-        return true;
-      }
-
-      int i = 0,
-        j = 0;
-      int lastRemovedOrReplaced = -1;
-      while (i < originalChildren.Count && j < modifiedChildren.Count)
-      {
-        var originalChild = originalChildren[i];
-        var modifiedChild = modifiedChildren[j];
-
-        bool matchedEnough = false;
-        if (checkOnly)
-        {
-          Logger.Debug(
-            $"Comparing child '{GetElementInfo(originalChild)}' of '{GetElementInfo(originalElem)}' vs '{GetElementInfo(modifiedChild)}' of '{GetElementInfo(modifiedElem)}'. Check only: {checkOnly}"
-          );
-        }
-        else
-        {
-          Logger.Info(
-            $"Comparing child '{GetElementInfo(originalChild)}' of '{GetElementInfo(originalElem)}' vs '{GetElementInfo(modifiedChild)}' of '{GetElementInfo(modifiedElem)}'"
-          );
-        }
-        if (originalChild.Name == modifiedChild.Name)
-        {
-          (matchedEnough, XElement? savedOp) = CompareAttributes(originalChild, modifiedChild, options, checkOnly);
-          if (matchedEnough == true && savedOp != null)
-          {
-            matchedEnough = false;
-            if (
-              (originalChild.Parent == null && modifiedChild.Parent == null)
-              || (
-                !CompareElements(original, modified, diffRoot, options, originalChild, modifiedChild, true)
-                && (
-                  i + 1 == originalChildren.Count
-                  || j + 1 == modifiedChildren.Count
-                  || originalChildren[i + 1].Name == modifiedChildren[j + 1].Name
-                    && CompareAttributes(originalChildren[i + 1], modifiedChildren[j + 1], options, true).matchedEnough
-                )
-              )
-            )
-            {
-              if (savedOp != null)
-              {
-                DiffRootAddOperation(diffRoot, savedOp);
-                Logger.Info($"[Operation {savedOp.Name}] Added the saved operation to the diff.");
-              }
-              matchedEnough = true;
-            }
-          }
-          Logger.Debug($"Matched enough: {matchedEnough}, i: {i}, j: {j}");
-          if (matchedEnough)
-          {
-            if (CompareElements(original, modified, diffRoot, options, originalChild, modifiedChild, checkOnly))
-            {
-              if (checkOnly)
-              {
-                Logger.Debug(
-                  $"Children of {GetElementInfo(originalElem)} and {GetElementInfo(modifiedElem)} do not match in check only mode. Returning true."
-                );
-                return true;
-              }
-            }
-            i++;
-            j++;
-          }
-        }
-        if (!matchedEnough)
-        {
-          if (checkOnly)
-          {
-            Logger.Debug(
-              $"Elements {GetElementInfo(originalElem)} and {GetElementInfo(modifiedElem)} do not match in check only mode. Returning true."
-            );
-            return true;
-          }
-          bool foundMatch = false;
-          Logger.Debug($"Checking for match for '{GetElementInfo(originalChild)}' in the next child of '{GetElementInfo(modifiedElem)}'.");
-          for (int k = j + 1; k < modifiedChildren.Count; k++)
-          {
-            var nextModifiedChild = modifiedChildren[k];
-            if (
-              originalChild.Name == nextModifiedChild.Name
-              && originalChild.Attributes().Count() == nextModifiedChild.Attributes().Count()
-              && originalChild.Attributes().All(attr => nextModifiedChild.Attribute(attr.Name)?.Value == attr.Value)
-            )
-            {
-              Logger.Debug($"Found match for '{GetElementInfo(originalChild)}' in the next child of '{GetElementInfo(modifiedElem)}'.");
-              XElement addOp;
-              if (i > 0)
-              {
-                string xpath = GenerateXPath(originalChildren[i - 1], options);
-                string pos = "after";
-                if (
-                  lastRemovedOrReplaced == i - 1
-                  || NumericIdsPattern.IsMatch(xpath)
-                  || IsElementPrecededByPosBeforeComment(modifiedChildren[j])
-                )
+                try
                 {
-                  string xpathBefore = GenerateXPath(originalChild, options);
-                  if (!NumericIdsPattern.IsMatch(xpathBefore))
-                  {
-                    xpath = xpathBefore;
-                    pos = "before";
-                  }
+                    Directory.CreateDirectory(dir);
                 }
-                addOp = new XElement("add", new XAttribute("sel", xpath), new XAttribute("pos", pos));
-                Logger.Info($"[Operation Add] Element '{GetElementInfo(originalChild)}' to parent '{GetElementInfo(originalElem)}'.");
-              }
-              else
-              {
-                addOp = new XElement("add", new XAttribute("sel", GenerateXPath(originalElem, options)), new XAttribute("pos", "prepend"));
-              }
-              // Process each added child, checking for pos=before comments
-              for (int l = j; l < k; l++)
-              {
-                var addedChild = modifiedChildren[l];
-                addOp.Add(addedChild);
-                Logger.Info($"[Operation Add] Element '{GetElementInfo(addedChild)}' to parent '{GetElementInfo(originalElem)}'.");
-              }
-              DiffRootAddOperation(diffRoot, addOp);
-              j = k;
-              foundMatch = true;
-              break;
-            }
-          }
-
-          if (!foundMatch)
-          {
-            Logger.Debug($"Trying to identify - is it replace or remove operation.");
-            // Check if the next original element (i+1) appears somewhere later in modifiedChildren (j+1 or beyond).
-            // If so, the current modifiedChildren[j] is replacing originalChildren[i], not just an unrelated insert.
-            bool nextOriginalFoundLaterInModified =
-              i + 1 < originalChildren.Count
-              && Enumerable
-                .Range(j + 1, modifiedChildren.Count - j - 1)
-                .Any(m =>
-                  modifiedChildren[m].Name == originalChildren[i + 1].Name
-                  && modifiedChildren[m].Attributes().Count() == originalChildren[i + 1].Attributes().Count()
-                  && originalChildren[i + 1].Attributes().All(attr => modifiedChildren[m].Attribute(attr.Name)?.Value == attr.Value)
-                );
-            // Check if modifiedChildren[j] matches ANY later original element (i+1, i+2, ...).
-            // If so, originalChildren[i] (and any skipped ones) were simply removed, not replaced.
-            bool nextOriginalIsCurrentModified = Enumerable
-              .Range(i + 1, originalChildren.Count - i - 1)
-              .Any(k =>
-                modifiedChildren[j].Name == originalChildren[k].Name
-                && modifiedChildren[j].Attributes().Count() == originalChildren[k].Attributes().Count()
-                && originalChildren[k].Attributes().All(attr => modifiedChildren[j].Attribute(attr.Name)?.Value == attr.Value)
-              );
-            if (
-              !nextOriginalIsCurrentModified
-              && (
-                originalChildren[i].Name == modifiedChildren[j].Name
-                  && originalChildren[i].Attributes().Any(attr => modifiedChildren[j].Attribute(attr.Name)?.Value == attr.Value)
-                || i + 1 == originalChildren.Count
-                || nextOriginalFoundLaterInModified
-              )
-            )
-            {
-              string sel = GenerateXPath(originalChild, options);
-              XElement replaceOp = new XElement("replace", new XAttribute("sel", sel), modifiedChild);
-              // Look ahead: bundle additional modified children that are not matched by the
-              // next original child into this replace op (1-element → many-elements replacement).
-              int k = j + 1;
-              while (k < modifiedChildren.Count)
-              {
-                bool matchesNextOriginal =
-                  i + 1 < originalChildren.Count
-                  && modifiedChildren[k].Name == originalChildren[i + 1].Name
-                  && modifiedChildren[k].Attributes().Count() == originalChildren[i + 1].Attributes().Count()
-                  && modifiedChildren[k].Attributes().All(attr => originalChildren[i + 1].Attribute(attr.Name)?.Value == attr.Value);
-                if (matchesNextOriginal)
-                  break;
-                replaceOp.Add(new XElement(modifiedChildren[k]));
-                Logger.Info(
-                  $"[Operation replace] Bundling extra element '{GetElementInfo(modifiedChildren[k])}' into replace of '{GetElementInfo(originalChild)}'."
-                );
-                k++;
-              }
-              lastRemovedOrReplaced = i;
-              DiffRootAddOperation(diffRoot, replaceOp);
-              Logger.Info($"[Operation replace] Element '{GetElementInfo(originalChild)}' with '{GetElementInfo(modifiedChild)}'.");
-              i++;
-              j = k;
-            }
-            else
-            {
-              string sel = GenerateXPath(originalChild, options);
-              XElement removeOp = new XElement("remove", new XAttribute("sel", sel));
-              lastRemovedOrReplaced = i;
-              DiffRootAddOperation(diffRoot, removeOp);
-              Logger.Info($"[Operation remove] Element '{GetElementInfo(originalChild)}' from parent '{GetElementInfo(originalElem)}'.");
-              i++;
-            }
-          }
-        }
-      }
-
-      while (i < originalChildren.Count)
-      {
-        var originalChild = originalChildren[i];
-        string sel = GenerateXPath(originalChild, options);
-        XElement removeOp = new XElement("remove", new XAttribute("sel", sel));
-        lastRemovedOrReplaced = i;
-        DiffRootAddOperation(diffRoot, removeOp);
-        Logger.Info($"[Operation remove] Element '{GetElementInfo(originalChild)}' from parent '{GetElementInfo(originalElem)}'.");
-        i++;
-      }
-
-      if (j + 1 <= modifiedChildren.Count)
-      {
-        XElement addOp;
-        addOp = new XElement("add", new XAttribute("sel", GenerateXPath(originalElem, options)));
-        while (j < modifiedChildren.Count)
-        {
-          var addedChild = modifiedChildren[j];
-          addOp.Add(addedChild);
-          Logger.Info($"[Operation add] Element '{GetElementInfo(addedChild)}' to parent '{GetElementInfo(originalElem)}'.");
-          j++;
-        }
-        DiffRootAddOperation(diffRoot, addOp);
-      }
-      if (checkOnly)
-      {
-        Logger.Debug($"Matched elements of {GetElementInfo(originalElem)} and {GetElementInfo(modifiedElem)}. Check only: {checkOnly}");
-      }
-      return false;
-    }
-
-    private static string AttributeToXpathElement(XAttribute attr)
-    {
-      string attrValue = attr.Value.Replace("\"", "&quot;");
-      if (attrValue.Contains("'"))
-      {
-        return $"[@{attr.Name.LocalName}=\"{attrValue}\"]";
-      }
-      else
-      {
-        return $"[@{attr.Name.LocalName}='{attrValue}']";
-      }
-    }
-
-    private static string GetElementPathStep(XElement element)
-    {
-      if (element == null)
-        return string.Empty;
-      string step = element.Name.LocalName;
-      if (element.FirstAttribute != null)
-      {
-        step += AttributeToXpathElement(element.FirstAttribute);
-      }
-      return step;
-    }
-
-    private static (string step, string pathForParent) GetElementPathStep(
-      XElement element,
-      XElement parent,
-      XDocument? doc,
-      Options options,
-      string pathForParent = ""
-    )
-    {
-      if (element == null)
-        return (string.Empty, string.Empty);
-      if (parent == null)
-        return (string.Empty, string.Empty);
-      string step = "";
-      pathForParent += GetElementPathStep(element);
-      IEnumerable<XElement> matches = parent.XPathSelectElements(pathForParent);
-      List<XAttribute>? attributes = null;
-      if (matches.Count() == 1 && matches.First() == element)
-      {
-        step = pathForParent;
-      }
-      else
-      {
-        attributes = element.Attributes().Skip(1).ToList();
-      }
-      if (attributes?.Count > 0)
-      {
-        string xpath = $"{pathForParent}";
-        if (options.UseAllAttributes)
-        {
-          foreach (var attr in attributes)
-          {
-            xpath += AttributeToXpathElement(attr);
-          }
-          matches = parent.XPathSelectElements(xpath);
-          if (matches.Count() == 1 && matches.First() == element)
-          {
-            step = xpath;
-            if (doc != null)
-            {
-              var doc_matches = doc.XPathSelectElements($"//{xpath}");
-              if (doc_matches.Count() == 1)
-                return ($"//{xpath}", pathForParent);
-            }
-          }
-        }
-        xpath = $"{pathForParent}";
-        foreach (var attr in attributes)
-        {
-          string attrValue = attr.Value.Replace("\"", "&quot;");
-          xpath += AttributeToXpathElement(attr);
-          matches = parent.XPathSelectElements(xpath);
-          if (matches.Count() == 1 && matches.First() == element)
-          {
-            if (step == "")
-              step = xpath;
-            if (doc != null)
-            {
-              var doc_matches = doc.XPathSelectElements($"//{xpath}");
-              if (doc_matches.Count() == 1)
-              {
-                return ($"//{xpath}", pathForParent);
-              }
-              else
-              {
-                return (xpath, pathForParent);
-              }
-            }
-          }
-        }
-      }
-      else if (doc != null)
-      {
-        var doc_matches = doc.XPathSelectElements($"//{pathForParent}");
-        if (doc_matches.Count() == 1)
-        {
-          return ($"//{pathForParent}", pathForParent);
-        }
-        else
-        {
-          return (pathForParent, pathForParent);
-        }
-      }
-      return (step, pathForParent);
-    }
-
-    private static string GenerateXPath(XElement element, Options options)
-    {
-      if (element == null)
-        return string.Empty;
-      XElement? root = element.Document?.Root;
-      if (root == null)
-        return string.Empty;
-      XDocument? doc = null;
-      if (options.AnywhereIsAllowed)
-      {
-        doc = element.Document;
-      }
-      var path = new System.Text.StringBuilder();
-      XElement? current = element;
-      while (current != null)
-      {
-        XElement? parent = current.Parent;
-        if (parent != null)
-        {
-          (string step, string pathForParent) = GetElementPathStep(current, parent, doc, options);
-          if (step.StartsWith("//"))
-          {
-            path.Insert(0, step);
-            return path.ToString();
-          }
-          if (step == "")
-          {
-            if (path.Length > 0)
-            {
-              if (parent.XPathSelectElements($"{pathForParent}/{path}").Count() == 1)
-              {
-                step = GetElementPathStep(current);
-              }
-            }
-            if (string.IsNullOrEmpty(step))
-            {
-              var siblings = parent.Elements().ToList();
-              string stepSibling = "";
-              string xpathWithSiblings = "";
-              int index = siblings.IndexOf(current);
-              if (index > 0)
-              {
-                XElement sibling = siblings[index - 1];
-                (stepSibling, xpathWithSiblings) = GetElementPathStep(sibling, parent, doc, options);
-                if (!string.IsNullOrEmpty(stepSibling))
+                catch (Exception ex)
                 {
-                  step += $"{stepSibling}/following-sibling::{pathForParent}[1]";
+                    Logger.Error($"Cannot create output directory '{dir}': {ex.Message}");
+                    return;
                 }
-              }
-              if (string.IsNullOrEmpty(step))
-              {
-                if (index + 1 < siblings.Count)
-                {
-                  XElement sibling = siblings[index + 1];
-                  (stepSibling, xpathWithSiblings) = GetElementPathStep(sibling, parent, doc, options);
-                  if (!string.IsNullOrEmpty(stepSibling))
-                  {
-                    step += $"{stepSibling}/preceding-sibling::{pathForParent}[1]";
-                  }
-                }
-              }
-              if (step.StartsWith("//"))
-              {
-                return step;
-              }
-              else if (string.IsNullOrEmpty(step))
-              {
-                if (siblings.Count == 1)
-                {
-                  step = $"{pathForParent}";
-                }
-                else
-                {
-                  int samePreCount = 0;
-                  for (int i = 0; i < index; i++)
-                  {
-                    if (siblings[i].Name == current.Name)
-                    {
-                      samePreCount++;
-                    }
-                  }
-                  step = $"{pathForParent}[{samePreCount + 1}]";
-                }
-              }
             }
-          }
-          path.Insert(0, "/" + step);
         }
-        else if (current == root)
-        {
-          path.Insert(0, "/" + root.Name.LocalName);
-        }
-        current = parent;
-      }
-      if (path.Length == 0)
-        path.Append("/" + root.Name.LocalName);
-      return path.ToString();
-    }
 
-    #endregion
-
-    #region Element and attr info
-
-    private static string GetValue(XElement? element)
-    {
-      if (element == null)
-      {
-        return "";
-      }
-      IEnumerable<XNode> nodes = element.Nodes().Where(n => n.NodeType == XmlNodeType.Text);
-      if (!nodes.Any())
-      {
-        return "";
-      }
-      return nodes.First().ToString();
-    }
-
-    private static string GetElementInfo(XElement? element)
-    {
-      string info = "<";
-      if (element != null)
-      {
-        info += $"{element.Name}";
-        if (element.HasAttributes)
-        {
-          info += $" {element.FirstAttribute?.Name}=\"{element.FirstAttribute?.Value}\"";
-          if (element.Attributes().Count() > 1)
-          {
-            info += " ...";
-          }
-        }
-        info += ">";
-      }
-      return info;
-    }
-
-    private static string GetAttributeInfo(XAttribute? attr)
-    {
-      if (attr == null)
-      {
-        return "";
-      }
-      return $"{attr.Name}=\"{attr.Value}\"";
-    }
-    #endregion
-
-    #region Diff Validation
-
-    private static bool ValidateXsdPath(string? xsdPath)
-    {
-      if (xsdPath == null || !File.Exists(xsdPath))
-      {
-        Logger.Warn($"diff.xsd file does not exist: {xsdPath}");
-        return false;
-      }
-
-      Logger.Info($"Using diff.xsd path: {xsdPath}");
-      return true;
-    }
-
-    private static XmlReaderSettings? CreateXmlReaderSettings(string xsdPath)
-    {
-      XmlReaderSettings? settings = null;
-      if (ValidateXsdPath(xsdPath))
-      {
         try
         {
-          XmlReaderSettings xsdSettings = new XmlReaderSettings
-          {
-            DtdProcessing = DtdProcessing.Parse, // Enable DTD processing
-            ValidationType = ValidationType.Schema, // Optional, for validation during reading
-          };
-          using (XmlReader reader = XmlReader.Create(xsdPath, xsdSettings))
-          {
-            XmlSchemaSet schemaSet = new XmlSchemaSet();
+            var originalDoc = XDocument.Load(originalPath);
+            var indent = XmlUtils.DetectIndentation(originalPath);
+            Logger.Info($"Detected indentation: {indent}");
+            var modifiedDoc = XDocument.Load(modifiedPath);
 
-            // Add the schema using the XmlReader
-            schemaSet.Add("", reader);
-            settings = new XmlReaderSettings();
-            settings.DtdProcessing = DtdProcessing.Parse; // Enable DTD processing
-            settings.ValidationType = ValidationType.Schema; // Optional, for validation during reading
-            settings.Schemas = schemaSet;
-          }
-        }
-        catch (XmlSchemaException ex)
-        {
-          Logger.Error($"Schema Exception: {ex.Message}");
-          Logger.Error($"Line: {ex.LineNumber}, Position: {ex.LinePosition}");
-          return settings;
+            if (File.Exists(diffPath))
+                File.Delete(diffPath);
+
+            var engine = new DiffEngine(options);
+            var diffRoot = engine.GenerateDiff(originalDoc, modifiedDoc);
+
+            if (!diffRoot.HasElements)
+            {
+                Logger.Info("No differences found. Diff file will not be created.");
+                return;
+            }
+
+            var diffDoc = new XDocument(new XDeclaration("1.0", "utf-8", "yes"), diffRoot);
+            var settings = new XmlWriterSettings
+            {
+                Indent = true,
+                IndentChars = new string(' ', indent),
+            };
+
+            using (var writer = XmlWriter.Create(diffPath, settings))
+                diffDoc.Save(writer);
+
+            // XSD validation
+            if (xsdSettings != null)
+            {
+                Logger.Info($"Validating '{diffPath}' against XSD...");
+                using var reader = XmlReader.Create(diffPath, xsdSettings);
+                try
+                {
+                    while (reader.Read()) { }
+                    Logger.Info("Validation successful.");
+                }
+                catch (XmlSchemaValidationException ex)
+                {
+                    Logger.Error($"Validation failed: {ex.Message}");
+                    File.Delete(diffPath);
+                    return;
+                }
+            }
+
+            Logger.Info($"Diff written to '{diffPath}'");
         }
         catch (Exception ex)
         {
-          Logger.Error($"General Exception: {ex.Message}");
-          return settings;
+            Logger.Error($"Error processing '{originalPath}': {ex.Message}");
         }
-      }
-      return settings;
     }
-
-    #endregion
-
-    #region Helper Methods for Comment Detection
-
-    /// <summary>
-    /// Checks if the given element is preceded by an XML comment containing "pos=before"
-    /// </summary>
-    /// <param name="element">The element to check</param>
-    /// <returns>True if the element is preceded by a comment with pos=before, false otherwise</returns>
-    private static bool IsElementPrecededByPosBeforeComment(XElement element)
-    {
-      if (element.Parent == null)
-        return false;
-
-      // Get all nodes from the parent
-      var allNodes = element.Parent.Nodes().ToList();
-      var elementIndex = allNodes.IndexOf(element);
-
-      if (elementIndex <= 0)
-        return false;
-
-      // Check the immediate preceding node
-      var precedingNode = allNodes[elementIndex - 1];
-
-      // Check if it's a comment containing "pos=before"
-      if (precedingNode is XComment comment)
-      {
-        string commentText = comment.Value.Trim();
-        Logger.Debug($"Found comment preceding element '{element.Name}': '{commentText}'");
-
-        // Check if comment contains pos=before (case insensitive)
-        bool containsPosBeforePattern =
-          commentText.Contains("pos=before", StringComparison.OrdinalIgnoreCase)
-          || commentText.Contains("pos=\"before\"", StringComparison.OrdinalIgnoreCase)
-          || commentText.Contains("pos='before'", StringComparison.OrdinalIgnoreCase);
-
-        if (containsPosBeforePattern)
-        {
-          Logger.Info($"Element '{element.Name}' is preceded by pos=before comment: '{commentText}'");
-          return true;
-        }
-      }
-
-      return false;
-    }
-
-    #endregion
-  }
 }
