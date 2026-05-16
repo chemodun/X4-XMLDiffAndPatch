@@ -309,6 +309,13 @@ Please be aware - each release archive has an appropriate link to the [url=https
 
 [size=130][u]Changelog[/u][/size]
 
+[size=125][u][1.1.0] - 2026-05-17[/u][/size]
+[list]
+[*] Improved:
+[list]
+[*] XMLDiff: implement LCS-based child comparison and edit processing
+[/list]
+[/list]
 [size=125][u][1.0.5] - 2026-05-17[/u][/size]
 [list]
 [*] Improved:
