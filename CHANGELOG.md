@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.0.5](https://github.com/chemodun/X4-XMLDiffAndPatch/compare/v1.0.4...v1.0.5) (2026-05-16)
+
+
+### Bug Fixes
+
+* **diff:** enhance matching logic for original and modified elements ([56b01ca](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/56b01ca677eff62fcec263307f58c7bcd1bd3ad0))
+
+
+### Documentation
+
+* **README:** update changelog for version 1.0.5 with enhancements to XMLDiff matching logic ([7705c6f](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/7705c6f3f5dbde9f57f583dfc10b939165f73608))
+
 ## [1.0.4](https://github.com/chemodun/X4-XMLDiffAndPatch/compare/v1.0.3...v1.0.4) (2026-05-16)
 
 
