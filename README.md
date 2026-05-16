@@ -307,6 +307,11 @@ Please be aware - each release archive has an appropriate link to the [VirusTota
 
 ## Changelog
 
+### [1.0.5] - 2026-05-17
+
+- Improved:
+  - XMLDiff: enhance matching logic for original and modified elements
+
 ### [1.0.4] - 2026-05-16
 
 - Fixed:
