@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.0.4](https://github.com/chemodun/X4-XMLDiffAndPatch/compare/v1.0.3...v1.0.4) (2026-05-16)
+
+
+### Bug Fixes
+
+* **diff:** simplify attribute comparison logic and improve debug logging ([3173757](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/3173757c3e8e57105143f5af6a3112c7bbafa3d5))
+
+
+### Documentation
+
+* **README:** update changelog for version 1.0.4 with fixes for attribute comparison logic ([ce1ec4f](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/ce1ec4fd4bde38662830351f82ff83574ed89467))
+
 ## [1.0.3](https://github.com/chemodun/X4-XMLDiffAndPatch/compare/v1.0.2...v1.0.3) (2026-05-15)
 
 
