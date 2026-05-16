@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.1.0](https://github.com/chemodun/X4-XMLDiffAndPatch/compare/v1.0.5...v1.1.0) (2026-05-16)
+
+
+### Code Refactoring
+
+* **diff:** implement LCS-based child comparison and edit processing ([4a06314](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/4a063146bac5c6bd0860ed29539de934fceb7038))
+
+
+### Miscellaneous Chores
+
+* release 1.1.0 ([69bcdc7](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/69bcdc742ed4f8cfce8926f8ca95bc0aebbc6394))
+
+
+### Documentation
+
+* **README:** update changelog for version 1.1.0 with improvements to XMLDiff processing ([40f3fcb](https://github.com/chemodun/X4-XMLDiffAndPatch/commit/40f3fcb3b4fb461640dae4158939b3e8a22d73d0))
+
 ## [1.0.5](https://github.com/chemodun/X4-XMLDiffAndPatch/compare/v1.0.4...v1.0.5) (2026-05-16)
 
 
