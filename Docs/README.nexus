@@ -309,6 +309,13 @@ Please be aware - each release archive has an appropriate link to the [url=https
 
 [size=3][u][b]Changelog[/b][/u][/size]
 
+[size=3][u][i][1.0.4] - 2026-05-16[/i][/u][/size]
+[list]
+[*] Fixed:
+[list]
+[*] XMLDiff: attribute comparison logic
+[/list]
+[/list]
 [size=3][u][i][1.0.3] - 2026-05-15[/i][/u][/size]
 [list]
 [*] Fixed:
