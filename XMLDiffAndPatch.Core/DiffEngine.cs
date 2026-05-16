@@ -198,12 +198,20 @@ public class DiffEngine
 
           bool nextOriginalIsCurrentModified = originalChildren.Skip(i + 1).Any(oc => ExactlyMatches(oc, modifiedChild));
 
+          // If original[i+1] is a close-enough match for modifiedChild (≤1 attr diff),
+          // modifiedChild belongs to original[i+1] — remove original[i] instead of replacing.
+          bool nextOriginalMatchesCurrentModified =
+            i + 1 < originalChildren.Count
+            && originalChildren[i + 1].Name == modifiedChild.Name
+            && CompareAttributes(originalChildren[i + 1], modifiedChild, checkOnly: true).matchedEnough;
+
           Logger.Debug(
-            $"[PhaseB] nextOrigFoundLater={nextOriginalFoundLaterInModified} nextOrigIsCurrentMod={nextOriginalIsCurrentModified}"
+            $"[PhaseB] nextOrigFoundLater={nextOriginalFoundLaterInModified} nextOrigIsCurrentMod={nextOriginalIsCurrentModified} nextOrigMatchesCurrent={nextOriginalMatchesCurrentModified}"
           );
 
           bool shouldReplace =
             !nextOriginalIsCurrentModified
+            && !nextOriginalMatchesCurrentModified
             && (
               (
                 originalChild.Name == modifiedChild.Name
