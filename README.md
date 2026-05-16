@@ -307,6 +307,11 @@ Please be aware - each release archive has an appropriate link to the [VirusTota
 
 ## Changelog
 
+### [1.0.4] - 2026-05-16
+
+- Fixed:
+  - XMLDiff: attribute comparison logic
+
 ### [1.0.3] - 2026-05-15
 
 - Fixed:
