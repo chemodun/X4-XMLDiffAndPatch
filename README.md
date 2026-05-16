@@ -307,6 +307,11 @@ Please be aware - each release archive has an appropriate link to the [VirusTota
 
 ## Changelog
 
+### [1.1.0] - 2026-05-17
+
+- Improved:
+  - XMLDiff: implement LCS-based child comparison and edit processing
+
 ### [1.0.5] - 2026-05-17
 
 - Improved:
