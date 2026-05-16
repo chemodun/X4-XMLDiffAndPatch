@@ -136,20 +136,10 @@ public class DiffEngine
           // One attribute diff — verify children and next siblings also align.
           bool childrenMatch = !CompareElements(original, modified, diffRoot, originalChild, modifiedChild, checkOnly: true);
 
-          bool siblingsAlign =
-            i + 1 == originalChildren.Count
-            || j + 1 == modifiedChildren.Count
-            || (
-              originalChildren[i + 1].Name == modifiedChildren[j + 1].Name
-              && CompareAttributes(originalChildren[i + 1], modifiedChildren[j + 1], checkOnly: true).matchedEnough
-            );
+          bool modifiedMatchesLaterOriginal = originalChildren.Skip(i + 1).Any(oc => ExactlyMatches(oc, modifiedChild));
 
-          bool modifiedMatchesLaterOriginal = originalChildren
-            .Skip(i + 1)
-            .Any(oc => ExactlyMatches(oc, modifiedChild));
-
-          Logger.Debug($"[Attrs] savedOp lookahead: childrenMatch={childrenMatch} siblingsAlign={siblingsAlign} modMatchesLater={modifiedMatchesLaterOriginal}");
-          if (childrenMatch && siblingsAlign && !modifiedMatchesLaterOriginal)
+          Logger.Debug($"[Attrs] savedOp lookahead: childrenMatch={childrenMatch} modMatchesLater={modifiedMatchesLaterOriginal}");
+          if (childrenMatch && !modifiedMatchesLaterOriginal)
           {
             if (!checkOnly)
             {
@@ -359,7 +349,7 @@ public class DiffEngine
             return (true, null); // has diff but ≤1 total — matched enough
 
           differencesCount++;
-          if (differencesCount > 1 || originalAttrs.Count == 1)
+          if (differencesCount > 1)
           {
             matchedEnough = false;
             break;
@@ -483,6 +473,8 @@ public class DiffEngine
     var bAttrs = b.Attributes().ToList();
     if (aAttrs.Count != bAttrs.Count)
       return false;
-    return aAttrs.All(attr => b.Attribute(attr.Name)?.Value == attr.Value);
+    if (!aAttrs.All(attr => b.Attribute(attr.Name)?.Value == attr.Value))
+      return false;
+    return XmlUtils.GetTextValue(a).Trim() == XmlUtils.GetTextValue(b).Trim();
   }
 }
