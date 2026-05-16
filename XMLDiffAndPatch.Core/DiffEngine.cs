@@ -112,174 +112,223 @@ public class DiffEngine
       return true;
     }
 
-    // ── Step 5: two-pointer child comparison ─────────────────────────────────
-    int i = 0,
-      j = 0;
-    int lastRemovedOrReplaced = -1;
-
-    while (i < originalChildren.Count && j < modifiedChildren.Count)
+    // ── Step 5: LCS-based child comparison ──────────────────────────────────
+    if (checkOnly)
     {
-      var originalChild = originalChildren[i];
-      var modifiedChild = modifiedChildren[j];
-      bool matchedEnough = false;
-
-      Logger.Debug($"[Loop] i={i} j={j}: orig={XmlUtils.GetElementInfo(originalChild)} mod={XmlUtils.GetElementInfo(modifiedChild)}");
-
-      if (originalChild.Name == modifiedChild.Name)
+      for (int ci = 0; ci < Math.Min(originalChildren.Count, modifiedChildren.Count); ci++)
       {
-        var (attrMatched, savedOp) = CompareAttributes(originalChild, modifiedChild, checkOnly);
-        matchedEnough = attrMatched;
-        Logger.Debug($"[Attrs] matchedEnough={matchedEnough} savedOp={savedOp?.Name.LocalName ?? "none"}");
-
-        if (matchedEnough && savedOp != null)
-        {
-          // One attribute diff — verify children and next siblings also align.
-          bool childrenMatch = !CompareElements(original, modified, diffRoot, originalChild, modifiedChild, checkOnly: true);
-
-          bool modifiedMatchesLaterOriginal = originalChildren.Skip(i + 1).Any(oc => ExactlyMatches(oc, modifiedChild));
-
-          Logger.Debug($"[Attrs] savedOp lookahead: childrenMatch={childrenMatch} modMatchesLater={modifiedMatchesLaterOriginal}");
-          if (childrenMatch && !modifiedMatchesLaterOriginal)
-          {
-            if (!checkOnly)
-            {
-              DiffRootAddOperation(diffRoot, savedOp);
-              Logger.Info($"[Operation {savedOp.Name.LocalName}] attribute: {savedOp.Attribute("sel")?.Value}");
-            }
-            // matchedEnough stays true
-          }
-          else
-          {
-            matchedEnough = false;
-          }
-        }
+        if (!ExactlyMatches(originalChildren[ci], modifiedChildren[ci]))
+          return true;
+        if (CompareElements(original, modified, diffRoot, originalChildren[ci], modifiedChildren[ci], checkOnly: true))
+          return true;
       }
+      return false;
+    }
 
-      if (matchedEnough)
+    var editSteps = ComputeDiff(originalChildren, modifiedChildren);
+    int lastRemovedOrReplaced = -1;
+    int s = 0;
+
+    while (s < editSteps.Count)
+    {
+      var step = editSteps[s];
+
+      if (step.Op == EditOp.Equal)
       {
-        if (checkOnly)
-        {
-          if (CompareElements(original, modified, diffRoot, originalChild, modifiedChild, checkOnly: true))
-            return true;
-        }
-        else
-        {
-          CompareElements(original, modified, diffRoot, originalChild, modifiedChild, checkOnly: false);
-        }
-        i++;
-        j++;
+        CompareElements(original, modified, diffRoot, originalChildren[step.IndexA], modifiedChildren[step.IndexB], checkOnly: false);
+        s++;
       }
       else
       {
-        if (checkOnly)
-          return true;
-
-        // ── Phase A: look for originalChild further ahead in modifiedChildren ──
-        bool foundMatch = false;
-        for (int k = j + 1; k < modifiedChildren.Count; k++)
+        // Collect consecutive Delete and Insert steps (edit block)
+        var deletes = new List<int>();
+        var inserts = new List<int>();
+        while (s < editSteps.Count && editSteps[s].Op != EditOp.Equal)
         {
-          if (ExactlyMatches(modifiedChildren[k], originalChild))
-          {
-            // modifiedChildren[j..k-1] are new → emit a single <add>
-            var addOp = BuildAddOperation(originalChildren, modifiedChildren, origEl, i, j, k, lastRemovedOrReplaced);
-            DiffRootAddOperation(diffRoot, addOp);
-            Logger.Info($"[Operation add] {k - j} element(s) before {XmlUtils.GetElementInfo(originalChild)}");
-            j = k;
-            foundMatch = true;
-            break;
-          }
-        }
-
-        if (!foundMatch)
-        {
-          // ── Phase B: decide between remove and replace ─────────────────
-          bool nextOriginalFoundLaterInModified =
-            i + 1 < originalChildren.Count && modifiedChildren.Skip(j + 1).Any(mc => ExactlyMatches(mc, originalChildren[i + 1]));
-
-          bool nextOriginalIsCurrentModified = originalChildren.Skip(i + 1).Any(oc => ExactlyMatches(oc, modifiedChild));
-
-          // If original[i+1] is a close-enough match for modifiedChild (≤1 attr diff),
-          // modifiedChild belongs to original[i+1] — remove original[i] instead of replacing.
-          bool nextOriginalMatchesCurrentModified =
-            i + 1 < originalChildren.Count
-            && originalChildren[i + 1].Name == modifiedChild.Name
-            && CompareAttributes(originalChildren[i + 1], modifiedChild, checkOnly: true).matchedEnough;
-
-          Logger.Debug(
-            $"[PhaseB] nextOrigFoundLater={nextOriginalFoundLaterInModified} nextOrigIsCurrentMod={nextOriginalIsCurrentModified} nextOrigMatchesCurrent={nextOriginalMatchesCurrentModified}"
-          );
-
-          bool shouldReplace =
-            !nextOriginalIsCurrentModified
-            && !nextOriginalMatchesCurrentModified
-            && (
-              (
-                originalChild.Name == modifiedChild.Name
-                && originalChild.Attributes().Any(a => modifiedChild.Attribute(a.Name)?.Value == a.Value)
-              )
-              || i + 1 == originalChildren.Count
-              || nextOriginalFoundLaterInModified
-            );
-
-          Logger.Debug($"[PhaseB] shouldReplace={shouldReplace}");
-          if (shouldReplace)
-          {
-            var xpath = XPathGenerator.GenerateXPath(originalChild, _options);
-            var replaceOp = new XElement("replace", new XAttribute("sel", xpath));
-            replaceOp.Add(new XElement(modifiedChild));
-
-            // Bundle additional modified children that don't match the next original
-            int k = j + 1;
-            while (k < modifiedChildren.Count)
-            {
-              if (i + 1 < originalChildren.Count && ExactlyMatches(modifiedChildren[k], originalChildren[i + 1]))
-                break;
-              replaceOp.Add(new XElement(modifiedChildren[k]));
-              k++;
-            }
-
-            DiffRootAddOperation(diffRoot, replaceOp);
-            Logger.Info($"[Operation replace] {xpath}");
-            lastRemovedOrReplaced = i;
-            i++;
-            j = k;
-          }
+          if (editSteps[s].Op == EditOp.Delete)
+            deletes.Add(editSteps[s].IndexA);
           else
-          {
-            var xpath = XPathGenerator.GenerateXPath(originalChild, _options);
-            var removeOp = new XElement("remove", new XAttribute("sel", xpath));
-            DiffRootAddOperation(diffRoot, removeOp);
-            Logger.Info($"[Operation remove] {xpath}");
-            lastRemovedOrReplaced = i;
-            i++;
-            // j intentionally stays the same
-          }
+            inserts.Add(editSteps[s].IndexB);
+          s++;
         }
+
+        // nextOrigIdx: original anchor after this block (for <add> positioning)
+        int nextOrigIdx = s < editSteps.Count ? editSteps[s].IndexA : originalChildren.Count;
+
+        ProcessEditBlock(
+          deletes,
+          inserts,
+          nextOrigIdx,
+          original,
+          modified,
+          originalChildren,
+          modifiedChildren,
+          origEl,
+          diffRoot,
+          ref lastRemovedOrReplaced
+        );
       }
     }
 
-    // ── Drain remaining original children (all removed) ──────────────────────
-    while (i < originalChildren.Count)
+    return false;
+  }
+
+  // ─── LCS edit types and helpers ──────────────────────────────────────────────
+
+  private enum EditOp
+  {
+    Equal,
+    Delete,
+    Insert,
+  }
+
+  private readonly record struct EditStep(EditOp Op, int IndexA, int IndexB);
+
+  /// <summary>
+  /// Computes the LCS-based edit script between two child lists.
+  /// Returns a list of Equal/Delete/Insert steps in forward (left-to-right) order.
+  /// </summary>
+  private static List<EditStep> ComputeDiff(IReadOnlyList<XElement> a, IReadOnlyList<XElement> b)
+  {
+    int n = a.Count,
+      m = b.Count;
+    var dp = new int[n + 1, m + 1];
+    for (int i = 1; i <= n; i++)
+    for (int j = 1; j <= m; j++)
+      dp[i, j] = ExactlyMatches(a[i - 1], b[j - 1]) ? dp[i - 1, j - 1] + 1 : Math.Max(dp[i - 1, j], dp[i, j - 1]);
+
+    var result = new List<EditStep>();
+    int x = n,
+      y = m;
+    while (x > 0 || y > 0)
     {
-      var xpath = XPathGenerator.GenerateXPath(originalChildren[i], _options);
+      if (x > 0 && y > 0 && ExactlyMatches(a[x - 1], b[y - 1]) && dp[x, y] == dp[x - 1, y - 1] + 1)
+      {
+        result.Add(new EditStep(EditOp.Equal, x - 1, y - 1));
+        x--;
+        y--;
+      }
+      else if (y > 0 && (x == 0 || dp[x, y - 1] >= dp[x - 1, y]))
+      {
+        result.Add(new EditStep(EditOp.Insert, -1, y - 1));
+        y--;
+      }
+      else
+      {
+        result.Add(new EditStep(EditOp.Delete, x - 1, -1));
+        x--;
+      }
+    }
+    result.Reverse();
+    return result;
+  }
+
+  /// <summary>
+  /// Processes one edit block (consecutive Delete/Insert steps between two Equal anchors).
+  /// Greedily pairs deletes with compatible inserts (same name + ≤1 attr diff),
+  /// emitting attribute-change ops, replace ops, remove ops, and add ops.
+  /// </summary>
+  private void ProcessEditBlock(
+    List<int> deletes,
+    List<int> inserts,
+    int nextOrigIdx,
+    XDocument original,
+    XDocument modified,
+    List<XElement> originalChildren,
+    List<XElement> modifiedChildren,
+    XElement origEl,
+    XElement diffRoot,
+    ref int lastRemovedOrReplaced
+  )
+  {
+    var usedInserts = new bool[inserts.Count];
+    var paired = new List<(int origIdx, int modIdx)>();
+    var unpairedDeletes = new List<int>();
+
+    // Greedily pair each delete with the first compatible insert (same name + ≤1 attr diff)
+    foreach (var origIdx in deletes)
+    {
+      bool found = false;
+      for (int ii = 0; ii < inserts.Count; ii++)
+      {
+        if (usedInserts[ii])
+          continue;
+        var origElem = originalChildren[origIdx];
+        var modElem = modifiedChildren[inserts[ii]];
+        if (origElem.Name == modElem.Name && CompareAttributes(origElem, modElem, checkOnly: true).matchedEnough)
+        {
+          usedInserts[ii] = true;
+          paired.Add((origIdx, inserts[ii]));
+          found = true;
+          break;
+        }
+      }
+      if (!found)
+        unpairedDeletes.Add(origIdx);
+    }
+
+    var unpairedInserts = new List<int>();
+    for (int ii = 0; ii < inserts.Count; ii++)
+      if (!usedInserts[ii])
+        unpairedInserts.Add(inserts[ii]);
+
+    // Emit paired operations: attribute change (+ child recurse) or full replace
+    foreach (var (origIdx, modIdx) in paired)
+    {
+      var origElem = originalChildren[origIdx];
+      var modElem = modifiedChildren[modIdx];
+      var (matchedEnough, savedOp) = CompareAttributes(origElem, modElem, checkOnly: false);
+      if (matchedEnough)
+      {
+        if (savedOp != null)
+        {
+          DiffRootAddOperation(diffRoot, savedOp);
+          Logger.Info($"[Operation {savedOp.Name.LocalName}] attribute: {savedOp.Attribute("sel")?.Value}");
+          // Attribute was renamed — the element's XPath identity changed, so treat it
+          // as "unavailable" for pos="after" anchoring in subsequent add operations.
+          lastRemovedOrReplaced = Math.Max(lastRemovedOrReplaced, origIdx);
+        }
+        CompareElements(original, modified, diffRoot, origElem, modElem, checkOnly: false);
+      }
+      else
+      {
+        var xpath = XPathGenerator.GenerateXPath(origElem, _options);
+        var replaceOp = new XElement("replace", new XAttribute("sel", xpath));
+        replaceOp.Add(new XElement(modElem));
+        DiffRootAddOperation(diffRoot, replaceOp);
+        Logger.Info($"[Operation replace] {xpath}");
+        lastRemovedOrReplaced = origIdx;
+      }
+    }
+
+    // Emit unpaired removes
+    foreach (var origIdx in unpairedDeletes)
+    {
+      var xpath = XPathGenerator.GenerateXPath(originalChildren[origIdx], _options);
       var removeOp = new XElement("remove", new XAttribute("sel", xpath));
       DiffRootAddOperation(diffRoot, removeOp);
       Logger.Info($"[Operation remove] {xpath}");
-      i++;
+      lastRemovedOrReplaced = origIdx;
     }
 
-    // ── Drain remaining modified children (all appended) ─────────────────────
-    if (j < modifiedChildren.Count)
+    // Emit unpaired inserts as a single batched <add>
+    if (unpairedInserts.Count > 0)
     {
-      var parentXPath = XPathGenerator.GenerateXPath(origEl, _options);
-      var addOp = new XElement("add", new XAttribute("sel", parentXPath));
-      for (int k = j; k < modifiedChildren.Count; k++)
-        addOp.Add(new XElement(modifiedChildren[k]));
-      DiffRootAddOperation(diffRoot, addOp);
-      Logger.Info($"[Operation add] append to {parentXPath}");
-    }
+      int j = unpairedInserts[0];
+      int k = unpairedInserts[^1] + 1;
 
-    return false;
+      // Any element touched in this block (removed OR paired/renamed) may have a stale
+      // XPath if used as a pos="after" anchor.  Compute the highest touched original
+      // index so BuildAddOperation can switch to pos="before" on the first stable Equal
+      // element that follows the block.
+      int maxBlockOrigIdx = lastRemovedOrReplaced;
+      foreach (var (origIdx, _) in paired)
+        maxBlockOrigIdx = Math.Max(maxBlockOrigIdx, origIdx);
+
+      var addOp = BuildAddOperation(originalChildren, modifiedChildren, origEl, nextOrigIdx, j, k, maxBlockOrigIdx);
+      DiffRootAddOperation(diffRoot, addOp);
+      Logger.Info($"[Operation add] {unpairedInserts.Count} element(s)");
+    }
   }
 
   // ─── Attribute comparison ────────────────────────────────────────────────────
@@ -413,18 +462,28 @@ public class DiffEngine
 
       if (usePosBeforeComment || prevAnchorRemoved || prevHasNumericIndex)
       {
-        // Prefer pos="before" on the current original element
-        string beforeXPath = XPathGenerator.GenerateXPath(originalChildren[i], _options);
-        if (!NumericIndexPattern.IsMatch(beforeXPath))
+        if (i < originalChildren.Count)
         {
-          pos = "before";
-          sel = beforeXPath;
+          // Prefer pos="before" on the current original element
+          string beforeXPath = XPathGenerator.GenerateXPath(originalChildren[i], _options);
+          if (!NumericIndexPattern.IsMatch(beforeXPath))
+          {
+            pos = "before";
+            sel = beforeXPath;
+          }
+          else
+          {
+            // Fall back to pos="after" the previous element
+            pos = "after";
+            sel = prevXPath;
+          }
         }
         else
         {
-          // Fall back to pos="after" the previous element
-          pos = "after";
-          sel = prevXPath;
+          // No next element exists; prev anchor may be stale (renamed/removed)
+          // → fall back to appending to the parent element
+          pos = string.Empty;
+          sel = XPathGenerator.GenerateXPath(origEl, _options);
         }
       }
       else
@@ -434,7 +493,9 @@ public class DiffEngine
       }
     }
 
-    var addOp = new XElement("add", new XAttribute("sel", sel), new XAttribute("pos", pos));
+    var addOp = string.IsNullOrEmpty(pos)
+      ? new XElement("add", new XAttribute("sel", sel))
+      : new XElement("add", new XAttribute("sel", sel), new XAttribute("pos", pos));
 
     for (int n = j; n < k; n++)
       addOp.Add(new XElement(modifiedChildren[n]));
